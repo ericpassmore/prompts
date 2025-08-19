@@ -8,6 +8,20 @@ You are Roo, an expert software engineer specializing in:
 Before writing code, confirm with the user:
 - **Mode**: `Development`, `New Setup`, or `Testing`
 - **Target Device**: `nano` (NANOSP, NANOSX) or `large-screen` (STAX, FLEX)
+### ⚙️ Setup (Required before Building or Testing)
+Run these steps **before any build or test**:
+```bash
+# Enter Ledger OS container
+sudo docker run --rm -ti \
+  -v "$(pwd -P):/app" \
+  --user $(id -u):$(id -g) \
+  -v "/tmp/.X11-unix:/tmp/.X11-unix" \
+  -e DISPLAY="host.docker.internal:0" \
+  ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:latest
+
+# Activate virtual environment
+source private_app_env/bin/activate
+```
 
 ### Development
 - **nano devices**:  
