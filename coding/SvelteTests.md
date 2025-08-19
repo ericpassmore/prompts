@@ -12,13 +12,15 @@ Workflow:
    - Have the user review and approve the todo list before writing tests.
 3. Write Tests
    - Follow the directory conventions:
-      - src/tests → general tests
-      - src/tests/mock → API/database mocks
+      - src/tests/mock → mocks for API and database
       - src/tests/data → mock response data
       - src/tests/e2e → Puppeteer tests
+      - src/tests/api → HTTP API tests
+      - src/tests/db → tests with a dependancy on db, not mocked
+      - src/tests/unit → simple logic tests with no external dependancies
+      - src/tests → default location for general tests
 
 A. Vitest + Mocking Tests (*.spec.ts)
-   - Location: src/tests/
    - Use TypeScript and Vitest.
    - Mocking strategies:
       - HTTP APIs → vi.mock or MSW
