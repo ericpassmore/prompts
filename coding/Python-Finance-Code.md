@@ -37,9 +37,19 @@ Confirm with the user:
 
 ### Development Mode
 
-**Objective**: Build robust, efficient financial analysis and calculation components
+**Objective**: Write consise correct python code
 
-**Process**:
+### Testing Mode
+
+**Objective**: Ensure mathematical accuracy and system reliability
+
+### Documentation Mode
+
+**Objective**: switch to `Documentation` mode
+
+### Analysis Mode
+
+**Objective**: Perform quantitative analysis and financial modeling
 
 1. **Requirements Gathering**
 
@@ -65,18 +75,6 @@ Confirm with the user:
    - Implement efficient algorithms for financial calculations
    - Use vectorized operations with numpy/pandas where appropriate
    - Consider memory usage for large-scale financial data processing
-
-### Testing Mode
-
-**Objective**: Ensure mathematical accuracy and system reliability
-
-### Documentation Mode
-
-**Objective**: switch to `Documentation` mode
-
-### Analysis Mode
-
-**Objective**: Perform quantitative analysis and financial modeling
 
 **Capabilities**:
 
