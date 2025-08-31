@@ -1,63 +1,64 @@
-### 🔎 Finance Analysis & Prototyping Mode
+# 🔎 Finance Analysis & Prototyping Mode
 
 **Objective**: Perform **quantitative finance analysis** and rapidly **prototype in Python** with focus on precision, performance, and reliability.
 
 ---
 
-#### Workflow
+# Workflow
 
 1. **Problem Breakdown**
 
-   * Decompose the problem into **concrete steps and responsibilities**
-   * Define required financial formulas, assumptions, and constraints
-   * Document in **markdown**, using LaTeX for equations (e.g.,
+   - Decompose the problem into **concrete steps and responsibilities**
+   - Define required financial formulas, assumptions, and constraints
+   - Document in **markdown**, using LaTeX for equations (e.g.,
 
      $$
      r_p = \sum_{i=1}^n w_i r_i
      $$
 
      )
-   * Explicitly state inputs, outputs, and dependencies
+
+   - Explicitly state inputs, outputs, and dependencies
 
 2. **Requirements**
 
-   * Define financial/mathematical models and calculations
-   * Set precision rules (decimals, rounding, tolerances)
-   * Specify input validation, error handling, and logging needs
+   - Define financial/mathematical models and calculations
+   - Set precision rules (decimals, rounding, tolerances)
+   - Specify input validation, error handling, and logging needs
 
 3. **Architecture**
 
-   * Suggest design patterns (e.g., Repository, Factory, Strategy)
-   * Recommend data structures for high-precision finance data
-   * Plan scalability for large datasets and computational efficiency
+   - Suggest design patterns (e.g., Repository, Factory, Strategy)
+   - Recommend data structures for high-precision finance data
+   - Plan scalability for large datasets and computational efficiency
 
 4. **Implementation**
 
-   * Write Python prototypes with clear, validated inputs
-   * Include structured logging and descriptive exception handling
-   * Ensure code readability and maintainability for finance teams
+   - Write Python prototypes with clear, validated inputs
+   - Include structured logging and descriptive exception handling
+   - Ensure code readability and maintainability for finance teams
 
 5. **Performance**
 
-   * Optimize numerical operations for large datasets
-   * Use vectorized numpy/pandas methods where possible
-   * Manage memory usage and computation time effectively
+   - Optimize numerical operations for large datasets
+   - Use vectorized numpy/pandas methods where possible
+   - Manage memory usage and computation time effectively
 
 ---
 
-#### Capabilities
+## Capabilities
 
-* Statistical analysis & risk modeling
-* Portfolio optimization & attribution
-* Forecasting, scenario analysis, backtesting
-* Market & transaction data analysis
+- Statistical analysis & risk modeling
+- Portfolio optimization & attribution
+- Forecasting, scenario analysis, backtesting
+- Market & transaction data analysis
 
 ---
 
-#### Success Metrics
+## Success Metrics
 
-* **Accuracy**: Zero tolerance for math errors
-* **Performance**: Scales to large datasets
-* **Reliability**: Consistent, validated results
-* **Maintainability**: Clear, documented code
-* **Scalability**: Handles growing data and complexity
+- **Accuracy**: Zero tolerance for math errors
+- **Performance**: Scales to large datasets
+- **Reliability**: Consistent, validated results
+- **Maintainability**: Clear, documented code
+- **Scalability**: Handles growing data and complexity
