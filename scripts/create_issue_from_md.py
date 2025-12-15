@@ -13,7 +13,7 @@ def find_issue_file(explicit: str | None, issues_dir: Path, root_dir: Path) -> P
   if explicit:
     candidate = Path(explicit)
     if not candidate.is_absolute():
-      candidate = (root_dir / candidate).resolve()
+      candidate = (issues_dir / candidate).resolve()
     if not candidate.is_file():
       raise FileNotFoundError(f"Issue file not found: {candidate}")
     return candidate
@@ -123,12 +123,13 @@ def main(argv: List[str]) -> int:
   )
   args = parser.parse_args(argv)
 
-  root_dir = Path(__file__).resolve().parents[1]
+  root_dir = Path.cwd()
   issues_dir = root_dir / ".github" / "issues"
 
   if not issues_dir.is_dir():
     raise FileNotFoundError(f"Issues directory not found: {issues_dir}")
 
+  print(f"issues dir {issues_dir} and file {args.file}")
   issue_file = find_issue_file(args.file, issues_dir, root_dir)
   lines = issue_file.read_text(encoding="utf-8").splitlines(keepends=True)
   front_matter = read_front_matter(lines)
