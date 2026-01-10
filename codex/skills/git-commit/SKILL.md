@@ -12,20 +12,29 @@ description: Draft a commit message, run safety checks, and commit to git.
 ### .env File Patterns
 
 **Used by:** Protect Sensitive Data, Commit
-**Rule:** `.env` files may be appended to locally but must never be staged or committed.
 
-#### Ignore env files
-.env
-.env.*
-^(?!developement\.env$).+\.env$
-^(?!developement\.env$).+\.env.*$
+#### Policy: env-like files (forbidden to stage/commit)
 
-#### Exception: allow this example file to be committed
-developement.env
+Treat any file matching **any** of these globs as an env file:
 
-#### Code Block `.gitignore`
+* `.env`
+* `.env.*` (example: `.env.local`, `.env.production`)
+* `*.env` (example: `test.env`, `production.env`)
+* `*.env.*` (example: `test.env.example`, `production.env.bak`)
 
-```
+**Rule:** Env-like files may be appended to locally but must never be staged or committed.
+
+#### Explicit exception: allowed example file
+
+The following file is allowed to be tracked and committed as an example/template:
+
+* `developement.env`
+
+When filtering env-like files, exclude anything matching the env-like globs **unless** the path is exactly `developement.env`
+
+#### `.gitignore` implementation
+
+```gitignore
 # Ignore env files
 .env
 .env.*
@@ -51,12 +60,14 @@ developement.env
 * `.mypy_cache/`
 * `.ruff_cache/`
 * `.cache/`
-* `.DS_Store` (file; include here for convenience)
 * `dist/`
 * `build/`
 * `bin/`
 * `out/`
 * `target/`
+
+**Never** add this file 
+* `.DS_Store` 
 
 **Rule:** Always add patterns for these to `.gitignore` if not already present.
 
@@ -171,17 +182,44 @@ git diff --cached --name-only -z \
 
 **Before Track Files Step**
 
-1. **Always** run `git status --porcelain | grep -q . && abort` abort on any dirty state.
+1. **Detect and abort on merge conflicts**
 
-   * Messaging: Inform the user aborted due to dirty state
-   * Messaging: Provide the user with a summarized list of dirty files derived from `git status --porcelain`
-2. **Always** run `git branch --show-current` to get the current branch
-3. **Always** abort and stop immediately when the branch name is empty; inform the user aborting due to empty branch name
-4. **Always** abort and stop immediately when the branch name is `main` or `master`
-5. **Always** run the script below to get a clean working tree
+   * **Always** check for unmerged/conflicted paths:
 
-   * `git pull --ff-only origin <branch> || abort`
-   * abort and inform the user when `git pull` fails
+     ```bash
+     git diff --name-only --diff-filter=U | grep -q . && abort
+     ```
+   * **Policy:** Allow working changes when committing, but never proceed when merge conflicts are present.
+   * **Messaging on abort:**
+
+     * Inform the user that merge conflicts or unmerged paths were detected.
+     * Provide a summarized list of conflicted files using:
+
+       ```bash
+       git diff --name-only --diff-filter=U
+       ```
+
+2. **Validate current branch**
+
+   * **Always** run:
+
+     ```bash
+     git branch --show-current
+     ```
+   * **Always** abort if the branch name is empty; inform the user that the repository is in a detached HEAD or invalid state.
+   * **Always** abort if the branch name is `main` or `master`; inform the user that commits are not allowed directly on protected branches.
+
+3. **Synchronize with remote**
+
+   * **Always** attempt to fast-forward the current branch:
+
+     ```bash
+     git pull --ff-only origin <branch> || abort
+     ```
+   * **Messaging on pull failure:**
+
+     * If output contains `couldn't find remote ref`, `no such ref`, or `no tracking information`, inform the user that the branch has no upstream and must be pushed first or configured with an upstream.
+     * Otherwise, inform the user that the pull failed and manual intervention is required.
 
 ---
 
@@ -215,7 +253,7 @@ git diff --cached --name-only -z \
 1. Follow **.env File Patterns** rules:
 
    * `.env` files may be appended to locally but must never be staged or committed.
-   * Exception: `development.env` is allowed to be tracked and committed as an example file.
+   * Exception: `developement.env` is allowed to be tracked and committed as an example file.
 2. **Always** inspect changes for secrets using:
 
    * `git diff` (unstaged changes)
@@ -270,11 +308,12 @@ git diff --cached --name-only -z \
 * Use present tense — “Add feature” not “Added feature”
 * Start summary with an action verb — Add, Update, Fix, Remove, etc.
 * Be specific about what components/files were affected
+* Do not use punctuation 
 
 ### Example Good Commit Message
 
 ```
-Refactor authentication system for better organization of code.
+Refactor authentication system for better organization of code
 ```
 
 ---
