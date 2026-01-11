@@ -90,6 +90,20 @@ prefix_rule(
 )
 
 # -----------------------
+# Commit (scoped)
+# -----------------------
+
+prefix_rule(
+    pattern = ["git", "commit"],
+    decision = "allow",
+    justification = "Commit changes locally.",
+    match = [
+        "git commit",
+        "git commit path/to/file",
+    ],
+)
+
+# -----------------------
 # Tracking / staging helpers (scoped)
 # -----------------------
 
@@ -101,10 +115,10 @@ prefix_rule(
 )
 
 prefix_rule(
-    pattern = ["git", "add", "-N"],
+    pattern = ["git", "add"],
     decision = "allow",
-    justification = "Intent-to-add to make untracked files visible in diffs.",
-    match = ["git add -N path/to/file"],
+    justification = "Add all files and stage to git.",
+    match = ["git add -A","git add path/to/file",],
 )
 
 prefix_rule(
@@ -119,19 +133,19 @@ prefix_rule(
 # ----------------------
 
 prefix_rule(
-    pattern = ["/Users/eric/codex/scripts/git-check-conflicts.sh"],
+    pattern = ["/Users/eric/.codex/scripts/git-check-conflicts.sh"],
     decision = "allow",
     justification = "Trusted helper script to detect merge conflicts safely.",
     match = [
-        "/Users/eric/codex/scripts/git-check-conflicts.sh",
+        "/Users/eric/.codex/scripts/git-check-conflicts.sh",
     ],
 )
 
 prefix_rule(
-    pattern = ["/Users/eric/codex/scripts/git-diff-staged-skip-binary.sh"],
+    pattern = ["/Users/eric/.codex/scripts/git-diff-staged-skip-binary.sh"],
     decision = "allow",
     justification = "Trusted helper script to diff staged files while skipping binaries.",
     match = [
-        "/Users/eric/codex/scripts/git-diff-staged-skip-binary.sh",
+        "/Users/eric/.codex/scripts/git-diff-staged-skip-binary.sh",
     ],
 )

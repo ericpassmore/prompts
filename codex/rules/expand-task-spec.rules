@@ -47,6 +47,20 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern=["bun", "run", "format"],
+    decision="allow",
+    justification="Run prettier format fix (bun).",
+    match=["bun run format"],
+)
+
+prefix_rule(
+    pattern=["npm", "run", "format"],
+    decision="allow",
+    justification="Run prettier format fix (npm).",
+    match=["npm run format"],
+)
+
+prefix_rule(
     pattern=["bun", "run", "build"],
     decision="allow",
     justification="Run repository build script (bun).",
@@ -58,6 +72,20 @@ prefix_rule(
     decision="allow",
     justification="Run repository build script (npm).",
     match=["npm run build"],
+)
+
+prefix_rule(
+    pattern=["bun", "run", "dev"],
+    decision="allow",
+    justification="Run service locally (bun).",
+    match=["bun run dev"],
+)
+
+prefix_rule(
+    pattern=["npm", "run", "dev"],
+    decision="allow",
+    justification="Run service locally (npm).",
+    match=["npm run dev"],
 )
 
 prefix_rule(
