@@ -195,7 +195,7 @@ git diff --cached --name-only -z \
      * Inform the user that merge conflicts or unmerged paths were detected.
      * Provide a summarized list of conflicted files using:
 
-       ```bash
+       ```bash	
        git diff --name-only --diff-filter=U
        ```
 

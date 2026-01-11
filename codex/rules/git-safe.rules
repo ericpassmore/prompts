@@ -1,0 +1,137 @@
+# Auto-allow a small, explicit set of git read/write commands commonly used
+# by commit/pull workflows. Rules are exact-prefix matches over argv.
+
+# -----------------------
+# Branch / status / fetch
+# -----------------------
+
+prefix_rule(
+    pattern = ["git", "branch", "--show-current"],
+    decision = "allow",
+    justification = "Read current branch name for safety checks.",
+    match = ["git branch --show-current"],
+)
+
+prefix_rule(
+    pattern = ["git", "status", "--porcelain"],
+    decision = "allow",
+    justification = "List working tree changes in machine-readable form.",
+    match = ["git status --porcelain"],
+)
+
+prefix_rule(
+    pattern = ["git", "fetch", "--prune"],
+    decision = "allow",
+    justification = "Fetch remote updates without modifying working files.",
+    match = ["git fetch --prune"],
+)
+
+# -----------------------
+# Diff / inspection
+# -----------------------
+
+prefix_rule(
+    pattern = ["git", "diff"],
+    decision = "allow",
+    justification = "Inspect changes (unstaged/staged depending on flags).",
+    match = [
+        "git diff",
+        "git diff --cached",
+        "git diff --cached --name-only -z",
+        "git diff --cached --numstat -- path/to/file",
+        "git diff --cached -- path/to/file",
+    ],
+)
+
+prefix_rule(
+    pattern = ["git", "diff", "--name-only", "--diff-filter=U"],
+    decision = "allow",
+    justification = "List conflicted/unmerged paths only.",
+    match = ["git diff --name-only --diff-filter=U"],
+)
+
+# -----------------------
+# Upstream / divergence checks
+# -----------------------
+
+prefix_rule(
+    pattern = ["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
+    decision = "allow",
+    justification = "Resolve upstream tracking ref for current branch.",
+    match = ["git rev-parse --abbrev-ref --symbolic-full-name @{u}"],
+)
+
+prefix_rule(
+    pattern = ["git", "rev-list", "--left-right", "--count", "HEAD...@{u}"],
+    decision = "allow",
+    justification = "Compute ahead/behind counts vs upstream.",
+    match = ["git rev-list --left-right --count HEAD...@{u}"],
+)
+
+# -----------------------
+# Pull / push (scoped)
+# -----------------------
+
+prefix_rule(
+    pattern = ["git", "pull", "--ff-only"],
+    decision = "allow",
+    justification = "Fast-forward-only pull; never creates merges.",
+    match = [
+        "git pull --ff-only",
+        "git pull --ff-only origin feature-branch",
+    ],
+)
+
+prefix_rule(
+    pattern = ["git", "push", "origin"],
+    decision = "allow",
+    justification = "Push to origin; branch name follows as argument.",
+    match = ["git push origin feature-branch"],
+)
+
+# -----------------------
+# Tracking / staging helpers (scoped)
+# -----------------------
+
+prefix_rule(
+    pattern = ["git", "ls-files", "-o", "--exclude-standard"],
+    decision = "allow",
+    justification = "List untracked files excluding standard ignores.",
+    match = ["git ls-files -o --exclude-standard"],
+)
+
+prefix_rule(
+    pattern = ["git", "add", "-N"],
+    decision = "allow",
+    justification = "Intent-to-add to make untracked files visible in diffs.",
+    match = ["git add -N path/to/file"],
+)
+
+prefix_rule(
+    pattern = ["git", "rm", "--cached"],
+    decision = "allow",
+    justification = "Stop tracking a file without deleting it from disk.",
+    match = ["git rm --cached path/to/file"],
+)
+
+# ----------------------
+# Auto-allow trusted helper scripts (exact path prefix)
+# ----------------------
+
+prefix_rule(
+    pattern = ["/Users/eric/codex/scripts/git-check-conflicts.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to detect merge conflicts safely.",
+    match = [
+        "/Users/<YOUR_USER>/codex/scripts/git-check-conflicts.sh",
+    ],
+)
+
+prefix_rule(
+    pattern = ["/Users/eric/codex/scripts/git-diff-staged-skip-binary.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to diff staged files while skipping binaries.",
+    match = [
+        "/Users/eric/codex/scripts/git-diff-staged-skip-binary.sh",
+    ],
+)
