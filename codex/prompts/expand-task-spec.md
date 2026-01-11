@@ -1,3 +1,7 @@
+---
+description: expand task into spec + phased plan + implementation 
+---
+
 # Expand task into spec + phased plan + implementation
 
 Use the `expand-task-spec` skill.

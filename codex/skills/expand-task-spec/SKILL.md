@@ -88,7 +88,6 @@ Read `package.json` scripts. Choose commands in this order:
   Prefer project-defined tasks in docs; otherwise:
   - If `ruff` is configured in `pyproject.toml`: `uv run ruff check .`
   - If `ruff format` configured: `uv run ruff format .`
-  - If `black` configured: `uv run black .`
   If none are configured: document “lint not configured” and propose adding in Final Phase.
 
 - Tests:
