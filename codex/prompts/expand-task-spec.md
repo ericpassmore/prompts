@@ -21,7 +21,7 @@ Use the `expand-task-spec` skill.
 
 ## Instructions
 1) Discover toolchain and verification commands; update `./.codex/codex-commands.md`.
-2) Scaffold `./tasks/<TASK_NAME_IN_KEBAB_CASE>/` using `./.codex/scripts/task-scaffold.sh <task-name>`.
+2) Scaffold `./tasks/<TASK_NAME_IN_KEBAB_CASE>/` using `./.codex/scripts/task-scaffold.sh <TASK_NAME_IN_KEBAB_CASE>`.
 3) Ask clarifying questions if needed.
 4) Write `./tasks/<TASK_NAME_IN_KEBAB_CASE>/spec.md` using the template from `./.codex/tasks/_templates/spec.template.md`.
 5) Write phased plans in `./tasks/<TASK_NAME_IN_KEBAB_CASE>/phase-1.md` … `./tasks/<TASK_NAME_IN_KEBAB_CASE>/phase-3.md` and `./tasks/<TASK_NAME_IN_KEBAB_CASE>/final-phase.md`.
