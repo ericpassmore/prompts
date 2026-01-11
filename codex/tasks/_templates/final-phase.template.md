@@ -1,9 +1,35 @@
 # Final Phase — Hardening, Verification, and Closeout
 
-## Documentation updates
-- [ ] README updates:
-- [ ] ADRs (if any):
-- [ ] Inline docs/comments:
+### Documentation updates
+
+* [ ] `/doc` audit and updates
+
+  * [ ] Enumerate documentation artifacts under `/doc` that are impacted by this change (API behavior, auth, error contracts, examples, migrations, ops notes).
+  * [ ] Update affected docs and ensure cross-links remain valid (README ↔ docs ↔ ADRs/runbooks).
+
+* [ ] YAML documentation contracts (`/doc/**/*.yaml`)
+
+  * [ ] Discover all YAML documentation files under `/doc` (recursive) and update any impacted by the change:
+
+    * [ ] endpoint definitions, request/response schemas, auth schemes, error models
+    * [ ] examples (happy path + common failures)
+  * [ ] If a YAML contract/spec is required for this change but no matching file exists yet:
+
+    * [ ] Create an initial YAML spec in `/doc/` using the repo’s conventions (OpenAPI/AsyncAPI/etc. as applicable)
+    * [ ] Include minimum viable metadata (`info`, `servers`/environment targets, `securitySchemes` where relevant) plus at least one representative operation and shared error schema(s)
+
+* [ ] README updates
+
+  * [ ] Add or refresh a single “Documentation” section linking to `/doc/` and any key YAML specs within it.
+  * [ ] Include local validation/viewing instructions if the repo has them (lint/validate/render command).
+
+* [ ] ADRs (if any)
+
+  * [ ] Add/update an ADR when the change introduces a durable architectural decision (contract format, versioning policy, auth strategy, error envelope standardization).
+
+* [ ] Inline docs/comments
+
+  * [ ] Update inline comments/docstrings only where they add implementation clarity without duplicating the YAML contracts.
 
 ## Testing closeout
 - [ ] Missing cases to add:

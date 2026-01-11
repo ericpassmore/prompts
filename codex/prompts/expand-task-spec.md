@@ -22,16 +22,18 @@ Use the `expand-task-spec` skill.
 ## Instructions
 
 0) **Initial setup**
-   - Check whether `/codex-commands.md` exists at the root of the local repository.
+   - Check whether `./codex-commands.md` exists at the root of the local repository.
    - If it does not exist:
-     - Copy `/Users/eric/.codex/codex-commands.md` to `/codex-commands.md`.
-     - Update `/codex-commands.md` to reflect the local repository’s toolchain, scripts, and rules.
+     - Copy `/Users/eric/.codex/codex-commands.md` to `./codex-commands.md`.
+     - Update `./codex-commands.md` to reflect the local repository’s toolchain, scripts, and rules.
 
-1) **Task scaffold (handles all directory scenarios)**
+1) **Task scaffold (authoritative: user-level script only)**
    - Create/verify the task directory and required task files by running:
-     - `./.codex/scripts/task-scaffold.sh <TASK_NAME_IN_KEBAB_CASE>`
+     - `/Users/eric/.codex/scripts/task-scaffold.sh <TASK_NAME_IN_KEBAB_CASE>`
    - The scaffold step must be non-destructive (must not overwrite existing task files).
    - The scaffold step must materialize templates by stripping `.template` from filenames (e.g., `spec.template.md` → `spec.md`).
+   - Templates must be sourced from:
+     - `/Users/eric/.codex/tasks/_templates/`
 
 2) Ask clarifying questions if required before proceeding.
 
@@ -45,6 +47,6 @@ Use the `expand-task-spec` skill.
 
 5) Execute work phase-by-phase, honoring defined gates and acceptance criteria.
 
-6) Run lint, build, and tests using the pinned commands in `/codex-commands.md`.
+6) Run lint, build, and tests using the pinned commands in `./codex-commands.md`.
 
 7) Perform a code review and surface issues, risks, and follow-up recommendations.
