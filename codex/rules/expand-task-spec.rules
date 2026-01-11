@@ -1,0 +1,130 @@
+# expand-task-spec.rules
+# Auto-allow a narrow set of commands used by the expand-task-spec skill.
+
+# -------------------------
+# Task scaffolding script
+# -------------------------
+
+prefix_rule(
+    pattern=["/Users/eric/.codex/scripts/task-scaffold.sh"],
+    decision="allow",
+    justification="Scaffold /tasks/<task-name>/ and validate required files.",
+    match=[
+        "/Users/eric/.codex/scripts/task-scaffold.sh add-feature-x",
+    ],
+)
+
+# -------------------------
+# Node / TypeScript (npm/bun)
+# -------------------------
+
+prefix_rule(
+    pattern=["bun", "run", "lint"],
+    decision="allow",
+    justification="Run repository lint script (bun).",
+    match=["bun run lint"],
+)
+
+prefix_rule(
+    pattern=["npm", "run", "lint"],
+    decision="allow",
+    justification="Run repository lint script (npm).",
+    match=["npm run lint"],
+)
+
+prefix_rule(
+    pattern=["bun", "run", "check"],
+    decision="allow",
+    justification="Run repository check script (bun).",
+    match=["bun run check"],
+)
+
+prefix_rule(
+    pattern=["npm", "run", "check"],
+    decision="allow",
+    justification="Run repository check script (npm).",
+    match=["npm run check"],
+)
+
+prefix_rule(
+    pattern=["bun", "run", "build"],
+    decision="allow",
+    justification="Run repository build script (bun).",
+    match=["bun run build"],
+)
+
+prefix_rule(
+    pattern=["npm", "run", "build"],
+    decision="allow",
+    justification="Run repository build script (npm).",
+    match=["npm run build"],
+)
+
+prefix_rule(
+    pattern=["bun", "run", "test"],
+    decision="allow",
+    justification="Run repository test script (bun).",
+    match=["bun run test"],
+)
+
+# npm test is a distinct argv shape from npm run test
+prefix_rule(
+    pattern=["npm", "test"],
+    decision="allow",
+    justification="Run repository tests via npm test.",
+    match=["npm test"],
+)
+
+prefix_rule(
+    pattern=["npm", "run", "test"],
+    decision="allow",
+    justification="Run repository test script (npm).",
+    match=["npm run test"],
+)
+
+# Optional: ONLY if you intend to run vitest directly (outside npm/bun scripts)
+prefix_rule(
+    pattern=["vitest", "run"],
+    decision="allow",
+    justification="Run vitest directly (non-interactive).",
+    match=["vitest run"],
+)
+
+# -------------------------
+# Python / uv
+# -------------------------
+
+prefix_rule(
+    pattern=["uv", "sync"],
+    decision="allow",
+    justification="Sync Python dependencies via uv.",
+    match=["uv sync"],
+)
+
+prefix_rule(
+    pattern=["uv", "run", "ruff", "check", "."],
+    decision="allow",
+    justification="Run ruff lint via uv.",
+    match=["uv run ruff check ."],
+)
+
+prefix_rule(
+    pattern=["uv", "run", "ruff", "format", "."],
+    decision="allow",
+    justification="Run ruff formatter via uv.",
+    match=["uv run ruff format ."],
+)
+
+prefix_rule(
+    pattern=["uv", "run", "black", "."],
+    decision="allow",
+    justification="Run black formatter via uv.",
+    match=["uv run black ."],
+)
+
+prefix_rule(
+    pattern=["uv", "run", "pytest", "-q"],
+    decision="allow",
+    justification="Run pytest quietly via uv.",
+    match=["uv run pytest -q"],
+)
