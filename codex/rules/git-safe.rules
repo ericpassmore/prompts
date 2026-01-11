@@ -123,7 +123,7 @@ prefix_rule(
     decision = "allow",
     justification = "Trusted helper script to detect merge conflicts safely.",
     match = [
-        "/Users/<YOUR_USER>/codex/scripts/git-check-conflicts.sh",
+        "/Users/eric/codex/scripts/git-check-conflicts.sh",
     ],
 )
 
