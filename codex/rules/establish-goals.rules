@@ -1,0 +1,38 @@
+# establish-goals.rules
+# Allow only the establish-goals helper scripts.
+# These scripts encapsulate all shell logic and enforce hard-stop behavior.
+
+prefix_rule(
+    pattern=["./.codex/scripts/goals-scaffold.sh"],
+    decision="allow",
+    justification="Scaffold establish-goals vN files for a task.",
+    match=["./.codex/scripts/goals-scaffold.sh"],
+)
+
+prefix_rule(
+    pattern=["./.codex/scripts/goals-next-iteration.sh"],
+    decision="allow",
+    justification="Create the next establish-goals iteration (vN+1).",
+    match=["./.codex/scripts/goals-next-iteration.sh"],
+)
+
+prefix_rule(
+    pattern=["./.codex/scripts/goals-extract.sh"],
+    decision="allow",
+    justification="Extract normalized goals from establish-goals artifact.",
+    match=["./.codex/scripts/goals-extract.sh"],
+)
+
+prefix_rule(
+    pattern=["./.codex/scripts/goals-validate.sh"],
+    decision="allow",
+    justification="Validate goals invariants (count, state, success criteria).",
+    match=["./.codex/scripts/goals-validate.sh"],
+)
+
+prefix_rule(
+    pattern=["./.codex/scripts/goals-lock-to-spec.sh"],
+    decision="allow",
+    justification="Copy locked goals into canonical task spec.md.",
+    match=["./.codex/scripts/goals-lock-to-spec.sh"],
+)
