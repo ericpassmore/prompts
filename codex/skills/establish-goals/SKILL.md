@@ -1,3 +1,8 @@
+---
+name: establish-goals
+description: Clarify an ambiguous or incomplete request and produce 0–5 explicit, verifiable goals before any planning or implementation.
+---
+
 # SKILL: establish-goals
 
 ## Purpose
