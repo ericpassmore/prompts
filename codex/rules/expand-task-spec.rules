@@ -64,6 +64,118 @@ prefix_rule(
 )
 
 # -------------------------
+# Prepare-phased-impl scripts
+# -------------------------
+
+prefix_rule(
+    pattern=["/Users/eric/.codex/scripts/prepare-phased-impl-archive.sh"],
+    decision="allow",
+    justification="Archive previous Stage 3 planning artifacts using short-hash archive GUIDs before restart.",
+    match=[
+        "/Users/eric/.codex/scripts/prepare-phased-impl-archive.sh add-feature-x",
+    ],
+)
+
+prefix_rule(
+    pattern=["./.codex/scripts/prepare-phased-impl-archive.sh"],
+    decision="allow",
+    justification="Archive previous Stage 3 planning artifacts using short-hash archive GUIDs before restart (canonical repo path).",
+    match=[
+        "./.codex/scripts/prepare-phased-impl-archive.sh add-feature-x",
+    ],
+)
+
+prefix_rule(
+    pattern=["./codex/scripts/prepare-phased-impl-archive.sh"],
+    decision="allow",
+    justification="Archive previous Stage 3 planning artifacts using short-hash archive GUIDs before restart (repo-local fallback path).",
+    match=[
+        "./codex/scripts/prepare-phased-impl-archive.sh add-feature-x",
+    ],
+)
+
+prefix_rule(
+    pattern=["/Users/eric/.codex/scripts/prepare-phased-impl-scaffold.sh"],
+    decision="allow",
+    justification="Create/normalize dynamic phase planning files for Stage 3.",
+    match=[
+        "/Users/eric/.codex/scripts/prepare-phased-impl-scaffold.sh add-feature-x medium",
+    ],
+)
+
+prefix_rule(
+    pattern=["./.codex/scripts/prepare-phased-impl-scaffold.sh"],
+    decision="allow",
+    justification="Create/normalize dynamic phase planning files for Stage 3 (canonical repo path).",
+    match=[
+        "./.codex/scripts/prepare-phased-impl-scaffold.sh add-feature-x medium",
+    ],
+)
+
+prefix_rule(
+    pattern=["./codex/scripts/prepare-phased-impl-scaffold.sh"],
+    decision="allow",
+    justification="Create/normalize dynamic phase planning files for Stage 3 (repo-local fallback path).",
+    match=[
+        "./codex/scripts/prepare-phased-impl-scaffold.sh add-feature-x medium",
+    ],
+)
+
+prefix_rule(
+    pattern=["/Users/eric/.codex/scripts/prepare-phased-impl-scope-lock.sh"],
+    decision="allow",
+    justification="Lock IN SCOPE / OUT OF SCOPE snapshot to enforce no-new-scope rule in Stage 3.",
+    match=[
+        "/Users/eric/.codex/scripts/prepare-phased-impl-scope-lock.sh add-feature-x",
+    ],
+)
+
+prefix_rule(
+    pattern=["./.codex/scripts/prepare-phased-impl-scope-lock.sh"],
+    decision="allow",
+    justification="Lock IN SCOPE / OUT OF SCOPE snapshot to enforce no-new-scope rule in Stage 3 (canonical repo path).",
+    match=[
+        "./.codex/scripts/prepare-phased-impl-scope-lock.sh add-feature-x",
+    ],
+)
+
+prefix_rule(
+    pattern=["./codex/scripts/prepare-phased-impl-scope-lock.sh"],
+    decision="allow",
+    justification="Lock IN SCOPE / OUT OF SCOPE snapshot to enforce no-new-scope rule in Stage 3 (repo-local fallback path).",
+    match=[
+        "./codex/scripts/prepare-phased-impl-scope-lock.sh add-feature-x",
+    ],
+)
+
+prefix_rule(
+    pattern=["/Users/eric/.codex/scripts/prepare-phased-impl-validate.sh"],
+    decision="allow",
+    justification="Validate Stage 3 gates and emit READY FOR IMPLEMENTATION or BLOCKED.",
+    match=[
+        "/Users/eric/.codex/scripts/prepare-phased-impl-validate.sh add-feature-x",
+    ],
+)
+
+prefix_rule(
+    pattern=["./.codex/scripts/prepare-phased-impl-validate.sh"],
+    decision="allow",
+    justification="Validate Stage 3 gates and emit READY FOR IMPLEMENTATION or BLOCKED (canonical repo path).",
+    match=[
+        "./.codex/scripts/prepare-phased-impl-validate.sh add-feature-x",
+    ],
+)
+
+prefix_rule(
+    pattern=["./codex/scripts/prepare-phased-impl-validate.sh"],
+    decision="allow",
+    justification="Validate Stage 3 gates and emit READY FOR IMPLEMENTATION or BLOCKED (repo-local fallback path).",
+    match=[
+        "./codex/scripts/prepare-phased-impl-validate.sh add-feature-x",
+    ],
+)
+
+# -------------------------
 # Node / TypeScript (npm/bun)
 # -------------------------
 
