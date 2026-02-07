@@ -7,8 +7,8 @@ Do not reinterpret or expand locked goals.
 
 ### 2. Respect Stage Gates
 
-`prepare-takeoff` is the gate before planning.
-Proceed only on `READY FOR PLANNING`; stop on `BLOCKED`.
+Treat the current lifecycle gate as authoritative before proceeding.
+Proceed only when the current gate explicitly permits advancement; stop when it does not.
 
 ### 3. Keep Changes Minimal
 

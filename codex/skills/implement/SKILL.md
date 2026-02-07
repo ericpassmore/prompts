@@ -87,15 +87,23 @@ Accepted `EVALUATED:` decisions include:
 For each active phase:
 
 1. Implement only the approved `Work items`.
-2. Stay within locked scope (`## IN SCOPE` / `## OUT OF SCOPE`).
-3. Run phase-specific verification steps from the phase file.
-4. Update phase gate evidence in the phase file.
+2. Apply simplicity bias and surgical-change discipline.
+3. Stay within locked scope (`## IN SCOPE` / `## OUT OF SCOPE`).
+4. Run phase-specific verification steps from the phase file.
+5. Update phase gate evidence in the phase file.
 
 If a phase gate fails:
 
 - stop progression
 - record blockers and evidence
 - emit `BLOCKED`
+
+If drift is detected in goals, scope, tests, or touched surfaces:
+
+- stop Stage 4 immediately
+- document drift evidence and rationale
+- route to `revalidate` before any further implementation
+- emit `BLOCKED` for Stage 4
 
 ### Step 2 — Maintain final-phase completion ledger
 
@@ -182,6 +190,7 @@ All gates must pass:
 ## Constraints
 
 - No goal or scope expansion.
+- Revalidate on drift before continuing.
 - No silent failure masking.
 - No verification falsification.
 - No code review stage in Stage 4.
