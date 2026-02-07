@@ -8,7 +8,7 @@ if [[ -z "$TASK_NAME" ]]; then
   exit 1
 fi
 
-GOALS_DIR="./.codex/goals/${TASK_NAME}"
+GOALS_DIR="./goals/${TASK_NAME}"
 
 if [[ ! -d "$GOALS_DIR" ]]; then
   echo "ERROR: No goals directory for task '${TASK_NAME}'"
@@ -36,7 +36,9 @@ NEW_GOALS="${GOALS_DIR}/goals.${NEXT_ITERATION}.md"
 cp "$PREV_ESTABLISH" "$NEW_ESTABLISH"
 
 sed -i.bak \
-  -e "s/^Iteration: v[0-9]\+/Iteration: ${NEXT_ITERATION}/" \
+  -e "s/^- Iteration: v[0-9][0-9]*/- Iteration: ${NEXT_ITERATION}/" \
+  -e "s/^Iteration: v[0-9][0-9]*/Iteration: ${NEXT_ITERATION}/" \
+  -e "s/^- State: .*/- State: draft/" \
   -e "s/^State: .*/State: draft/" \
   "$NEW_ESTABLISH"
 

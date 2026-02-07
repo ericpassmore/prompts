@@ -9,7 +9,7 @@ if [[ -z "$TASK_NAME" || -z "$ITERATION" ]]; then
   exit 1
 fi
 
-GOALS_DIR="./.codex/goals/${TASK_NAME}"
+GOALS_DIR="./goals/${TASK_NAME}"
 ESTABLISH_FILE="${GOALS_DIR}/establish-goals.${ITERATION}.md"
 GOALS_FILE="${GOALS_DIR}/goals.${ITERATION}.md"
 
@@ -18,7 +18,7 @@ if [[ ! -f "$ESTABLISH_FILE" ]]; then
   exit 1
 fi
 
-STATE=$(sed -n 's/^State: //p' "$ESTABLISH_FILE" | head -n 1)
+STATE=$(sed -n 's/^- State: //p; s/^State: //p' "$ESTABLISH_FILE" | head -n 1)
 
 {
   echo "# Goals Extract"

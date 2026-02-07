@@ -9,7 +9,7 @@ if [[ -z "$TASK_NAME" ]]; then
   exit 1
 fi
 
-GOALS_DIR="./.codex/goals/${TASK_NAME}"
+GOALS_DIR="./goals/${TASK_NAME}"
 ESTABLISH_TEMPLATE="./.codex/goals/establish-goals.template.md"
 
 if [[ ! -f "$ESTABLISH_TEMPLATE" ]]; then

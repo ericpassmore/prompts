@@ -65,7 +65,7 @@ The following templates MUST be used as the basis for all artifacts:
 
 All goal artifacts are stored under:
 
-`./.codex/goals/<TASK_NAME_IN_KEBAB_CASE>/`
+`./goals/<TASK_NAME_IN_KEBAB_CASE>/`
 
 For each iteration `vN`, the following files MUST exist:
 
