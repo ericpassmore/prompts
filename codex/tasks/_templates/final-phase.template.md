@@ -1,5 +1,8 @@
 # Final Phase — Hardening, Verification, and Closeout
 
+> Stage 4 completion source of truth:
+> mark items as complete with `[x]`, or leave unchecked with `EVALUATED: <decision + reason>`.
+
 ### Documentation updates
 
 * [ ] `/doc` audit and updates
@@ -37,10 +40,11 @@
 
 ## Full verification
 > Use the pinned commands in spec + `./codex-commands.md`.
+> Stage 4 requires explicit pass notation: `PASS`.
 
-- [ ] Lint: `...`
-- [ ] Build: `...`
-- [ ] Tests: `...`
+- [ ] Lint: `...` PASS
+- [ ] Build: `...` PASS
+- [ ] Tests: `...` PASS
 
 ## Manual QA (if applicable)
 - [ ] Steps:
@@ -62,6 +66,7 @@
 
 ## Outstanding issues (if any)
 For each issue include severity + repro + suggested fix.
+- None.
 - Severity:
 - Repro:
 - Suggested fix:

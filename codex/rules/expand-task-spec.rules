@@ -176,6 +176,37 @@ prefix_rule(
 )
 
 # -------------------------
+# Implement validation script
+# -------------------------
+
+prefix_rule(
+    pattern=["/Users/eric/.codex/scripts/implement-validate.sh"],
+    decision="allow",
+    justification="Validate Stage 4 gates and emit READY FOR REVERIFICATION or BLOCKED.",
+    match=[
+        "/Users/eric/.codex/scripts/implement-validate.sh add-feature-x",
+    ],
+)
+
+prefix_rule(
+    pattern=["./.codex/scripts/implement-validate.sh"],
+    decision="allow",
+    justification="Validate Stage 4 gates and emit READY FOR REVERIFICATION or BLOCKED (canonical repo path).",
+    match=[
+        "./.codex/scripts/implement-validate.sh add-feature-x",
+    ],
+)
+
+prefix_rule(
+    pattern=["./codex/scripts/implement-validate.sh"],
+    decision="allow",
+    justification="Validate Stage 4 gates and emit READY FOR REVERIFICATION or BLOCKED (repo-local fallback path).",
+    match=[
+        "./codex/scripts/implement-validate.sh add-feature-x",
+    ],
+)
+
+# -------------------------
 # Node / TypeScript (npm/bun)
 # -------------------------
 
