@@ -123,6 +123,8 @@ CODEX_ROOT=<CODEX_ROOT> <CODEX_SCRIPTS_DIR>/prepare-takeoff-worktree.sh <TASK_NA
 $HOME/.codex/scripts/prepare-takeoff-worktree.sh <TASK_NAME_IN_KEBAB_CASE> [branch]
 ```
 
+- Non-interactive stage runs are the default behavior.
+- For manual shell handoff only, append `--interactive-shell`.
 - Branch behavior:
   - If selected branch is `main` or `master`, create new branch `codex/<TASK_NAME_IN_KEBAB_CASE>`.
   - Otherwise, use the selected existing local branch as-is.

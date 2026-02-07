@@ -1,14 +1,41 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TASK_NAME="${1:-}"
-BRANCH_NAME="${2:-}"
+INTERACTIVE_SHELL="${PREPARE_TAKEOFF_INTERACTIVE_SHELL:-0}"
+POSITIONAL_ARGS=()
 
 usage() {
-  echo "Usage (canonical): ./.codex/scripts/prepare-takeoff-worktree.sh <task-name> [branch]"
-  echo "Usage (fallback): ${HOME}/.codex/scripts/prepare-takeoff-worktree.sh <task-name> [branch]"
+  echo "Usage (canonical): ./.codex/scripts/prepare-takeoff-worktree.sh <task-name> [branch] [--interactive-shell]"
+  echo "Usage (fallback): ${HOME}/.codex/scripts/prepare-takeoff-worktree.sh <task-name> [branch] [--interactive-shell]"
   echo "Example: ./.codex/scripts/prepare-takeoff-worktree.sh add-performer-search main"
 }
+
+for arg in "$@"; do
+  case "${arg}" in
+    --interactive-shell)
+      INTERACTIVE_SHELL=1
+      ;;
+    --no-interactive-shell)
+      INTERACTIVE_SHELL=0
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      POSITIONAL_ARGS+=("${arg}")
+      ;;
+  esac
+done
+
+TASK_NAME="${POSITIONAL_ARGS[0]:-}"
+BRANCH_NAME="${POSITIONAL_ARGS[1]:-}"
+
+if [[ "${#POSITIONAL_ARGS[@]}" -gt 2 ]]; then
+  echo "Abort: too many positional arguments."
+  usage
+  exit 2
+fi
 
 if [[ -z "${TASK_NAME}" ]]; then
   usage
@@ -101,9 +128,12 @@ echo "Worktree created: ${WORKTREE_DIR}"
 echo "Branch in worktree: ${TARGET_BRANCH}"
 echo "Current directory: $(pwd)"
 
-if [[ -z "${SHELL:-}" ]]; then
-  echo "Abort: SHELL is not set."
-  exit 1
+if [[ "${INTERACTIVE_SHELL}" == "1" ]]; then
+  if [[ -z "${SHELL:-}" ]]; then
+    echo "Abort: SHELL is not set."
+    exit 1
+  fi
+  exec "${SHELL}"
 fi
 
-exec "${SHELL}"
+echo "Non-interactive mode: worktree setup complete."

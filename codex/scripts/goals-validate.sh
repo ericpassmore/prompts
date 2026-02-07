@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TASK_NAME="$1"
-ITERATION="$2"
+TASK_NAME="${1:-}"
+ITERATION="${2:-}"
 
 if [[ -z "$TASK_NAME" || -z "$ITERATION" ]]; then
   echo "ERROR: TASK_NAME_IN_KEBAB_CASE and iteration (vN) are required"
+  exit 1
+fi
+
+if [[ ! "${TASK_NAME}" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+  echo "ERROR: TASK_NAME_IN_KEBAB_CASE must use lowercase letters, digits, and hyphens only"
+  echo "Example: add-performer-search"
   exit 1
 fi
 
