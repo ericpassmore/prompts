@@ -128,6 +128,64 @@ prefix_rule(
     match = ["git rm --cached path/to/file"],
 )
 
+# -----------------------
+# Worktree lifecycle
+# -----------------------
+
+prefix_rule(
+    pattern = ["git", "worktree", "list", "--porcelain"],
+    decision = "allow",
+    justification = "List worktrees for deterministic workspace release.",
+    match = ["git worktree list --porcelain"],
+)
+
+prefix_rule(
+    pattern = ["git", "worktree", "remove"],
+    decision = "allow",
+    justification = "Release non-primary task worktrees during landing.",
+    match = ["git worktree remove /path/to/worktree"],
+)
+
+prefix_rule(
+    pattern = ["git", "worktree", "prune"],
+    decision = "allow",
+    justification = "Prune stale worktree metadata after release.",
+    match = ["git worktree prune"],
+)
+
+# -----------------------
+# GitHub PR handoff
+# -----------------------
+
+prefix_rule(
+    pattern = ["gh", "pr", "create"],
+    decision = "allow",
+    justification = "Create reviewer-facing pull requests during land-the-plan.",
+    match = [
+        "gh pr create --base main --head feature-branch --title T --body-file /tmp/pr-body.md",
+    ],
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", "edit"],
+    decision = "allow",
+    justification = "Update an existing pull request instead of creating duplicates.",
+    match = [
+        "gh pr edit 123 --title T --body-file /tmp/pr-body.md",
+        "gh pr edit --title T --body-file /tmp/pr-body.md",
+    ],
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", "view"],
+    decision = "allow",
+    justification = "Read existing pull request metadata for handoff details.",
+    match = [
+        "gh pr view",
+        "gh pr view --json url",
+    ],
+)
+
 # ----------------------
 # Auto-allow trusted helper scripts (exact path prefix)
 # ----------------------

@@ -2,3 +2,207 @@
 name: land-the-plan
 description: Finalize completed work by validating results, committing changes, and preparing a pull request for review.
 ---
+
+# SKILL: land-the-plan
+
+## Intent
+
+Finalize verified task work into a reviewer-ready pull request, then cleanly release execution resources and relinquish the active git workspace.
+
+## Preconditions (hard)
+
+- `revalidate` has emitted `READY TO RESUME`.
+- `./tasks/<TASK_NAME_IN_KEBAB_CASE>/` exists.
+- Current branch is non-empty and is not `main` or `master`.
+- Repository has no unmerged/conflicted paths.
+- A remote push target exists for the active branch (required by `git-commit` and PR creation).
+
+If any hard precondition fails, emit `BLOCKED` and stop.
+
+## Rule dependencies
+
+Stage 6 depends on:
+
+- `codex/rules/expand-task-spec.rules`
+- `codex/rules/git-safe.rules`
+
+## Required upstream skill (mandatory)
+
+`land-the-plan` MUST run the `git-commit` skill before creating or updating a PR.
+
+## Command resolution
+
+Preferred (from persisted bootstrap reference in `./codex-commands.md`):
+
+```bash
+CODEX_ROOT=<CODEX_ROOT> <CODEX_SCRIPTS_DIR>/<script>.sh ...
+```
+
+Fallback order:
+
+1. `./.codex/scripts/<script>.sh ...`
+2. `./codex/scripts/<script>.sh ...`
+3. `$HOME/.codex/scripts/<script>.sh ...`
+
+## Base branch resolution
+
+Resolve PR base branch in this order:
+
+1. `./codex-commands.md` (repo root)
+2. `./codex/codex-commands.md` (repo-local fallback)
+3. fallback default: `main`
+
+Accept only valid branch tokens (`[A-Za-z0-9._/-]+`).
+Ignore placeholder values (for example `<main>`).
+If parsing fails, use `main`.
+
+## PR content contract (mandatory)
+
+Use Codex to generate both PR title and PR body.
+
+PR body MUST include these sections:
+
+- `Goals`
+- `Non-goals`
+- `ADR`
+- `Exceptions`
+- `Deferred work`
+
+`Deferred work` MUST be populated from real `//TODO` markers in the codebase (or explicitly state none).
+
+## Stage procedure
+
+### Step 0 — Confirm task identity and branch
+
+- Confirm `<TASK_NAME_IN_KEBAB_CASE>`.
+- Confirm active branch via `git branch --show-current`.
+- Abort if branch is empty, `main`, or `master`.
+
+### Step 1 — Enforce `READY TO RESUME` hard gate
+
+Run:
+
+```bash
+<CODEX_SCRIPTS_DIR>/revalidate-validate.sh <TASK_NAME_IN_KEBAB_CASE> [base-branch]
+```
+
+Proceed only if output is exactly:
+
+`READY TO RESUME`
+
+Otherwise emit `BLOCKED`.
+
+### Step 2 — Execute `git-commit` skill (mandatory)
+
+Run the `git-commit` skill workflow completely:
+
+- branch/update safety checks
+- secure file tracking policy
+- staged diff review (text only)
+- commit message generation
+- commit creation
+- push to `origin/<current-branch>`
+
+If `git-commit` fails, emit `BLOCKED`.
+
+### Step 3 — Resolve base branch for PR
+
+Resolve base branch using the **Base branch resolution** rules in this skill.
+
+If a valid configured value is missing, fallback to `main`.
+
+### Step 4 — Build PR input context
+
+Collect required context from task artifacts and code:
+
+- Goals and Non-goals: `./tasks/<TASK_NAME_IN_KEBAB_CASE>/spec.md`
+- ADR decisions:
+  - referenced or newly added ADR documents
+  - if no ADR applies, state `None`
+- Exceptions:
+  - blockers/deviations recorded in task artifacts (for example `final-phase.md`, `revalidate.md`, review notes)
+- Deferred work:
+  - discover real `//TODO` markers in changed files
+  - include file references and short rationale where present
+
+### Step 5 — Generate PR title and body with Codex
+
+Generate:
+
+- PR title: concise, imperative, specific to delivered behavior
+- PR body: include all required sections from the **PR content contract**
+
+Do not omit sections; use explicit `None` when a section has no entries.
+
+### Step 6 — Create or update the PR
+
+Create PR against resolved base branch:
+
+```bash
+gh pr create --base <BASE_BRANCH> --head <CURRENT_BRANCH> --title "<PR_TITLE>" --body-file <PR_BODY_FILE>
+```
+
+If a PR for the head branch already exists, update it instead of creating a duplicate.
+
+### Step 7 — Release held resources and relinquish workspace
+
+Release all temporary stage resources:
+
+- remove transient files created for PR composition
+- release task-specific worktree resources when applicable
+- prune stale worktree metadata if any worktrees were removed
+
+After release:
+
+- stop modifying task/code files for this stage
+- provide handoff-ready PR details only
+
+### Step 8 — Emit final verdict
+
+Emit exactly one verdict:
+
+- `LANDED`
+- `BLOCKED`
+
+`LANDED` is allowed only when:
+
+- `READY TO RESUME` precondition passed
+- `git-commit` completed successfully
+- PR exists and is reviewer-ready
+- resources were released and workspace relinquished
+
+## Stage gates
+
+All gates must pass:
+
+- Gate 1: `revalidate-validate.sh` returns `READY TO RESUME`.
+- Gate 2: `git-commit` skill completed (including push).
+- Gate 3: base branch resolved from `codex-commands.md` or fallback `main`.
+- Gate 4: PR title/body generated by Codex.
+- Gate 5: PR body contains `Goals`, `Non-goals`, `ADR`, `Exceptions`, `Deferred work`.
+- Gate 6: deferred work section reflects actual `//TODO` markers (or explicit none).
+- Gate 7: PR created/updated successfully.
+- Gate 8: held resources released and workspace relinquished.
+- Gate 9: terminal verdict emitted (`LANDED` or `BLOCKED`).
+
+## Constraints
+
+- Do not run `land-the-plan` unless `READY TO RESUME` is satisfied.
+- Do not bypass the `git-commit` skill.
+- Do not invent TODO items; only include observed `//TODO`.
+- Do not skip required PR body sections.
+- Do not keep task worktree resources held after successful landing.
+
+## Required outputs
+
+- terminal stage verdict: `LANDED` or `BLOCKED`
+- resolved base branch used for the PR
+- PR URL
+- generated PR title
+- generated PR body containing:
+  - goals
+  - non-goals
+  - ADR
+  - exceptions
+  - deferred work (`//TODO`)
+- explicit release summary for held resources and workspace relinquish actions
