@@ -18,28 +18,34 @@ Prepare a deterministic execution environment after goals are locked and before 
 
 ### 1. Establish Codex Command Root and Commands Manifest
 
-- Before any other stage action, detect which codex directory is available:
-  - Prefer repository-local `./.codex/` if required files exist.
-  - Otherwise use repository-local `./codex/` if required files exist.
-  - Otherwise fallback to `$HOME/.codex/`.
-  - If neither is usable, halt as `BLOCKED`.
-- Required files for availability check:
-  - `<CODEX_ROOT>/scripts/task-scaffold.sh`
-  - `<CODEX_ROOT>/scripts/prepare-takeoff-worktree.sh`
-  - `<CODEX_ROOT>/codex-commands.md`
-- Establish and persist:
-  - `CODEX_ROOT` (`./.codex`, `./codex`, or `$HOME/.codex`)
-  - `CODEX_SCRIPTS_DIR` (`<CODEX_ROOT>/scripts`)
-- Check for `./codex-commands.md`.
-  - If present, update it with the selected `CODEX_ROOT` and `CODEX_SCRIPTS_DIR` reference.
-  - If missing, copy from `./.codex/codex-commands.md`.
-  - If `./.codex/codex-commands.md` is unavailable, copy from `./codex/codex-commands.md`.
-  - If `./codex/codex-commands.md` is unavailable, copy from `$HOME/.codex/codex-commands.md`.
-  - If copy source is unavailable, halt as `BLOCKED`.
-- `./codex-commands.md` must contain a durable section (or equivalent key-value entry) recording:
-  - selected codex root path
-  - selected scripts directory path
-  - canonical and fallback paths for scripts
+- Run the bootstrap script; do not perform this step manually.
+- Command resolution order:
+
+1. Canonical command:
+
+```bash
+./.codex/scripts/prepare-takeoff-bootstrap.sh
+```
+
+2. Repository-local fallback:
+
+```bash
+./codex/scripts/prepare-takeoff-bootstrap.sh
+```
+
+3. Home fallback:
+
+```bash
+$HOME/.codex/scripts/prepare-takeoff-bootstrap.sh
+```
+
+- Script responsibilities (authoritative):
+  - resolve `CODEX_ROOT` using `./.codex`, `./codex`, then `$HOME/.codex`
+  - verify required files under selected root
+  - bootstrap `./codex-commands.md` if missing
+  - persist `CODEX_ROOT` and `CODEX_SCRIPTS_DIR` in `./codex-commands.md`
+  - persist canonical and fallback script paths in `./codex-commands.md`
+  - fail with explicit `BLOCKED` reason if bootstrap cannot be completed
 
 All subsequent script commands in this skill MUST be resolved from the stored `CODEX_SCRIPTS_DIR` reference in `./codex-commands.md`.
 

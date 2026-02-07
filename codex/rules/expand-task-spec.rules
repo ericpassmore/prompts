@@ -15,6 +15,37 @@ prefix_rule(
 )
 
 # -------------------------
+# Prepare-takeoff bootstrap script
+# -------------------------
+
+prefix_rule(
+    pattern=["/Users/eric/.codex/scripts/prepare-takeoff-bootstrap.sh"],
+    decision="allow",
+    justification="Bootstrap codex root selection and codex-commands manifest deterministically.",
+    match=[
+        "/Users/eric/.codex/scripts/prepare-takeoff-bootstrap.sh",
+    ],
+)
+
+prefix_rule(
+    pattern=["./.codex/scripts/prepare-takeoff-bootstrap.sh"],
+    decision="allow",
+    justification="Bootstrap codex root selection and codex-commands manifest deterministically (canonical repo path).",
+    match=[
+        "./.codex/scripts/prepare-takeoff-bootstrap.sh",
+    ],
+)
+
+prefix_rule(
+    pattern=["./codex/scripts/prepare-takeoff-bootstrap.sh"],
+    decision="allow",
+    justification="Bootstrap codex root selection and codex-commands manifest deterministically (repo-local fallback path).",
+    match=[
+        "./codex/scripts/prepare-takeoff-bootstrap.sh",
+    ],
+)
+
+# -------------------------
 # Node / TypeScript (npm/bun)
 # -------------------------
 
