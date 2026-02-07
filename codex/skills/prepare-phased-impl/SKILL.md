@@ -137,7 +137,19 @@ If scope changes are needed:
 - emit `BLOCKED`
 - route to `revalidate`
 
-### Step 6 — Emit readiness verdict
+### Step 6 — Enforce drift hard-gate policy
+
+Continuously enforce the cross-stage drift policy from `codex/AGENTS.md`:
+
+- locked contract integrity
+- stage/surface enforcement
+- verification stability
+- progress budget (`N=45m`, `M=5`, `K=2 no-evidence cycles`)
+- completion declaration integrity
+
+If any drift signal is detected, stop Stage 3, document evidence, emit `BLOCKED`, and route to `revalidate`.
+
+### Step 7 — Emit readiness verdict
 
 Run:
 
@@ -161,7 +173,8 @@ All gates must pass:
 - Gate 3: dynamic phase plan scaffolded based on complexity.
 - Gate 4: required planning sections exist in all active phase files.
 - Gate 5: no scope drift relative to lock snapshot.
-- Gate 6: verdict emitted by validator.
+- Gate 6: drift hard-gate policy respected or stage blocked with evidence.
+- Gate 7: verdict emitted by validator.
 
 ## Exit behavior
 

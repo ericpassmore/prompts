@@ -28,4 +28,5 @@ Tests are mandatory when behavior is changed.
 
 ### 6. Revalidate on Drift
 
-If scope, goals, tests, or touched surfaces drift, enter `revalidate` before continuing.
+If goals, scope, tests, touched surfaces, verification plans, or locked completion criteria drift, enter `revalidate` before continuing.
+Treat drift detection as a hard gate, including loop-prevention limits (`N=45m`, `M=5 cycles`, `K=2 no-evidence cycles`).

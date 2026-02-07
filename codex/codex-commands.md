@@ -31,6 +31,10 @@ This file pins the canonical verification commands for this repository so they d
 - Test:
   - Command: <uv run pytest -q | not-configured>
 
+## Code Review
+
+- Base branch: <main>
+
 ## Notes
 
 - Update this manifest only when the repository’s canonical commands change.

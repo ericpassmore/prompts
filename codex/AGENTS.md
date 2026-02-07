@@ -96,9 +96,58 @@ For all downstream stages:
 
 ---
 
-## 8. Revalidate Is Mandatory on Drift and Restarts from Stage 3
+## 8. Drift Detection and Revalidation Hard Gate
 
-Enter `revalidate` when goals, scope, tests, or touched surfaces drift from the approved contract.
+To prevent goal redefinition, unbounded iteration, or stalled execution, all post-lock stages MUST continuously check for drift signals.
+
+### 8.1 Locked Contract Integrity
+
+Once goals and gate contracts are locked, the following are immutable unless an explicit unlock/relock process is executed:
+
+- goals
+- constraints
+- success criteria
+- non-goals
+- active stage gate contract
+
+Any unauthorized modification, reinterpretation, or implicit relaxation CONSTITUTES drift and REQUIRES entering `revalidate`.
+
+### 8.2 Stage and Surface Enforcement
+
+Stages MUST operate only on actions and file surfaces authorized by the active stage contract and approved plan.
+
+Touching disallowed files, expanding affected surfaces, or running unauthorized stage actions CONSTITUTES drift and REQUIRES entering `revalidate`.
+
+### 8.3 Verification Stability
+
+Definition of Done and verification plans are immutable once locked for active execution.
+
+Removing, weakening, bypassing, or silently redefining verification, or introducing new behavior without corresponding verification, CONSTITUTES drift and REQUIRES entering `revalidate`.
+
+### 8.4 Progress Budget (Loop Prevention)
+
+Each stage has a strict budget:
+
+- `N = 45 minutes` maximum wall-clock time in a stage
+- `M = 5 cycles` maximum plan -> attempt -> observe -> adjust loops in a stage
+- `K = 2 cycles` maximum consecutive loops without new evidence
+
+New evidence means at least one of:
+
+- new or changed test output
+- narrowed or falsified hypothesis
+- reduced failure surface
+- concrete reproducible observation not previously recorded
+
+Exceeding `N`, `M`, or `K` CONSTITUTES drift and REQUIRES entering `revalidate`.
+
+### 8.5 Completion Declaration Integrity
+
+A stage MAY be declared complete only when all locked success criteria and verification steps are satisfied, or blockers are explicitly documented.
+
+Declaring completion without satisfying this condition CONSTITUTES drift and REQUIRES entering `revalidate`.
+
+### 8.6 Revalidate Execution Requirements
 
 All revalidation decisions must be documented.
 
@@ -111,6 +160,7 @@ All revalidation decisions must be documented.
   - `prepare-phased-impl-<SHORT_GIT_HASH>-<N>`
 - Archival must be performed using:
   - `prepare-phased-impl-archive.sh`
+- If no prior Stage 3 artifacts exist, archival is a no-op and must be recorded as such.
 
 ---
 

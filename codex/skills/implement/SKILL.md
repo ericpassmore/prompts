@@ -98,12 +98,29 @@ If a phase gate fails:
 - record blockers and evidence
 - emit `BLOCKED`
 
-If drift is detected in goals, scope, tests, or touched surfaces:
+If drift is detected in goals, constraints, success criteria, non-goals, scope, tests, touched surfaces, verification plan, or completion criteria:
 
 - stop Stage 4 immediately
 - document drift evidence and rationale
 - route to `revalidate` before any further implementation
 - emit `BLOCKED` for Stage 4
+
+### Step 1A — Enforce progress budget hard gate (loop prevention)
+
+Stage 4 budgets are strict:
+
+- `N = 45 minutes` maximum wall-clock in Stage 4
+- `M = 5 cycles` maximum plan -> attempt -> observe -> adjust loops
+- `K = 2 cycles` maximum consecutive loops without new evidence
+
+New evidence means at least one of:
+
+- new or changed test output
+- narrowed or falsified hypothesis
+- reduced failure surface
+- concrete reproducible observation not previously recorded
+
+Exceeding `N`, `M`, or `K` is drift. Stop Stage 4, document evidence, route to `revalidate`, and emit `BLOCKED`.
 
 ### Step 2 — Maintain final-phase completion ledger
 
@@ -180,7 +197,8 @@ All gates must pass:
 - Gate 3: `final-phase.md` checklist items are fully evaluated (`[x]` or `EVALUATED:`).
 - Gate 4: lint/build/test are present and marked `PASS`.
 - Gate 5: outstanding issues are fully documented.
-- Gate 6: validator emits terminal verdict.
+- Gate 6: drift hard-gate policy (including `N/M/K` budget) respected or stage blocked with evidence.
+- Gate 7: validator emits terminal verdict.
 
 ## Exit behavior
 
@@ -191,6 +209,8 @@ All gates must pass:
 
 - No goal or scope expansion.
 - Revalidate on drift before continuing.
+- No stage/surface expansion outside approved phase work.
+- No verification weakening or bypass.
 - No silent failure masking.
 - No verification falsification.
 - No code review stage in Stage 4.

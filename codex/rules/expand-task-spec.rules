@@ -207,6 +207,74 @@ prefix_rule(
 )
 
 # -------------------------
+# Revalidate code review script
+# -------------------------
+
+prefix_rule(
+    pattern=["/Users/eric/.codex/scripts/revalidate-code-review.sh"],
+    decision="allow",
+    justification="Scaffold/validate Stage 5 code review findings and verdict output.",
+    match=[
+        "/Users/eric/.codex/scripts/revalidate-code-review.sh add-feature-x",
+        "/Users/eric/.codex/scripts/revalidate-code-review.sh add-feature-x main",
+    ],
+)
+
+prefix_rule(
+    pattern=["./.codex/scripts/revalidate-code-review.sh"],
+    decision="allow",
+    justification="Scaffold/validate Stage 5 code review findings and verdict output (canonical repo path).",
+    match=[
+        "./.codex/scripts/revalidate-code-review.sh add-feature-x",
+        "./.codex/scripts/revalidate-code-review.sh add-feature-x main",
+    ],
+)
+
+prefix_rule(
+    pattern=["./codex/scripts/revalidate-code-review.sh"],
+    decision="allow",
+    justification="Scaffold/validate Stage 5 code review findings and verdict output (repo-local fallback path).",
+    match=[
+        "./codex/scripts/revalidate-code-review.sh add-feature-x",
+        "./codex/scripts/revalidate-code-review.sh add-feature-x main",
+    ],
+)
+
+# -------------------------
+# Revalidate stage validator script
+# -------------------------
+
+prefix_rule(
+    pattern=["/Users/eric/.codex/scripts/revalidate-validate.sh"],
+    decision="allow",
+    justification="Validate Stage 5 Step 4/5 gates and emit READY TO RESUME or BLOCKED.",
+    match=[
+        "/Users/eric/.codex/scripts/revalidate-validate.sh add-feature-x",
+        "/Users/eric/.codex/scripts/revalidate-validate.sh add-feature-x main",
+    ],
+)
+
+prefix_rule(
+    pattern=["./.codex/scripts/revalidate-validate.sh"],
+    decision="allow",
+    justification="Validate Stage 5 Step 4/5 gates and emit READY TO RESUME or BLOCKED (canonical repo path).",
+    match=[
+        "./.codex/scripts/revalidate-validate.sh add-feature-x",
+        "./.codex/scripts/revalidate-validate.sh add-feature-x main",
+    ],
+)
+
+prefix_rule(
+    pattern=["./codex/scripts/revalidate-validate.sh"],
+    decision="allow",
+    justification="Validate Stage 5 Step 4/5 gates and emit READY TO RESUME or BLOCKED (repo-local fallback path).",
+    match=[
+        "./codex/scripts/revalidate-validate.sh add-feature-x",
+        "./codex/scripts/revalidate-validate.sh add-feature-x main",
+    ],
+)
+
+# -------------------------
 # Node / TypeScript (npm/bun)
 # -------------------------
 

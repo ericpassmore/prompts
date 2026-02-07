@@ -169,7 +169,19 @@ $HOME/.codex/scripts/prepare-takeoff-worktree.sh <TASK_NAME_IN_KEBAB_CASE> [bran
 - Define required override authority.
 - Record in `spec.md`.
 
-### 11. Emit Readiness Verdict
+### 11. Enforce drift hard-gate policy
+
+During Stage 2, continuously enforce the cross-stage drift policy from `codex/AGENTS.md`:
+
+- locked contract integrity
+- stage/surface enforcement
+- verification stability
+- progress budget (`N=45m`, `M=5`, `K=2 no-evidence cycles`)
+- completion declaration integrity
+
+If any drift signal is detected, stop Stage 2, emit `BLOCKED` with explicit evidence, and route to `revalidate`.
+
+### 12. Emit Readiness Verdict
 
 - Emit exactly one verdict:
   - `READY FOR PLANNING`
@@ -190,7 +202,8 @@ All gates must pass before planning starts.
 - Gate 8: Scope boundaries declared.
 - Gate 9: Execution posture lock recorded.
 - Gate 10: Change-control rule recorded.
-- Gate 11: Final verdict emitted.
+- Gate 11: Drift hard-gate policy respected or stage blocked with evidence.
+- Gate 12: Final verdict emitted.
 
 ## Constraints
 
