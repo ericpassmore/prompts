@@ -11,7 +11,35 @@ fi
 
 GOALS_FILE="./goals/${TASK_NAME}/goals.${ITERATION}.md"
 SPEC_FILE="./tasks/${TASK_NAME}/spec.md"
-SPEC_TEMPLATE="./.codex/tasks/_templates/spec.template.md"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_CODEX_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+resolve_codex_root() {
+  local candidate
+  local candidates=()
+
+  if [[ -n "${CODEX_ROOT:-}" ]]; then
+    candidates+=("${CODEX_ROOT}")
+  fi
+
+  candidates+=("${SCRIPT_CODEX_ROOT}" "./.codex" "./codex" "${HOME}/.codex")
+
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "${candidate}/tasks/_templates/spec.template.md" ]]; then
+      echo "${candidate}"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+if ! CODEX_ROOT_RESOLVED="$(resolve_codex_root)"; then
+  echo "ERROR: Unable to resolve codex root (checked script root, ./.codex, ./codex, \$HOME/.codex)"
+  exit 1
+fi
+
+SPEC_TEMPLATE="${CODEX_ROOT_RESOLVED}/tasks/_templates/spec.template.md"
 
 if [[ ! -f "$GOALS_FILE" ]]; then
   echo "ERROR: Missing $GOALS_FILE"

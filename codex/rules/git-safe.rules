@@ -149,3 +149,13 @@ prefix_rule(
         "/Users/eric/.codex/scripts/git-diff-staged-skip-binary.sh",
     ],
 )
+
+prefix_rule(
+    pattern = ["/Users/eric/.codex/scripts/prepare-takeoff-worktree.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to create task worktrees under $HOME/workspace.",
+    match = [
+        "/Users/eric/.codex/scripts/prepare-takeoff-worktree.sh add-feature-x",
+        "/Users/eric/.codex/scripts/prepare-takeoff-worktree.sh add-feature-x feature/add-feature-x",
+    ],
+)

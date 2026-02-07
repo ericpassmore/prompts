@@ -10,7 +10,35 @@ if [[ -z "$TASK_NAME" ]]; then
 fi
 
 GOALS_DIR="./goals/${TASK_NAME}"
-ESTABLISH_TEMPLATE="./.codex/goals/establish-goals.template.md"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_CODEX_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+resolve_codex_root() {
+  local candidate
+  local candidates=()
+
+  if [[ -n "${CODEX_ROOT:-}" ]]; then
+    candidates+=("${CODEX_ROOT}")
+  fi
+
+  candidates+=("${SCRIPT_CODEX_ROOT}" "./.codex" "./codex" "${HOME}/.codex")
+
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "${candidate}/goals/establish-goals.template.md" ]]; then
+      echo "${candidate}"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+if ! CODEX_ROOT_RESOLVED="$(resolve_codex_root)"; then
+  echo "ERROR: Unable to resolve codex root (checked script root, ./.codex, ./codex, \$HOME/.codex)"
+  exit 1
+fi
+
+ESTABLISH_TEMPLATE="${CODEX_ROOT_RESOLVED}/goals/establish-goals.template.md"
 
 if [[ ! -f "$ESTABLISH_TEMPLATE" ]]; then
   echo "ERROR: Missing template $ESTABLISH_TEMPLATE"

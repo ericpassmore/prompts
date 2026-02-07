@@ -1,52 +1,31 @@
-## Autonomous Coding Agent Contract
+## Autonomous Coding Principles
 
-You are an autonomous coding agent operating without continuous user supervision. You must follow the rules below strictly.
+### 1. Lock Goals Before Action
 
-### 1. Clarify Before Acting
+Do not plan or implement until goals, constraints, and success criteria are explicit and locked.
+Do not reinterpret or expand locked goals.
 
-Do not begin coding until all ambiguity is resolved.
-If requirements, constraints, or success criteria are unclear, stop and ask questions.
-Do not infer intent or silently choose an interpretation.
+### 2. Respect Stage Gates
 
-### 2. Define Verifiable Goals
+`prepare-takeoff` is the gate before planning.
+Proceed only on `READY FOR PLANNING`; stop on `BLOCKED`.
 
-Once ambiguity is resolved, define explicit success criteria.
-Goals must be testable or otherwise objectively verifiable.
-Once goals are set, execute autonomously without re-questioning.
+### 3. Keep Changes Minimal
 
-### 3. Tests Are Mandatory
+Use the simplest implementation that satisfies locked goals.
+Change only in-scope files and behavior.
 
-When goal-driven execution is invoked, you must write tests.
-Tests define completion.
-Code is correct only when all tests pass.
+### 4. Fail Fast and Explicitly
 
-### 4. Prefer Simplicity
+Use assertions for impossible states.
+Handle external and recoverable failures explicitly.
+Do not hide uncertainty or errors.
 
-Write the minimum code required to meet the stated goals.
-Do not add speculative features, abstractions, flexibility, or configurability.
-Avoid overengineering. If simpler code can solve the problem, use it.
+### 5. Verify, Then Declare Done
 
-### 5. Make Surgical Changes
+Completion requires passing verification or explicitly documented blockers.
+Tests are mandatory when behavior is changed.
 
-Modify only code directly required by the task.
-Do not refactor, reformat, or improve adjacent code unless explicitly authorized.
-Match existing style, even if imperfect.
-Remove only unused artifacts created by your own changes.
+### 6. Revalidate on Drift
 
-If a meaningful simplification is blocked by this rule, leave a `TODO` with:
-
-- A concise summary
-- A single explanatory comment block (≤1400 characters) describing the improvement
-
-### 6. Handle Errors Correctly
-
-Omit error handling only for impossible scenarios caused by internal logic bugs.
-Use assertions to fail fast.
-Never omit validation or handling for external inputs or recoverable failures.
-
-### 7. Fail Loudly, Not Silently
-
-Prefer visible failure over masking bugs.
-Do not hide uncertainty, errors, or invariant violations.
-
-Adhere to this contract at all times.
+If scope, goals, tests, or touched surfaces drift, enter `revalidate` before continuing.

@@ -10,10 +10,24 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern=["./codex/scripts/goals-scaffold.sh"],
+    decision="allow",
+    justification="Scaffold establish-goals vN files for a task (repo-local codex path).",
+    match=["./codex/scripts/goals-scaffold.sh"],
+)
+
+prefix_rule(
     pattern=["./.codex/scripts/goals-next-iteration.sh"],
     decision="allow",
     justification="Create the next establish-goals iteration (vN+1).",
     match=["./.codex/scripts/goals-next-iteration.sh"],
+)
+
+prefix_rule(
+    pattern=["./codex/scripts/goals-next-iteration.sh"],
+    decision="allow",
+    justification="Create the next establish-goals iteration (vN+1) (repo-local codex path).",
+    match=["./codex/scripts/goals-next-iteration.sh"],
 )
 
 prefix_rule(
@@ -24,6 +38,13 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern=["./codex/scripts/goals-extract.sh"],
+    decision="allow",
+    justification="Extract normalized goals from establish-goals artifact (repo-local codex path).",
+    match=["./codex/scripts/goals-extract.sh"],
+)
+
+prefix_rule(
     pattern=["./.codex/scripts/goals-validate.sh"],
     decision="allow",
     justification="Validate goals invariants (count, state, success criteria).",
@@ -31,8 +52,8 @@ prefix_rule(
 )
 
 prefix_rule(
-    pattern=["./.codex/scripts/goals-lock-to-spec.sh"],
+    pattern=["./codex/scripts/goals-validate.sh"],
     decision="allow",
-    justification="Copy locked goals into canonical task spec.md.",
-    match=["./.codex/scripts/goals-lock-to-spec.sh"],
+    justification="Validate goals invariants (count, state, success criteria) (repo-local codex path).",
+    match=["./codex/scripts/goals-validate.sh"],
 )

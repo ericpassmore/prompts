@@ -23,9 +23,46 @@ fi
 ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 TASKS_DIR="${ROOT_DIR}/tasks"
 TASK_DIR="${TASKS_DIR}/${TASK_NAME}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_CODEX_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# User-level templates ONLY (never repo-local)
-TEMPLATES_DIR="${HOME}/.codex/tasks/_templates"
+resolve_templates_dir() {
+  local candidate
+  local candidates=()
+
+  if [[ -n "${CODEX_ROOT:-}" ]]; then
+    candidates+=("${CODEX_ROOT}")
+  fi
+
+  candidates+=(
+    "${SCRIPT_CODEX_ROOT}"
+    "${ROOT_DIR}/.codex"
+    "${ROOT_DIR}/codex"
+    "${HOME}/.codex"
+  )
+
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "${candidate}/tasks/_templates/spec.template.md" && \
+          -f "${candidate}/tasks/_templates/phase.template.md" && \
+          -f "${candidate}/tasks/_templates/final-phase.template.md" ]]; then
+      echo "${candidate}/tasks/_templates"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+if ! TEMPLATES_DIR="$(resolve_templates_dir)"; then
+  echo "Abort: unable to resolve codex templates directory."
+  echo "Checked (in order):"
+  [[ -n "${CODEX_ROOT:-}" ]] && echo "  ${CODEX_ROOT}/tasks/_templates"
+  echo "  ${SCRIPT_CODEX_ROOT}/tasks/_templates"
+  echo "  ${ROOT_DIR}/.codex/tasks/_templates"
+  echo "  ${ROOT_DIR}/codex/tasks/_templates"
+  echo "  ${HOME}/.codex/tasks/_templates"
+  exit 1
+fi
 
 SPEC_TPL="${TEMPLATES_DIR}/spec.template.md"
 PHASE_TPL="${TEMPLATES_DIR}/phase.template.md"

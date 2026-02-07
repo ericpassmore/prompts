@@ -9,7 +9,7 @@ description: Clarify an ambiguous or incomplete request and produce 0–5 explic
 
 Execute the `establish-goals` lifecycle stage in isolation to eliminate ambiguity and produce **0–5 verifiable goals** with explicit success criteria.
 
-This skill establishes the contractual foundation for all subsequent autonomous execution.
+This skill establishes the contractual foundation for downstream execution and ends at goal lock.
 
 All work in this skill MUST be performed using the approved establish-goals scripts.
 
@@ -27,6 +27,8 @@ This skill includes:
 This skill explicitly excludes:
 
 - environment setup
+- task scaffolding
+- `spec.md` population
 - phased planning
 - implementation
 - testing
@@ -55,9 +57,17 @@ This rule is enforced mechanically via validation scripts.
 
 The following templates MUST be used as the basis for all artifacts:
 
-- `./.codex/goals/establish-goals.template.md`
-- `./.codex/goals/goal.template.md` (optional drafting helper)
-- `./.codex/goals/establish-goals.checklist.md`
+- `<CODEX_ROOT>/goals/establish-goals.template.md`
+- `<CODEX_ROOT>/goals/goal.template.md` (optional drafting helper)
+- `<CODEX_ROOT>/goals/establish-goals.checklist.md`
+
+`CODEX_ROOT` resolution order:
+
+1. `./.codex`
+2. `./codex`
+3. `$HOME/.codex`
+
+If none exist, STOP as blocked.
 
 ---
 
@@ -88,15 +98,22 @@ Earlier iterations MUST NOT be modified.
 
 ## Approved scripts (mandatory)
 
-All file creation, iteration, validation, extraction, and locking MUST be performed using the following scripts:
+All file creation, iteration, validation, and extraction MUST be performed using the following scripts:
 
 - `goals-scaffold.sh`
 - `goals-next-iteration.sh`
 - `goals-extract.sh`
 - `goals-validate.sh`
-- `goals-lock-to-spec.sh`
 
 Direct manual file creation or copying is NOT permitted.
+
+`CODEX_SCRIPTS_DIR` resolution order:
+
+1. `./.codex/scripts`
+2. `./codex/scripts`
+3. `$HOME/.codex/scripts`
+
+If none exist, STOP as blocked.
 
 ---
 
@@ -112,7 +129,7 @@ Direct manual file creation or copying is NOT permitted.
 ### Step 1 — Scaffold initial iteration (v0)
 
 Create the v0 iteration using:
-`./.codex/scripts/goals-scaffold.sh <TASK_NAME_IN_KEBAB_CASE>`
+`<CODEX_SCRIPTS_DIR>/goals-scaffold.sh <TASK_NAME_IN_KEBAB_CASE>`
 
 This MUST create:
 
@@ -147,7 +164,7 @@ Set:
 
 After updating `establish-goals.vN.md`, run:
 
-`./.codex/scripts/goals-extract.sh <TASK_NAME_IN_KEBAB_CASE> vN`
+`<CODEX_SCRIPTS_DIR>/goals-extract.sh <TASK_NAME_IN_KEBAB_CASE> vN`
 
 This produces or updates:
 
@@ -174,7 +191,7 @@ Checklist completion is required before validation.
 
 Validate the iteration using:
 
-`./.codex/scripts/goals-validate.sh <TASK_NAME_IN_KEBAB_CASE> vN`
+`<CODEX_SCRIPTS_DIR>/goals-validate.sh <TASK_NAME_IN_KEBAB_CASE> vN`
 
 This validation enforces:
 
@@ -206,7 +223,7 @@ When user input is required:
 - ask ONLY the questions listed in the current iteration
 - on reply, create the next iteration using:
 
-`./.codex/scripts/goals-next-iteration.sh <TASK_NAME_IN_KEBAB_CASE>`
+`<CODEX_SCRIPTS_DIR>/goals-next-iteration.sh <TASK_NAME_IN_KEBAB_CASE>`
 
 - populate `establish-goals.v(N+1).md`
 - re-run extraction and validation
@@ -215,21 +232,13 @@ Do NOT modify earlier iterations.
 
 ---
 
-### Step 8 — Locking goals and handoff
+### Step 8 — Locking goals and stage completion
 
 When the user confirms the goals:
 
 1. Set `State = locked` in `establish-goals.vN.md`
 2. Re-run extraction and validation
-3. Copy goals into the canonical task spec using:
-
-`./.codex/scripts/goals-lock-to-spec.sh <TASK_NAME_IN_KEBAB_CASE> vN`
-
-This writes to:
-
-`./tasks/<TASK_NAME_IN_KEBAB_CASE>/spec.md`
-
-using the canonical spec template.
+3. Add a one-line handoff note in `establish-goals.vN.md` stating that `prepare-takeoff` owns task scaffolding and `spec.md` readiness content.
 
 This step completes the `establish-goals` skill.
 
@@ -243,7 +252,6 @@ This skill is complete ONLY when:
 - goals are verifiable
 - State = `locked`
 - validation passes
-- goals are recorded in `./tasks/<TASK_NAME_IN_KEBAB_CASE>/spec.md`
 
 Autonomous execution is NOT permitted before these conditions are met.
 
