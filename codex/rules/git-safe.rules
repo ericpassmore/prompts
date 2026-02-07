@@ -159,3 +159,23 @@ prefix_rule(
         "/Users/eric/.codex/scripts/prepare-takeoff-worktree.sh add-feature-x feature/add-feature-x",
     ],
 )
+
+prefix_rule(
+    pattern = ["./.codex/scripts/prepare-takeoff-worktree.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to create task worktrees under $HOME/workspace (canonical repo path).",
+    match = [
+        "./.codex/scripts/prepare-takeoff-worktree.sh add-feature-x",
+        "./.codex/scripts/prepare-takeoff-worktree.sh add-feature-x feature/add-feature-x",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./codex/scripts/prepare-takeoff-worktree.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to create task worktrees under $HOME/workspace (repo-local fallback path).",
+    match = [
+        "./codex/scripts/prepare-takeoff-worktree.sh add-feature-x",
+        "./codex/scripts/prepare-takeoff-worktree.sh add-feature-x feature/add-feature-x",
+    ],
+)

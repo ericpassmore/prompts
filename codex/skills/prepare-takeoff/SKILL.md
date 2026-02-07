@@ -48,6 +48,7 @@ $HOME/.codex/scripts/prepare-takeoff-bootstrap.sh
   - fail with explicit `BLOCKED` reason if bootstrap cannot be completed
 
 All subsequent script commands in this skill MUST be resolved from the stored `CODEX_SCRIPTS_DIR` reference in `./codex-commands.md`.
+This is mechanized via `<CODEX_SCRIPTS_DIR>/read-codex-paths.sh`, which Stage 2 scripts source automatically.
 
 ### 2. Assert Goal Lock
 
@@ -135,6 +136,9 @@ $HOME/.codex/scripts/prepare-takeoff-worktree.sh <TASK_NAME_IN_KEBAB_CASE> [bran
 ### 6. Identify Governing Context
 
 - Identify applicable rules files.
+  - Stage 2 depends on:
+    - `codex/rules/expand-task-spec.rules`
+    - `codex/rules/git-safe.rules`
 - Identify applicable skills.
 - Identify sandbox constraints.
 - Record findings in `spec.md`.

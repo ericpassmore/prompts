@@ -4,8 +4,10 @@ set -euo pipefail
 TASK_NAME="${1:-}"
 
 usage() {
-  echo "Usage: ${HOME}/.codex/scripts/task-scaffold.sh <task-name>"
-  echo "Example: ${HOME}/.codex/scripts/task-scaffold.sh add-performer-search"
+  echo "Usage (canonical): ./.codex/scripts/task-scaffold.sh <task-name>"
+  echo "Usage (repo-local fallback): ./codex/scripts/task-scaffold.sh <task-name>"
+  echo "Usage (home fallback): ${HOME}/.codex/scripts/task-scaffold.sh <task-name>"
+  echo "Example: ./.codex/scripts/task-scaffold.sh add-performer-search"
 }
 
 if [[ -z "${TASK_NAME}" ]]; then
@@ -24,40 +26,29 @@ ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 TASKS_DIR="${ROOT_DIR}/tasks"
 TASK_DIR="${TASKS_DIR}/${TASK_NAME}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCRIPT_CODEX_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/resolve-codex-root.sh"
+
+# Load persisted CODEX_ROOT/CODEX_SCRIPTS_DIR if available.
+if [[ -f "${SCRIPT_DIR}/read-codex-paths.sh" ]]; then
+  # shellcheck source=/dev/null
+  source "${SCRIPT_DIR}/read-codex-paths.sh" >/dev/null 2>&1 || true
+fi
 
 resolve_templates_dir() {
-  local candidate
-  local candidates=()
+  local root
+  root="$(resolve_codex_root \
+    tasks/_templates/spec.template.md \
+    tasks/_templates/phase.template.md \
+    tasks/_templates/final-phase.template.md)" || return 1
 
-  if [[ -n "${CODEX_ROOT:-}" ]]; then
-    candidates+=("${CODEX_ROOT}")
-  fi
-
-  candidates+=(
-    "${SCRIPT_CODEX_ROOT}"
-    "${ROOT_DIR}/.codex"
-    "${ROOT_DIR}/codex"
-    "${HOME}/.codex"
-  )
-
-  for candidate in "${candidates[@]}"; do
-    if [[ -f "${candidate}/tasks/_templates/spec.template.md" && \
-          -f "${candidate}/tasks/_templates/phase.template.md" && \
-          -f "${candidate}/tasks/_templates/final-phase.template.md" ]]; then
-      echo "${candidate}/tasks/_templates"
-      return 0
-    fi
-  done
-
-  return 1
+  echo "${root}/tasks/_templates"
 }
 
 if ! TEMPLATES_DIR="$(resolve_templates_dir)"; then
   echo "Abort: unable to resolve codex templates directory."
   echo "Checked (in order):"
   [[ -n "${CODEX_ROOT:-}" ]] && echo "  ${CODEX_ROOT}/tasks/_templates"
-  echo "  ${SCRIPT_CODEX_ROOT}/tasks/_templates"
   echo "  ${ROOT_DIR}/.codex/tasks/_templates"
   echo "  ${ROOT_DIR}/codex/tasks/_templates"
   echo "  ${HOME}/.codex/tasks/_templates"

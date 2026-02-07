@@ -3,10 +3,18 @@ set -euo pipefail
 
 INTERACTIVE_SHELL="${PREPARE_TAKEOFF_INTERACTIVE_SHELL:-0}"
 POSITIONAL_ARGS=()
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Load persisted CODEX_ROOT/CODEX_SCRIPTS_DIR for Stage 2 consistency.
+if [[ -f "${SCRIPT_DIR}/read-codex-paths.sh" ]]; then
+  # shellcheck source=/dev/null
+  source "${SCRIPT_DIR}/read-codex-paths.sh" >/dev/null 2>&1 || true
+fi
 
 usage() {
   echo "Usage (canonical): ./.codex/scripts/prepare-takeoff-worktree.sh <task-name> [branch] [--interactive-shell]"
-  echo "Usage (fallback): ${HOME}/.codex/scripts/prepare-takeoff-worktree.sh <task-name> [branch] [--interactive-shell]"
+  echo "Usage (repo-local fallback): ./codex/scripts/prepare-takeoff-worktree.sh <task-name> [branch] [--interactive-shell]"
+  echo "Usage (home fallback): ${HOME}/.codex/scripts/prepare-takeoff-worktree.sh <task-name> [branch] [--interactive-shell]"
   echo "Example: ./.codex/scripts/prepare-takeoff-worktree.sh add-performer-search main"
 }
 

@@ -17,30 +17,11 @@ fi
 
 GOALS_DIR="./goals/${TASK_NAME}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCRIPT_CODEX_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/resolve-codex-root.sh"
 
-resolve_codex_root() {
-  local candidate
-  local candidates=()
-
-  if [[ -n "${CODEX_ROOT:-}" ]]; then
-    candidates+=("${CODEX_ROOT}")
-  fi
-
-  candidates+=("${SCRIPT_CODEX_ROOT}" "./.codex" "./codex" "${HOME}/.codex")
-
-  for candidate in "${candidates[@]}"; do
-    if [[ -f "${candidate}/goals/establish-goals.template.md" ]]; then
-      echo "${candidate}"
-      return 0
-    fi
-  done
-
-  return 1
-}
-
-if ! CODEX_ROOT_RESOLVED="$(resolve_codex_root)"; then
-  echo "ERROR: Unable to resolve codex root (checked script root, ./.codex, ./codex, \$HOME/.codex)"
+if ! CODEX_ROOT_RESOLVED="$(resolve_codex_root goals/establish-goals.template.md)"; then
+  echo "ERROR: Unable to resolve codex root (checked ./.codex, ./codex, \$HOME/.codex)"
   exit 1
 fi
 

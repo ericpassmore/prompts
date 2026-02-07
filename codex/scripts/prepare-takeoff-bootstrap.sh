@@ -3,45 +3,13 @@ set -euo pipefail
 
 ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCRIPT_CODEX_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/resolve-codex-root.sh"
 
 DEST_MANIFEST="${ROOT_DIR}/codex-commands.md"
 
 BOOTSTRAP_START="<!-- PREPARE-TAKEOFF BOOTSTRAP START -->"
 BOOTSTRAP_END="<!-- PREPARE-TAKEOFF BOOTSTRAP END -->"
-
-require_file() {
-  local root="$1"
-  [[ -f "${root}/scripts/task-scaffold.sh" ]] || return 1
-  [[ -f "${root}/scripts/prepare-takeoff-worktree.sh" ]] || return 1
-  [[ -f "${root}/codex-commands.md" ]] || return 1
-  return 0
-}
-
-resolve_codex_root() {
-  local candidate
-  local candidates=()
-
-  if [[ -n "${CODEX_ROOT:-}" ]]; then
-    candidates+=("${CODEX_ROOT}")
-  fi
-
-  candidates+=(
-    "${ROOT_DIR}/.codex"
-    "${ROOT_DIR}/codex"
-    "${SCRIPT_CODEX_ROOT}"
-    "${HOME}/.codex"
-  )
-
-  for candidate in "${candidates[@]}"; do
-    if require_file "${candidate}"; then
-      echo "${candidate}"
-      return 0
-    fi
-  done
-
-  return 1
-}
 
 copy_manifest_if_missing() {
   local source
@@ -103,9 +71,9 @@ if ! copy_manifest_if_missing; then
   exit 1
 fi
 
-if ! SELECTED_CODEX_ROOT="$(resolve_codex_root)"; then
+if ! SELECTED_CODEX_ROOT="$(resolve_codex_root scripts/task-scaffold.sh scripts/prepare-takeoff-worktree.sh codex-commands.md)"; then
   echo "Abort: unable to resolve CODEX_ROOT with required files."
-  echo "Checked: ${ROOT_DIR}/.codex, ${ROOT_DIR}/codex, ${SCRIPT_CODEX_ROOT}, ${HOME}/.codex"
+  echo "Checked: ${ROOT_DIR}/.codex, ${ROOT_DIR}/codex, ${HOME}/.codex"
   exit 1
 fi
 
