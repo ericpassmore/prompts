@@ -159,19 +159,30 @@ When filtering env-like files, exclude anything matching the env-like globs **un
 
 **Used by:** Protect Sensitive Data, Commit
 
-```bash
-# Staged files only (NUL-delimited, safe for spaces)
-git diff --cached --name-only -z \
-| while IFS= read -r -d '' f; do
-    # Skip if Git considers it binary in the index vs HEAD
-    if git diff --cached --numstat -- "$f" | awk 'NR==1{exit !($1=="-" && $2=="-")}'; then
-      echo "Skipping binary: $f"
-      continue
-    fi
+Run the trusted helper script:
 
-    # Show text diff for this file
-    git diff --cached -- "$f"
-  done
+```bash
+/Users/eric/.codex/scripts/git-diff-staged-skip-binary.sh
+```
+
+### Script: Commit Preflight
+
+**Used by:** Update Branch
+
+Run the trusted helper script:
+
+```bash
+/Users/eric/.codex/scripts/git-commit-preflight.sh
+```
+
+### Script: Track Safe Untracked Files
+
+**Used by:** Track Files
+
+Run the trusted helper script:
+
+```bash
+/Users/eric/.codex/scripts/git-track-safe-untracked.sh
 ```
 
 ---
@@ -182,44 +193,15 @@ git diff --cached --name-only -z \
 
 **Before Track Files Step**
 
-1. **Detect and abort on merge conflicts**
-
-   * **Always** check for unmerged/conflicted paths:
-
-     ```bash
-     git diff --name-only --diff-filter=U | grep -q . && abort
-     ```
-   * **Policy:** Allow working changes when committing, but never proceed when merge conflicts are present.
-   * **Messaging on abort:**
-
-     * Inform the user that merge conflicts or unmerged paths were detected.
-     * Provide a summarized list of conflicted files using:
-
-       ```bash	
-       git diff --name-only --diff-filter=U
-       ```
-
-2. **Validate current branch**
-
-   * **Always** run:
-
-     ```bash
-     git branch --show-current
-     ```
-   * **Always** abort if the branch name is empty; inform the user that the repository is in a detached HEAD or invalid state.
-   * **Always** abort if the branch name is `main` or `master`; inform the user that commits are not allowed directly on protected branches.
-
-3. **Synchronize with remote**
-
-   * **Always** attempt to fast-forward the current branch:
-
-     ```bash
-     git pull --ff-only origin <branch> || abort
-     ```
-   * **Messaging on pull failure:**
-
-     * If output contains `couldn't find remote ref`, `no such ref`, or `no tracking information`, inform the user that the branch has no upstream and must be pushed first or configured with an upstream.
-     * Otherwise, inform the user that the pull failed and manual intervention is required.
+1. **Always** run **Script: Commit Preflight**.
+2. The preflight script must:
+   * abort when merge conflicts/unmerged paths are present
+   * abort when branch name is empty (detached HEAD or invalid state)
+   * abort when branch is `main` or `master`
+   * abort when no upstream is configured
+   * run `git pull --ff-only` and classify pull failures:
+     * upstream/reference issues (`couldn't find remote ref`, `no such ref`, `no tracking information`)
+     * all other failures as manual-intervention required
 
 ---
 
@@ -227,21 +209,15 @@ git diff --cached --name-only -z \
 
 **Before the Add Step**
 
-1. **Always** find untracked files using `git ls-files -o --exclude-standard`
-2. **Always** add eligible untracked files to git as an intent-to-add:
-   * before running `git add -N`, filter out files matching **.env File Patterns** and **Forbidden Directories**
-   * Exception: `developement.env` is allowed to be tracked and committed as an example file
-   * using `git add -N <file_name>`
-3. Apply media rules using the shared definitions:
-
-   * **Image File Definitions**
-   * **Video and Audio File Definitions**
-4. **Never** add files within **Forbidden Directories**
-5. **Never** add compiled or cached outputs matching **Compiled and Cached Output Patterns**
-6. **Never** add non-media binary files matching **Non-Media Binary File Patterns**
-7. **Allowed** vendor lockfiles per **Vendor Lockfiles**
-8. **Never** add tar archives
-9. **Always** run **Protect Sensitive Data** after tracking untracked files.
+1. **Always** run **Script: Track Safe Untracked Files**.
+2. The tracking script must:
+   * read untracked files from `git ls-files -o --exclude-standard`
+   * add eligible files as intent-to-add via `git add -N`
+   * skip files matching **.env File Patterns**, **Forbidden Directories**, **Compiled and Cached Output Patterns**, **Non-Media Binary File Patterns**, and tar archives
+   * enforce media rules from **Image File Definitions** and **Video and Audio File Definitions**
+   * if permission-required images are reported, ask the user before adding any of those files
+   * preserve the exception: `developement.env` is allowed
+3. **Always** run **Protect Sensitive Data** after tracking untracked files.
 
 ---
 

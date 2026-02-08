@@ -209,6 +209,60 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern = ["/Users/eric/.codex/scripts/git-commit-preflight.sh"],
+    decision = "allow",
+    justification = "Trusted helper script for git-commit preflight safety checks and fast-forward sync.",
+    match = [
+        "/Users/eric/.codex/scripts/git-commit-preflight.sh",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./.codex/scripts/git-commit-preflight.sh"],
+    decision = "allow",
+    justification = "Trusted helper script for git-commit preflight checks (canonical repo path).",
+    match = [
+        "./.codex/scripts/git-commit-preflight.sh",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./codex/scripts/git-commit-preflight.sh"],
+    decision = "allow",
+    justification = "Trusted helper script for git-commit preflight checks (repo-local fallback path).",
+    match = [
+        "./codex/scripts/git-commit-preflight.sh",
+    ],
+)
+
+prefix_rule(
+    pattern = ["/Users/eric/.codex/scripts/git-track-safe-untracked.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to apply git-commit track-file policies and stage intent-to-add safely.",
+    match = [
+        "/Users/eric/.codex/scripts/git-track-safe-untracked.sh",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./.codex/scripts/git-track-safe-untracked.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to apply git-commit track-file policies (canonical repo path).",
+    match = [
+        "./.codex/scripts/git-track-safe-untracked.sh",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./codex/scripts/git-track-safe-untracked.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to apply git-commit track-file policies (repo-local fallback path).",
+    match = [
+        "./codex/scripts/git-track-safe-untracked.sh",
+    ],
+)
+
+prefix_rule(
     pattern = ["/Users/eric/.codex/scripts/prepare-takeoff-worktree.sh"],
     decision = "allow",
     justification = "Trusted helper script to create task worktrees under $HOME/workspace.",
