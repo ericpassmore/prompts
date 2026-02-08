@@ -103,6 +103,20 @@ Run the `git-commit` skill workflow completely:
 - commit creation
 - push to `origin/<current-branch>`
 
+When an upstream push is required with `-u`, use the safe push helper script:
+
+```bash
+<CODEX_SCRIPTS_DIR>/git-push-branch-safe.sh <CURRENT_BRANCH>
+```
+
+This script blocks `git push -u origin <branch>` for protected branch names:
+
+- `main`
+- `master`
+- `dev`
+- `release/*`
+- `qa`
+
 If `git-commit` fails, emit `BLOCKED`.
 
 ### Step 3 — Resolve base branch for PR
@@ -190,6 +204,7 @@ All gates must pass:
 
 - Do not run `land-the-plan` unless `READY TO LAND` is satisfied.
 - Do not bypass the `git-commit` skill.
+- Do not run raw `git push -u origin <branch>`; use `git-push-branch-safe.sh`.
 - Do not invent TODO items; only include observed `//TODO`.
 - Do not skip required PR body sections.
 - Do not keep task worktree resources held after successful landing.

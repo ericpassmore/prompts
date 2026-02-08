@@ -2,16 +2,16 @@
 
 ## Autonomous Coding Agent Contract
 
-This contract applies to the lifecycle:
-`establish-goals` → `prepare-takeoff` → `prepare-phased-impl` → `implement` → `revalidate` → `land-the-plan`
+This contract defines cross-stage invariants for the lifecycle:
+`establish-goals` -> `prepare-takeoff` -> `prepare-phased-impl` -> `implement` -> `revalidate` -> `land-the-plan`
 
-Stage mechanics are defined in stage artifacts, including `codex/skills/prepare-takeoff/SKILL.md`. This file defines cross-stage invariants only.
+Stage mechanics, commands, and file-surface details are owned by stage artifacts under `codex/skills/*/SKILL.md`.
 
 ---
 
 ## 1. Stage Flow Contract (Mandatory)
 
-Stages must run in lifecycle order and must emit one of the exact verdicts below.
+Stages must run in lifecycle order and emit only these verdicts:
 
 - `establish-goals`: `GOALS LOCKED` or `BLOCKED`
 - `prepare-takeoff`: `READY FOR PLANNING` or `BLOCKED`
@@ -20,11 +20,11 @@ Stages must run in lifecycle order and must emit one of the exact verdicts below
 - `revalidate`: `READY TO REPLAN`, `READY TO LAND`, or `BLOCKED`
 - `land-the-plan`: `LANDED` or `BLOCKED`
 
-If any stage emits `BLOCKED`, stop progression immediately.
+If any stage emits `BLOCKED`, progression stops immediately.
 
 ---
 
-## 2. Goals Must Be Locked Before Planning or Implementation
+## 2. Goal Lock Contract
 
 Before goals are locked, you MUST NOT:
 
@@ -32,77 +32,60 @@ Before goals are locked, you MUST NOT:
 - prepare implementation phases
 - write or modify source code
 
-Locked goals are the execution contract:
+Locked goals are immutable execution input:
 
 - goals, constraints, and success criteria must be explicit and verifiable
 - goals must not be reinterpreted or expanded after lock
 
 ---
 
-## 3. `prepare-takeoff` Is the Planning Gate
+## 3. Execution Invariants
 
-Planning may begin only after `prepare-takeoff` emits `READY FOR PLANNING`.
-
-If `prepare-takeoff` emits `BLOCKED`:
-
-- stop
-- record precise blockers
-- do not continue to planning or implementation
-
-During `prepare-takeoff`:
-
-- no planning, design, or implementation is allowed
-- no code/config changes are allowed except codex bootstrap/config updates (`./codex/codex-config.yaml` and `./codex/project-structure.md`), task scaffolding, worktree creation, and Stage 2 readiness metadata updates in `./tasks/<TASK_NAME_IN_KEBAB_CASE>/spec.md`
-
----
-
-## 4. Prepare-Phased-Impl and Implement Are Distinct Gates
-
-`prepare-phased-impl` is planning-only and must not perform implementation.
-
-- Exit `prepare-phased-impl` only on `READY FOR IMPLEMENTATION`.
-- Exit `implement` only on `READY FOR REVERIFICATION`.
-- If either stage emits `BLOCKED`, stop and record blockers.
-
----
-
-## 5. Traceability Requirement (Simple)
-
-Traceability is required but does not require a formal table format.
-
-- Planned phase work must map back to locked goals.
-- Implemented changes must map back to approved phase work.
-- Reverification evidence must map back to implemented changes.
-
----
-
-## 6. Reverification Defines Completion
-
-- tests or equivalent validation must exist
-- work is complete only when verification passes or blockers are explicitly documented
-- unverifiable goals are invalid goals
-- `lint`, `build`, and `test` are mandatory minimum reverification command classes
-- command instances must come from pinned task/repo command records (`spec.md`, `./codex/project-structure.md`, and `./codex/codex-config.yaml`)
-
----
-
-## 7. Execution Posture Is Fixed After `prepare-takeoff`
-
-For all downstream stages:
+For all downstream stages after `prepare-takeoff`:
 
 - apply simplicity bias
 - apply surgical-change discipline
 - apply fail-fast error handling
+- change only in-scope files and behavior required to satisfy locked goals
+
+Fail-fast behavior is mandatory:
+
+- assert impossible states
+- handle external and recoverable failures explicitly
+- do not hide uncertainty or errors
+
+Traceability is mandatory:
+
+- planned phase work maps to locked goals
+- implemented changes maps to approved phase work
+- reverification evidence maps to implemented changes
 
 ---
 
-## 8. Drift Detection and Revalidation Hard Gate
+## 4. Verification and Completion Contract
 
-To prevent goal redefinition, unbounded iteration, or stalled execution, all post-lock stages MUST continuously check for drift signals.
+Completion requires passing verification or explicit blocker documentation.
 
-### 8.1 Locked Contract Integrity
+- tests or equivalent validation must exist
+- tests are mandatory when behavior is changed
+- unverifiable goals are invalid
+- `lint`, `build`, and `test` are mandatory reverification command classes
+- command instances must come from pinned task/repo command records:
+  - `spec.md`
+  - `./codex/project-structure.md`
+  - `./codex/codex-config.yaml`
 
-Once goals and gate contracts are locked, the following are immutable unless an explicit unlock/relock process is executed:
+A stage MAY be declared complete only when locked success criteria and verification steps are satisfied, or blockers are explicitly documented.
+
+---
+
+## 5. Drift and Revalidation Hard Gate
+
+Post-lock stages MUST continuously detect drift and enter `revalidate` on drift.
+
+### 5.1 Drift signals
+
+Any unauthorized change to locked contract items is drift:
 
 - goals
 - constraints
@@ -110,82 +93,89 @@ Once goals and gate contracts are locked, the following are immutable unless an 
 - non-goals
 - active stage gate contract
 
-Any unauthorized modification, reinterpretation, or implicit relaxation CONSTITUTES drift and REQUIRES entering `revalidate`.
+Any unauthorized stage/surface change is drift:
 
-### 8.2 Stage and Surface Enforcement
+- actions outside the active stage contract
+- file-surface expansion outside approved scope
+- touched surfaces outside approved scope
 
-Stages MUST operate only on actions and file surfaces authorized by the active stage contract and approved plan.
+Any verification contract change is drift:
 
-Touching disallowed files, expanding affected surfaces, or running unauthorized stage actions CONSTITUTES drift and REQUIRES entering `revalidate`.
+- removing, weakening, bypassing, or silently redefining verification
+- changing test requirements or test scope without relock
+- introducing new behavior without corresponding verification
 
-### 8.3 Verification Stability
+Any completion-integrity violation is drift:
 
-Definition of Done and verification plans are immutable once locked for active execution.
+- declaring completion without satisfying locked criteria/verification or explicit blockers
 
-Removing, weakening, bypassing, or silently redefining verification, or introducing new behavior without corresponding verification, CONSTITUTES drift and REQUIRES entering `revalidate`.
+### 5.2 Progress budget (loop prevention)
 
-### 8.4 Progress Budget (Loop Prevention)
+Per stage limits:
 
-Each stage has a strict budget:
+- `N = 45 minutes` maximum wall-clock time
+- `M = 5` maximum plan -> attempt -> observe -> adjust cycles
+- `K = 2` maximum consecutive cycles without new evidence
 
-- `N = 45 minutes` maximum wall-clock time in a stage
-- `M = 5 cycles` maximum plan -> attempt -> observe -> adjust loops in a stage
-- `K = 2 cycles` maximum consecutive loops without new evidence
-
-New evidence means at least one of:
+New evidence is at least one of:
 
 - new or changed test output
 - narrowed or falsified hypothesis
 - reduced failure surface
 - concrete reproducible observation not previously recorded
 
-Exceeding `N`, `M`, or `K` CONSTITUTES drift and REQUIRES entering `revalidate`.
-
-### 8.5 Completion Declaration Integrity
-
-A stage MAY be declared complete only when all locked success criteria and verification steps are satisfied, or blockers are explicitly documented.
-
-Declaring completion without satisfying this condition CONSTITUTES drift and REQUIRES entering `revalidate`.
-
-### 8.6 Revalidate Execution Requirements
-
-All revalidation decisions must be documented.
-
-- `revalidate` must wipe prior working memory/history for active execution context.
-- `establish-goals` and `prepare-takeoff` remain locked and are context-only inputs during `revalidate`.
-- Trigger classes are explicit:
-  - drift-triggered revalidation (entered due to Section 8 drift signals)
-  - direct reverification revalidation (entered directly after `implement` emits `READY FOR REVERIFICATION`)
-- Drift-triggered `revalidate` may exit only as:
-  - `READY TO REPLAN`
-  - `BLOCKED`
-- Direct reverification `revalidate` may exit only as:
-  - `READY TO LAND`
-  - `BLOCKED`
-- On successful drift-triggered `revalidate` (`READY TO REPLAN`), work resumes at `prepare-phased-impl` and Stage 3 restarts.
-- On successful direct reverification `revalidate` (`READY TO LAND`), do not restart Stage 3; hand off to `land-the-plan`.
-- `READY TO LAND` is valid only when:
-  - `prepare-phased-impl` has been executed at least twice total for the task (initial pass plus at least one post-revalidation restart)
-  - current `revalidate` entry was direct from Stage 4 verdict `READY FOR REVERIFICATION`
-- Stage 3 run count source of truth is:
-  - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` (`- Stage 3 runs: <N>`)
-- Post-revalidation restart evidence source of truth is:
-  - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` (`- Drift revalidation count: <N>`, where `N >= 1`)
-- `READY TO LAND` additionally requires:
-  - no open actionable code-review findings
-  - code-review verdict is `patch is correct`
-  - unresolved actionable findings may proceed only with explicit risk acceptance documented in `./tasks/<TASK_NAME_IN_KEBAB_CASE>/risk-acceptance.md`
-- Previous Stage 3 artifacts must be archived before each Stage 3 restart at:
-  - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/archive/prepare-phased-impl-<SHORT_GIT_HASH>/`
-- If that exact directory already exists, append a numeric suffix:
-  - `prepare-phased-impl-<SHORT_GIT_HASH>-<N>`
-- Archival must be performed using:
-  - `prepare-phased-impl-archive.sh`
-- If no prior Stage 3 artifacts exist, archival is a no-op and must be recorded as such.
+Exceeding `N`, `M`, or `K` is drift and requires `revalidate`.
 
 ---
 
-## 9. Land Cleanly
+## 6. Revalidate Contract
+
+All revalidation decisions must be documented.
+
+- `revalidate` wipes prior working memory/history for active execution context
+- `establish-goals` and `prepare-takeoff` remain locked context-only inputs
+- trigger classes:
+  - drift-triggered revalidation
+  - direct reverification revalidation (direct from `implement` verdict `READY FOR REVERIFICATION`)
+
+Allowed exits by trigger:
+
+- drift-triggered: `READY TO REPLAN` or `BLOCKED`
+- direct reverification: `READY TO LAND` or `BLOCKED`
+
+Outcome routing:
+
+- `READY TO REPLAN`: resume at `prepare-phased-impl` (Stage 3 restart)
+- `READY TO LAND`: hand off directly to `land-the-plan` (no Stage 3 restart)
+
+`READY TO LAND` is valid only when:
+
+- `prepare-phased-impl` has been executed at least once total for the task
+- current `revalidate` entry is direct from Stage 4 verdict `READY FOR REVERIFICATION`
+- no open actionable code-review findings
+- code-review verdict is `patch is correct`
+- unresolved actionable findings are covered by explicit risk acceptance at:
+  - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/risk-acceptance.md`
+
+Stage 3 state source of truth:
+
+- `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md`:
+  - `- Stage 3 runs: <N>`
+  - `- Drift revalidation count: <N>`
+
+Stage 3 restart archival requirement:
+
+- archive prior Stage 3 artifacts before each restart at:
+  - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/archive/prepare-phased-impl-<SHORT_GIT_HASH>/`
+- if collision exists, append numeric suffix:
+  - `prepare-phased-impl-<SHORT_GIT_HASH>-<N>`
+- archival must use:
+  - `prepare-phased-impl-archive.sh`
+- if no prior Stage 3 artifacts exist, archival is a recorded no-op
+
+---
+
+## 7. Land Cleanly
 
 Do not finalize until:
 

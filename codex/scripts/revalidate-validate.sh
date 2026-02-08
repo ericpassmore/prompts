@@ -125,11 +125,8 @@ if [[ -n "${trigger_source}" && -n "${verdict}" ]]; then
       if [[ "${verdict}" == "READY TO REPLAN" ]]; then
         issues+=("Trigger source is ready-for-reverification; READY TO REPLAN is not permitted. Use READY TO LAND or BLOCKED.")
       fi
-      if [[ "${verdict}" == "READY TO LAND" && "${stage3_runs}" -lt 2 ]]; then
-        issues+=("READY TO LAND requires at least 2 total Stage 3 executions; detected ${stage3_runs}.")
-      fi
-      if [[ "${verdict}" == "READY TO LAND" && "${drift_revalidation_count}" -lt 1 ]]; then
-        issues+=("READY TO LAND requires at least 1 drift revalidation cycle before landing; detected ${drift_revalidation_count}.")
+      if [[ "${verdict}" == "READY TO LAND" && "${stage3_runs}" -lt 1 ]]; then
+        issues+=("READY TO LAND requires at least 1 total Stage 3 execution; detected ${stage3_runs}.")
       fi
       ;;
   esac
