@@ -16,7 +16,7 @@ Prepare a deterministic execution environment after goals are locked and before 
 
 ## The Agent MUST
 
-### 1. Establish Codex Command Root and Commands Manifest
+### 1. Establish Codex Command Root and Canonical Config
 
 - Run the bootstrap script; do not perform this step manually.
 - Command resolution order:
@@ -42,12 +42,13 @@ $HOME/.codex/scripts/prepare-takeoff-bootstrap.sh
 - Script responsibilities (authoritative):
   - resolve `CODEX_ROOT` using `./.codex`, `./codex`, then `$HOME/.codex`
   - verify required files under selected root
-  - bootstrap `./codex-commands.md` if missing
-  - persist `CODEX_ROOT` and `CODEX_SCRIPTS_DIR` in `./codex-commands.md`
-  - persist canonical and fallback script paths in `./codex-commands.md`
+  - enforce required `project-structure.md` under selected root (abort if missing)
+  - bootstrap `codex-config.yaml` if missing
+  - persist `CODEX_ROOT` and `CODEX_SCRIPTS_DIR` in `codex-config.yaml`
+  - persist canonical and fallback script paths in `codex-config.yaml`
   - fail with explicit `BLOCKED` reason if bootstrap cannot be completed
 
-All subsequent script commands in this skill MUST be resolved from the stored `CODEX_SCRIPTS_DIR` reference in `./codex-commands.md`.
+All subsequent script commands in this skill MUST be resolved from the stored `CODEX_SCRIPTS_DIR` reference in `codex-config.yaml`.
 This is mechanized via `<CODEX_SCRIPTS_DIR>/read-codex-paths.sh`, which Stage 2 scripts source automatically.
 
 ### 2. Assert Goal Lock
@@ -66,7 +67,7 @@ This is mechanized via `<CODEX_SCRIPTS_DIR>/read-codex-paths.sh`, which Stage 2 
 
 ### 4. Scaffold Task Structure
 
-- Scaffold the task directory using the `CODEX_SCRIPTS_DIR` selected in `./codex-commands.md`.
+- Scaffold the task directory using the `CODEX_SCRIPTS_DIR` selected in `codex-config.yaml`.
 - Preferred command:
 
 ```bash
@@ -99,7 +100,7 @@ $HOME/.codex/scripts/task-scaffold.sh <TASK_NAME_IN_KEBAB_CASE>
 
 `$HOME/workspace/<repository>/<sanitized-branch>/<TASK_NAME_IN_KEBAB_CASE>`
 
-- Use the `CODEX_SCRIPTS_DIR` selected in `./codex-commands.md`.
+- Use the `CODEX_SCRIPTS_DIR` selected in `codex-config.yaml`.
 - Preferred command:
 
 ```bash
@@ -192,8 +193,8 @@ If any drift signal is detected, stop Stage 2, emit `BLOCKED` with explicit evid
 
 All gates must pass before planning starts.
 
-- Gate 1: Codex root and scripts directory selected and persisted in `./codex-commands.md`.
-- Gate 2: `./codex-commands.md` exists (bootstrapped if needed).
+- Gate 1: Codex root and scripts directory selected and persisted in `codex-config.yaml`.
+- Gate 2: required canonical files exist: `codex-config.yaml` and `project-structure.md`.
 - Gate 3: Goal lock asserted and recorded.
 - Gate 4: Ambiguity check passed.
 - Gate 5: Task scaffold exists.
@@ -208,14 +209,15 @@ All gates must pass before planning starts.
 ## Constraints
 
 - No planning, design, or implementation is permitted.
-- no code/config changes are allowed except codex command bootstrap/update (`./codex-commands.md`), task scaffolding, worktree creation, and Stage 2 readiness metadata updates in `./tasks/<TASK_NAME_IN_KEBAB_CASE>/spec.md`
+- no code/config changes are allowed except codex bootstrap/config updates (`./codex/codex-config.yaml` and `./codex/project-structure.md`), task scaffolding, worktree creation, and Stage 2 readiness metadata updates in `./tasks/<TASK_NAME_IN_KEBAB_CASE>/spec.md`
 
 ## Required Outputs
 
-- `./codex-commands.md` present and updated with:
+- `codex-config.yaml` present and updated with:
   - selected `CODEX_ROOT`
   - selected `CODEX_SCRIPTS_DIR`
   - canonical and fallback script paths
+- `project-structure.md` present; stage aborts if missing
 - Fully scaffolded `./tasks/<TASK_NAME_IN_KEBAB_CASE>/`.
 - Git worktree created at `$HOME/workspace/<repository>/<sanitized-branch>/<TASK_NAME_IN_KEBAB_CASE>`.
 - Updated `spec.md` with:

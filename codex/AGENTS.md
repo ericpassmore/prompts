@@ -52,7 +52,7 @@ If `prepare-takeoff` emits `BLOCKED`:
 During `prepare-takeoff`:
 
 - no planning, design, or implementation is allowed
-- no code/config changes are allowed except codex command bootstrap/update (`./codex-commands.md`), task scaffolding, worktree creation, and Stage 2 readiness metadata updates in `./tasks/<TASK_NAME_IN_KEBAB_CASE>/spec.md`
+- no code/config changes are allowed except codex bootstrap/config updates (`./codex/codex-config.yaml` and `./codex/project-structure.md`), task scaffolding, worktree creation, and Stage 2 readiness metadata updates in `./tasks/<TASK_NAME_IN_KEBAB_CASE>/spec.md`
 
 ---
 
@@ -82,7 +82,7 @@ Traceability is required but does not require a formal table format.
 - work is complete only when verification passes or blockers are explicitly documented
 - unverifiable goals are invalid goals
 - `lint`, `build`, and `test` are mandatory minimum reverification command classes
-- command instances must come from pinned task/repo command records (`spec.md` and `./codex-commands.md`)
+- command instances must come from pinned task/repo command records (`spec.md`, `./codex/project-structure.md`, and `./codex/codex-config.yaml`)
 
 ---
 

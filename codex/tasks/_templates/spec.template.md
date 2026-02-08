@@ -35,7 +35,7 @@
 ## Observability (logs/metrics)
 
 ## Verification Commands
-> Pin the exact commands discovered for this repo (also update `./codex-commands.md`).
+> Pin the exact commands discovered for this repo (also update `./codex/project-structure.md` and `./codex/codex-config.yaml`).
 
 - Lint:
   - `...`

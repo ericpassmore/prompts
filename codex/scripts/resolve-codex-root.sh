@@ -9,7 +9,7 @@ set -euo pipefail
 #
 # Optional positional args are required relative paths that must exist under
 # the selected root, for example:
-#   resolve_codex_root scripts/task-scaffold.sh codex-commands.md
+#   resolve_codex_root scripts/task-scaffold.sh codex-config.yaml project-structure.md
 
 resolve_codex_root() {
   local candidate

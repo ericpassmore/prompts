@@ -46,7 +46,7 @@ Ensure that file citations and line numbers are exactly correct using the tools 
 
 ## Diff source policy
 
-- Preferred diff source: `git diff <BASE_BRANCH>...HEAD`, where `<BASE_BRANCH>` comes from `codex-commands.md`.
+- Preferred diff source: `git diff <BASE_BRANCH>...HEAD`, where `<BASE_BRANCH>` comes from `codex-config.yaml`.
 - Fallback base branch: `main`.
 - If the preferred diff errors or is empty, fallback to `git diff`.
 

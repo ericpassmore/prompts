@@ -39,7 +39,7 @@
 - [ ] Coverage gaps:
 
 ## Full verification
-> Use the pinned commands in spec + `./codex-commands.md`.
+> Use the pinned commands in spec + `./codex/project-structure.md` + `./codex/codex-config.yaml`.
 > Stage 4 requires explicit pass notation: `PASS`.
 
 - [ ] Lint: `...` PASS

@@ -19,7 +19,7 @@ Execute approved implementation work in deterministic phase order and produce tr
   - `final-phase.md`
   - `.scope-lock.md`
   - active `phase-<n>.md` files
-- Verification commands are pinned in task `spec.md` and/or `./codex-commands.md` for:
+- Verification commands are pinned in task `spec.md` and canonical records (`./codex/project-structure.md`, `./codex/codex-config.yaml`) for:
   - lint
   - build
   - test
@@ -43,7 +43,7 @@ Direct shell reimplementation of the Stage 4 final gate logic is not allowed.
 
 ## Command resolution
 
-Preferred (from persisted bootstrap reference in `./codex-commands.md`):
+Preferred (from persisted bootstrap reference in `codex-config.yaml`):
 
 ```bash
 CODEX_ROOT=<CODEX_ROOT> <CODEX_SCRIPTS_DIR>/<script>.sh ...
@@ -134,7 +134,7 @@ The validator treats unchecked items without `EVALUATED:` as unevaluated and blo
 
 ### Step 3 — Mandatory full verification (`lint`, `build`, `test`)
 
-- Run pinned lint/build/test commands from task `spec.md` and `./codex-commands.md`.
+- Run pinned lint/build/test commands from task `spec.md` and canonical records (`./codex/project-structure.md`, `./codex/codex-config.yaml`).
 - Record command and outcome under `## Full verification` in `final-phase.md`.
 
 Required pass notation:
