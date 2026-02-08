@@ -254,6 +254,33 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern = ["/Users/eric/.codex/scripts/git-push-branch-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to enforce protected-branch restrictions for 'git push -u origin <branch>'.",
+    match = [
+        "/Users/eric/.codex/scripts/git-push-branch-safe.sh feature/add-feature-x",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./.codex/scripts/git-push-branch-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to enforce protected-branch restrictions for 'git push -u origin <branch>' (canonical repo path).",
+    match = [
+        "./.codex/scripts/git-push-branch-safe.sh feature/add-feature-x",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./codex/scripts/git-push-branch-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to enforce protected-branch restrictions for 'git push -u origin <branch>' (repo-local fallback path).",
+    match = [
+        "./codex/scripts/git-push-branch-safe.sh feature/add-feature-x",
+    ],
+)
+
+prefix_rule(
     pattern = ["/Users/eric/.codex/scripts/prepare-takeoff-worktree.sh"],
     decision = "allow",
     justification = "Trusted helper script to create task worktrees under $HOME/workspace.",

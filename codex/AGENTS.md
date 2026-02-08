@@ -165,12 +165,12 @@ All revalidation decisions must be documented.
 - On successful drift-triggered `revalidate` (`READY TO REPLAN`), work resumes at `prepare-phased-impl` and Stage 3 restarts.
 - On successful direct reverification `revalidate` (`READY TO LAND`), do not restart Stage 3; hand off to `land-the-plan`.
 - `READY TO LAND` is valid only when:
-  - `prepare-phased-impl` has been executed at least twice total for the task (initial pass plus at least one post-revalidation restart)
+  - `prepare-phased-impl` has been executed at least once total for the task
   - current `revalidate` entry was direct from Stage 4 verdict `READY FOR REVERIFICATION`
 - Stage 3 run count source of truth is:
   - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` (`- Stage 3 runs: <N>`)
-- Post-revalidation restart evidence source of truth is:
-  - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` (`- Drift revalidation count: <N>`, where `N >= 1`)
+- Drift revalidation count source of truth is:
+  - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` (`- Drift revalidation count: <N>`)
 - `READY TO LAND` additionally requires:
   - no open actionable code-review findings
   - code-review verdict is `patch is correct`

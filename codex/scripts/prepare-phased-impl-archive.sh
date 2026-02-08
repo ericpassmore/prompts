@@ -53,7 +53,8 @@ if [[ -f "${PHASE_PLAN_FILE}" ]]; then
 fi
 
 if [[ -f "${SCOPE_LOCK_FILE}" ]]; then
-  mv "${SCOPE_LOCK_FILE}" "${archive_dir}/.scope-lock.md"
+  # Keep the active scope lock in place and archive a snapshot for traceability.
+  cp "${SCOPE_LOCK_FILE}" "${archive_dir}/.scope-lock.md"
 fi
 
 for phase_file in "${phase_files[@]}"; do

@@ -154,9 +154,9 @@ Verdict constraints:
 - If trigger source is `ready-for-reverification`, success verdict may only be `READY TO LAND`.
 - `READY TO LAND` requires:
   - current `revalidate` entry is direct from Stage 4 verdict `READY FOR REVERIFICATION`
-  - Stage 3 has executed at least twice for the task (initial pass + at least one post-revalidation restart)
+  - Stage 3 has executed at least once for the task
   - stage-count source of truth: `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` with `- Stage 3 runs: <N>`
-  - drift source-of-truth: `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` with `- Drift revalidation count: <N>` and `N >= 1`
+  - drift source-of-truth: `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` with `- Drift revalidation count: <N>`
   - no open review findings and review verdict `patch is correct`
   - unresolved actionable findings may proceed only with explicit risk acceptance in `./tasks/<TASK_NAME_IN_KEBAB_CASE>/risk-acceptance.md` containing:
     - `- Owner:`

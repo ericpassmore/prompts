@@ -103,8 +103,15 @@ EOF
 ensure_lifecycle_state_file
 
 # Enforce Stage 3 archival on restart/rerun when prior Stage 3 records exist.
+archived_prior_stage3=0
 if [[ -f "${PHASE_PLAN_FILE}" || -f "${SCOPE_LOCK_FILE}" ]]; then
   "${SCRIPT_DIR}/prepare-phased-impl-archive.sh" "${TASK_NAME}"
+  archived_prior_stage3=1
+fi
+
+# Regenerate active scope lock after archival so validate never observes a moved lock.
+if [[ "${archived_prior_stage3}" -eq 1 ]]; then
+  "${SCRIPT_DIR}/prepare-phased-impl-scope-lock.sh" "${TASK_NAME}" >/dev/null
 fi
 
 if ! CODEX_ROOT_RESOLVED="$(resolve_codex_root tasks/_templates/phase.template.md)"; then
