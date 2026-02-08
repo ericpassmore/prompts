@@ -191,15 +191,6 @@ prefix_rule(
 # ----------------------
 
 prefix_rule(
-    pattern = ["/Users/eric/.codex/scripts/git-check-conflicts.sh"],
-    decision = "allow",
-    justification = "Trusted helper script to detect merge conflicts safely.",
-    match = [
-        "/Users/eric/.codex/scripts/git-check-conflicts.sh",
-    ],
-)
-
-prefix_rule(
     pattern = ["/Users/eric/.codex/scripts/git-diff-staged-skip-binary.sh"],
     decision = "allow",
     justification = "Trusted helper script to diff staged files while skipping binaries.",
