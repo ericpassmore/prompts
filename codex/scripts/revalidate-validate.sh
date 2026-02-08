@@ -6,9 +6,10 @@ BASE_BRANCH="${2:-}"
 ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 TASK_DIR="${ROOT_DIR}/tasks/${TASK_NAME}"
 REVALIDATE_FILE="${TASK_DIR}/revalidate.md"
+REVIEW_FILE="${TASK_DIR}/revalidate-code-review.md"
+RISK_ACCEPTANCE_FILE="${TASK_DIR}/risk-acceptance.md"
+LIFECYCLE_STATE_FILE="${TASK_DIR}/lifecycle-state.md"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PHASE_PLAN_FILE="${TASK_DIR}/phase-plan.md"
-ARCHIVE_DIR="${TASK_DIR}/archive"
 
 usage() {
   echo "Usage (canonical): ./.codex/scripts/revalidate-validate.sh <task-name> [base-branch]"
@@ -36,6 +37,10 @@ if [[ ! -f "${REVALIDATE_FILE}" ]]; then
   issues+=("Missing required file: ${REVALIDATE_FILE}")
 fi
 
+if [[ ! -f "${REVIEW_FILE}" ]]; then
+  issues+=("Missing required file: ${REVIEW_FILE}")
+fi
+
 # Step 4 gate: code review must validate successfully.
 review_cmd=( "${SCRIPT_DIR}/revalidate-code-review.sh" "${TASK_NAME}" )
 if [[ -n "${BASE_BRANCH}" ]]; then
@@ -53,6 +58,11 @@ fi
 
 verdict=""
 trigger_source=""
+review_status=""
+review_verdict=""
+findings_json=""
+findings_compact=""
+stage3_runs="0"
 if [[ -f "${REVALIDATE_FILE}" ]]; then
   trigger_source="$(sed -nE 's/^- Trigger source:[[:space:]]*(drift|ready-for-reverification)[[:space:]]*$/\1/p' "${REVALIDATE_FILE}" | head -n 1)"
   if [[ -z "${trigger_source}" ]]; then
@@ -65,16 +75,38 @@ if [[ -f "${REVALIDATE_FILE}" ]]; then
   fi
 fi
 
-stage3_runs=0
-if [[ -f "${PHASE_PLAN_FILE}" ]]; then
-  stage3_runs=$((stage3_runs + 1))
+if [[ -f "${REVIEW_FILE}" ]]; then
+  review_status="$(sed -nE 's/^- Findings status:[[:space:]]*(pending|complete|none)[[:space:]]*$/\1/p' "${REVIEW_FILE}" | head -n 1)"
+  review_verdict="$(sed -nE 's/^- Verdict:[[:space:]]*(patch is correct|patch is incorrect)[[:space:]]*$/\1/p' "${REVIEW_FILE}" | head -n 1)"
+  findings_json="$(awk '
+    /^## Findings JSON$/ {in_section=1; next}
+    in_section && /^```json$/ {in_json=1; next}
+    in_section && /^```$/ && in_json {exit}
+    in_json {print}
+  ' "${REVIEW_FILE}")"
+  findings_compact="$(printf '%s' "${findings_json}" | tr -d '[:space:]')"
 fi
 
-archive_count=0
-if [[ -d "${ARCHIVE_DIR}" ]]; then
-  archive_count="$(find "${ARCHIVE_DIR}" -mindepth 1 -maxdepth 1 -type d -name 'prepare-phased-impl-*' | wc -l | tr -d '[:space:]')"
+if [[ -f "${LIFECYCLE_STATE_FILE}" ]]; then
+  stage3_runs="$(sed -nE 's/^- Stage 3 runs:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${LIFECYCLE_STATE_FILE}" | head -n 1)"
+  if [[ -z "${stage3_runs}" ]]; then
+    stage3_runs="0"
+    issues+=("Missing or invalid '- Stage 3 runs:' in ${LIFECYCLE_STATE_FILE}.")
+  fi
 fi
-stage3_runs=$((stage3_runs + archive_count))
+
+has_valid_risk_acceptance_waiver() {
+  [[ -f "${RISK_ACCEPTANCE_FILE}" ]] || return 1
+
+  local owner
+  local justification
+  local expiry
+  owner="$(sed -nE 's/^- Owner:[[:space:]]*(.+)$/\1/p' "${RISK_ACCEPTANCE_FILE}" | head -n 1)"
+  justification="$(sed -nE 's/^- Justification:[[:space:]]*(.+)$/\1/p' "${RISK_ACCEPTANCE_FILE}" | head -n 1)"
+  expiry="$(sed -nE 's/^- Expiry:[[:space:]]*([0-9]{4}-[0-9]{2}-[0-9]{2})[[:space:]]*$/\1/p' "${RISK_ACCEPTANCE_FILE}" | head -n 1)"
+
+  [[ -n "${owner}" && -n "${justification}" && -n "${expiry}" ]]
+}
 
 if [[ -n "${trigger_source}" && -n "${verdict}" ]]; then
   case "${trigger_source}" in
@@ -92,6 +124,14 @@ if [[ -n "${trigger_source}" && -n "${verdict}" ]]; then
       fi
       ;;
   esac
+fi
+
+if [[ "${verdict}" == "READY TO LAND" ]]; then
+  if [[ "${review_status}" != "none" || "${findings_compact}" != "[]" || "${review_verdict}" != "patch is correct" ]]; then
+    if ! has_valid_risk_acceptance_waiver; then
+      issues+=("READY TO LAND requires no open review findings and review verdict 'patch is correct'. Provide a valid ${RISK_ACCEPTANCE_FILE} waiver to proceed with unresolved findings.")
+    fi
+  fi
 fi
 
 if [[ "${#issues[@]}" -gt 0 ]]; then

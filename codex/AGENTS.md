@@ -165,8 +165,14 @@ All revalidation decisions must be documented.
 - On successful drift-triggered `revalidate` (`READY TO REPLAN`), work resumes at `prepare-phased-impl` and Stage 3 restarts.
 - On successful direct reverification `revalidate` (`READY TO LAND`), do not restart Stage 3; hand off to `land-the-plan`.
 - `READY TO LAND` is valid only when:
-  - `prepare-phased-impl` has been executed at least once total for the task
+  - `prepare-phased-impl` has been executed at least twice total for the task (initial pass plus at least one post-revalidation restart)
   - current `revalidate` entry was direct from Stage 4 verdict `READY FOR REVERIFICATION`
+- Stage 3 run count source of truth is:
+  - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` (`- Stage 3 runs: <N>`)
+- `READY TO LAND` additionally requires:
+  - no open actionable code-review findings
+  - code-review verdict is `patch is correct`
+  - unresolved actionable findings may proceed only with explicit risk acceptance documented in `./tasks/<TASK_NAME_IN_KEBAB_CASE>/risk-acceptance.md`
 - Previous Stage 3 artifacts must be archived before each Stage 3 restart at:
   - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/archive/prepare-phased-impl-<SHORT_GIT_HASH>/`
 - If that exact directory already exists, append a numeric suffix:

@@ -169,6 +169,8 @@ Hard rules:
 In `## Outstanding issues (if any)`:
 
 - record every known issue with severity, repro, and suggested fix
+- issue recording is temporary evidence, not completion approval
+- unresolved actionable code-review findings must route to `BLOCKED`/`READY TO REPLAN` before landing
 - if no issues exist, write an explicit none marker (for example `- None.`)
 
 Placeholder-only issue entries are invalid.

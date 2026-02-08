@@ -193,7 +193,7 @@ After completing phases:
    - performance (hot paths, DB queries, batching)
    - style/conventions (repo patterns)
    - test coverage vs acceptance criteria
-5) Fix issues found, or record them in `/tasks/<task-name>/final-phase.md` with severity and next steps.
+5) Fix issues found; unresolved actionable findings are blockers unless explicitly waived in `/tasks/<task-name>/risk-acceptance.md`.
 
 # Safety and repository hygiene
 
@@ -210,4 +210,4 @@ Complete only when:
 - All required task files exist under `/tasks/<task-name>/`
 - All phase gates have passed
 - Lint/build/tests pass OR failures are documented as explicit blockers
-- A final code review has been performed and issues addressed or recorded
+- A final code review has been performed and issues addressed; unresolved actionable findings are blockers unless explicitly waived

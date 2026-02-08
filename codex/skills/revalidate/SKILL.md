@@ -155,6 +155,12 @@ Verdict constraints:
 - `READY TO LAND` requires:
   - current `revalidate` entry is direct from Stage 4 verdict `READY FOR REVERIFICATION`
   - Stage 3 has executed at least twice for the task (initial pass + at least one post-revalidation restart)
+  - stage-count source of truth: `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` with `- Stage 3 runs: <N>`
+  - no open review findings and review verdict `patch is correct`
+  - unresolved actionable findings may proceed only with explicit risk acceptance in `./tasks/<TASK_NAME_IN_KEBAB_CASE>/risk-acceptance.md` containing:
+    - `- Owner:`
+    - `- Justification:`
+    - `- Expiry: YYYY-MM-DD`
 
 ### Step 6 — Validate Step 4/5 gates mechanically
 
@@ -168,6 +174,8 @@ Validator behavior:
 
 - executes `revalidate-code-review.sh` to enforce Step 4
 - enforces Step 0 trigger-source format and Step 5 final verdict format in `revalidate.md`
+- enforces Stage 3 run-count source from `lifecycle-state.md`
+- enforces landing strictness for review findings/verdict, with optional risk-acceptance waiver
 - emits exactly:
   - `READY TO REPLAN`
   - `READY TO LAND`
@@ -210,4 +218,5 @@ All gates must pass:
   - actionable findings (or explicit no-findings state)
   - overall correctness verdict
   - confidence score
+- optional `./tasks/<TASK_NAME_IN_KEBAB_CASE>/risk-acceptance.md` when unresolved actionable findings are explicitly waived
 - for trigger source `drift`: archived Stage 3 artifacts under task `archive/` using short-hash GUID format

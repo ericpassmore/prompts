@@ -8,6 +8,7 @@ SPEC_FILE="${TASK_DIR}/spec.md"
 PHASE_PLAN_FILE="${TASK_DIR}/phase-plan.md"
 LOCK_FILE="${TASK_DIR}/.scope-lock.md"
 FINAL_PHASE_FILE="${TASK_DIR}/final-phase.md"
+LIFECYCLE_STATE_FILE="${TASK_DIR}/lifecycle-state.md"
 
 usage() {
   echo "Usage (canonical): ./.codex/scripts/prepare-phased-impl-validate.sh <task-name>"
@@ -57,6 +58,38 @@ set_verdict() {
     }
   ' "${PHASE_PLAN_FILE}" > "${tmp_file}"
   mv "${tmp_file}" "${PHASE_PLAN_FILE}"
+}
+
+update_lifecycle_stage3_runs() {
+  local stage3_runs="0"
+  local current_cycle="0"
+  local last_validated_cycle="0"
+
+  if [[ -f "${LIFECYCLE_STATE_FILE}" ]]; then
+    stage3_runs="$(sed -nE 's/^- Stage 3 runs:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${LIFECYCLE_STATE_FILE}" | head -n 1)"
+    current_cycle="$(sed -nE 's/^- Stage 3 current cycle:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${LIFECYCLE_STATE_FILE}" | head -n 1)"
+    last_validated_cycle="$(sed -nE 's/^- Stage 3 last validated cycle:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${LIFECYCLE_STATE_FILE}" | head -n 1)"
+  fi
+
+  [[ "${stage3_runs}" =~ ^[0-9]+$ ]] || stage3_runs="0"
+  [[ "${current_cycle}" =~ ^[0-9]+$ ]] || current_cycle="0"
+  [[ "${last_validated_cycle}" =~ ^[0-9]+$ ]] || last_validated_cycle="0"
+
+  if [[ "${current_cycle}" -eq 0 ]]; then
+    current_cycle=1
+  fi
+
+  if [[ "${last_validated_cycle}" -lt "${current_cycle}" ]]; then
+    stage3_runs=$((stage3_runs + 1))
+    last_validated_cycle="${current_cycle}"
+  fi
+
+  cat > "${LIFECYCLE_STATE_FILE}" <<EOF
+# Lifecycle State
+- Stage 3 runs: ${stage3_runs}
+- Stage 3 current cycle: ${current_cycle}
+- Stage 3 last validated cycle: ${last_validated_cycle}
+EOF
 }
 
 if [[ ! -f "${SPEC_FILE}" ]]; then
@@ -131,6 +164,7 @@ if [[ -f "${LOCK_FILE}" && -f "${SPEC_FILE}" ]]; then
 fi
 
 if [[ "${#issues[@]}" -eq 0 ]]; then
+  update_lifecycle_stage3_runs
   set_verdict "READY FOR IMPLEMENTATION"
   echo "READY FOR IMPLEMENTATION"
   exit 0

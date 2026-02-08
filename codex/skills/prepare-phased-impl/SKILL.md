@@ -105,6 +105,7 @@ Script behavior:
   - `complex` -> 4
 - creates missing `phase-<n>.md` files for active phases
 - writes `./tasks/<TASK_NAME_IN_KEBAB_CASE>/phase-plan.md` with `PENDING` verdict
+- initializes/advances `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` Stage 3 cycle metadata
 - appends implementation strategy section to `spec.md` when missing
 
 ### Step 4 — Populate planning documents
@@ -164,6 +165,7 @@ The validator emits exactly one verdict:
 - `BLOCKED`
 
 It also updates `phase-plan.md` verdict accordingly.
+On success, it updates `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` Stage 3 run count deterministically.
 
 ## Stage gates
 
@@ -191,5 +193,6 @@ All gates must pass:
 
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/phase-plan.md` with final verdict.
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/.scope-lock.md`.
+- `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` with Stage 3 run metadata.
 - Active phase files matching chosen complexity.
 - Updated planning docs under `./tasks/<TASK_NAME_IN_KEBAB_CASE>/`.

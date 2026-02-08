@@ -49,6 +49,7 @@ SPEC_FILE="${TASK_DIR}/spec.md"
 FINAL_PHASE_FILE="${TASK_DIR}/final-phase.md"
 PHASE_PLAN_FILE="${TASK_DIR}/phase-plan.md"
 SCOPE_LOCK_FILE="${TASK_DIR}/.scope-lock.md"
+LIFECYCLE_STATE_FILE="${TASK_DIR}/lifecycle-state.md"
 
 if [[ ! -d "${TASK_DIR}" ]]; then
   echo "Abort: missing task directory ${TASK_DIR}"
@@ -69,6 +70,33 @@ if [[ ! -f "${FINAL_PHASE_FILE}" ]]; then
   echo "Abort: missing ${FINAL_PHASE_FILE}"
   exit 1
 fi
+
+ensure_lifecycle_state_file() {
+  local stage3_runs="0"
+  local current_cycle="0"
+  local last_validated_cycle="0"
+
+  if [[ -f "${LIFECYCLE_STATE_FILE}" ]]; then
+    stage3_runs="$(sed -nE 's/^- Stage 3 runs:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${LIFECYCLE_STATE_FILE}" | head -n 1)"
+    current_cycle="$(sed -nE 's/^- Stage 3 current cycle:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${LIFECYCLE_STATE_FILE}" | head -n 1)"
+    last_validated_cycle="$(sed -nE 's/^- Stage 3 last validated cycle:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${LIFECYCLE_STATE_FILE}" | head -n 1)"
+  fi
+
+  [[ "${stage3_runs}" =~ ^[0-9]+$ ]] || stage3_runs="0"
+  [[ "${current_cycle}" =~ ^[0-9]+$ ]] || current_cycle="0"
+  [[ "${last_validated_cycle}" =~ ^[0-9]+$ ]] || last_validated_cycle="0"
+
+  current_cycle=$((current_cycle + 1))
+
+  cat > "${LIFECYCLE_STATE_FILE}" <<EOF
+# Lifecycle State
+- Stage 3 runs: ${stage3_runs}
+- Stage 3 current cycle: ${current_cycle}
+- Stage 3 last validated cycle: ${last_validated_cycle}
+EOF
+}
+
+ensure_lifecycle_state_file
 
 # Enforce Stage 3 archival on restart/rerun when prior Stage 3 records exist.
 if [[ -f "${PHASE_PLAN_FILE}" || -f "${SCOPE_LOCK_FILE}" ]]; then
@@ -121,6 +149,7 @@ EOF
 echo "Prepared phased implementation plan scaffold for ${TASK_NAME}"
 echo "Phase count: ${PHASE_COUNT}"
 echo "Phase plan: ${PHASE_PLAN_FILE}"
+echo "Lifecycle state: ${LIFECYCLE_STATE_FILE}"
 if [[ "${#created_files[@]}" -gt 0 ]]; then
   echo "Created phase files:"
   for f in "${created_files[@]}"; do
