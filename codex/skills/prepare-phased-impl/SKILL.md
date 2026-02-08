@@ -59,6 +59,7 @@ Fallback order:
   - `simple`
   - `medium`
   - `complex`
+  - `1|2|3|4` (explicit phase count override)
 
 Complexity drives phase count dynamically.
 
@@ -92,7 +93,7 @@ This writes `./tasks/<TASK_NAME_IN_KEBAB_CASE>/.scope-lock.md` from `spec.md` sc
 Run:
 
 ```bash
-<CODEX_SCRIPTS_DIR>/prepare-phased-impl-scaffold.sh <TASK_NAME_IN_KEBAB_CASE> <simple|medium|complex>
+<CODEX_SCRIPTS_DIR>/prepare-phased-impl-scaffold.sh <TASK_NAME_IN_KEBAB_CASE> <simple|medium|complex|1|2|3|4>
 ```
 
 Script behavior:

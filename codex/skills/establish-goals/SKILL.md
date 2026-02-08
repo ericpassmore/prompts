@@ -238,7 +238,8 @@ When the user confirms the goals:
 
 1. Set `State = locked` in `establish-goals.vN.md`
 2. Re-run extraction and validation
-3. Add a one-line handoff note in `establish-goals.vN.md` stating that `prepare-takeoff` owns task scaffolding and `spec.md` readiness content.
+3. Emit stage verdict `GOALS LOCKED`.
+4. Add a one-line handoff note in `establish-goals.vN.md` stating that `prepare-takeoff` owns task scaffolding and `spec.md` readiness content.
 
 This step completes the `establish-goals` skill.
 
@@ -252,6 +253,7 @@ This skill is complete ONLY when:
 - goals are verifiable
 - State = `locked`
 - validation passes
+- stage verdict emitted is exactly `GOALS LOCKED`
 
 Autonomous execution is NOT permitted before these conditions are met.
 

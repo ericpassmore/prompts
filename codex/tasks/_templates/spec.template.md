@@ -52,3 +52,9 @@
 ## Acceptance criteria checklist
 - [ ] …
 - [ ] …
+
+## IN SCOPE
+- `...`
+
+## OUT OF SCOPE
+- `...`

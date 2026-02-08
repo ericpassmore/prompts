@@ -7,7 +7,7 @@ description: Reassess correctness, scope alignment, and plan adequacy when execu
 
 ## Intent
 
-Reassess execution integrity when drift is detected, preserve locked upstream context, and deterministically restart work at `prepare-phased-impl`.
+Reassess execution integrity when drift is detected or Stage 4 requests reverification, preserve locked upstream context, and emit a deterministic handoff verdict.
 
 ## Preconditions (hard)
 
@@ -68,21 +68,25 @@ Any unresolved drift signal requires `BLOCKED`.
 ### Step 0 — Confirm task identity and trigger
 
 - Confirm `<TASK_NAME_IN_KEBAB_CASE>`.
-- Record the trigger source and concrete evidence in:
+- Record trigger source and concrete evidence in:
   - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/revalidate.md`
+- Trigger source must be exactly one of:
+  - `drift`
+  - `ready-for-reverification`
 
 ### Step 1 — Reset active execution context (mandatory actions)
 
-Step 1 MUST execute both of the following actions:
+Step 1 MUST execute:
 
 1. Start a new chat thread and do not access or rely on context/history from the previous thread.
-2. Run Stage 3 archival using:
+2. For trigger source `drift` only, run Stage 3 archival using:
 
 ```bash
 <CODEX_SCRIPTS_DIR>/prepare-phased-impl-archive.sh <TASK_NAME_IN_KEBAB_CASE>
 ```
 
-These two actions satisfy active execution context reset.
+For trigger source `ready-for-reverification`, Stage 3 archival is not required in this step.
+These actions satisfy active execution context reset.
 No additional reset records are required.
 
 ### Step 2 — Lock upstream context as read-only inputs
@@ -133,14 +137,24 @@ If script validation fails, emit `BLOCKED`.
 
 Emit exactly one verdict:
 
-- `READY TO RESUME`
+- `READY TO REPLAN`
+- `READY TO LAND`
 - `BLOCKED`
 
 Set verdict in `./tasks/<TASK_NAME_IN_KEBAB_CASE>/revalidate.md` using:
 
-- `- Final verdict: READY TO RESUME`
+- `- Final verdict: READY TO REPLAN`
+- `- Final verdict: READY TO LAND`
 or
 - `- Final verdict: BLOCKED`
+
+Verdict constraints:
+
+- If trigger source is `drift`, success verdict may only be `READY TO REPLAN`.
+- If trigger source is `ready-for-reverification`, success verdict may only be `READY TO LAND`.
+- `READY TO LAND` requires:
+  - current `revalidate` entry is direct from Stage 4 verdict `READY FOR REVERIFICATION`
+  - Stage 3 has executed at least twice for the task (initial pass + at least one post-revalidation restart)
 
 ### Step 6 — Validate Step 4/5 gates mechanically
 
@@ -153,9 +167,10 @@ Run:
 Validator behavior:
 
 - executes `revalidate-code-review.sh` to enforce Step 4
-- enforces Step 5 final verdict format in `revalidate.md`
+- enforces Step 0 trigger-source format and Step 5 final verdict format in `revalidate.md`
 - emits exactly:
-  - `READY TO RESUME`
+  - `READY TO REPLAN`
+  - `READY TO LAND`
   - `BLOCKED`
 
 ## Stage gates
@@ -164,7 +179,7 @@ All gates must pass:
 
 - Gate 1: trigger and evidence recorded.
 - Gate 2: new thread started and prior-thread context excluded.
-- Gate 3: `prepare-phased-impl-archive.sh` executed (archive or no-op).
+- Gate 3: `prepare-phased-impl-archive.sh` executed for `drift` trigger (archive or no-op).
 - Gate 4: locked upstream context identified and treated read-only.
 - Gate 5: drift categories assessed with explicit outcomes.
 - Gate 6: explicit code review completed and validated.
@@ -173,7 +188,8 @@ All gates must pass:
 
 ## Exit behavior
 
-- On `READY TO RESUME`: return control to `prepare-phased-impl`; Stage 3 restarts.
+- On `READY TO REPLAN`: return control to `prepare-phased-impl`; Stage 3 restarts.
+- On `READY TO LAND`: hand off directly to `land-the-plan` without Stage 3 restart.
 - On `BLOCKED`: stop progression and list blocking reasons.
 
 ## Constraints
@@ -187,11 +203,11 @@ All gates must pass:
 ## Required outputs
 
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/revalidate.md` with:
-  - trigger evidence
+  - trigger source and trigger evidence
   - drift category decisions
-  - final verdict (`- Final verdict: READY TO RESUME|BLOCKED`)
+  - final verdict (`- Final verdict: READY TO REPLAN|READY TO LAND|BLOCKED`)
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/revalidate-code-review.md` with:
   - actionable findings (or explicit no-findings state)
   - overall correctness verdict
   - confidence score
-- archived Stage 3 artifacts under task `archive/` using short-hash GUID format
+- for trigger source `drift`: archived Stage 3 artifacts under task `archive/` using short-hash GUID format

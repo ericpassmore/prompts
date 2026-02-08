@@ -52,4 +52,14 @@ if [[ "$GOAL_COUNT" -gt 0 && "$SUCCESS_COUNT" -eq 0 ]]; then
   exit 1
 fi
 
-echo "Validation passed for ${TASK_NAME} ${ITERATION}"
+if [[ "$STATE" == "locked" ]]; then
+  echo "GOALS LOCKED"
+  exit 0
+fi
+
+if [[ "$STATE" == "blocked" ]]; then
+  echo "BLOCKED"
+  exit 0
+fi
+
+echo "VALIDATION PASSED for ${TASK_NAME} ${ITERATION}"

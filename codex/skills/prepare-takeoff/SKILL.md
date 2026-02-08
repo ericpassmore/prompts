@@ -208,7 +208,7 @@ All gates must pass before planning starts.
 ## Constraints
 
 - No planning, design, or implementation is permitted.
-- no code/config changes are allowed except codex command bootstrap/update (./codex-commands.md), task scaffolding, and worktree creation
+- no code/config changes are allowed except codex command bootstrap/update (`./codex-commands.md`), task scaffolding, worktree creation, and Stage 2 readiness metadata updates in `./tasks/<TASK_NAME_IN_KEBAB_CASE>/spec.md`
 
 ## Required Outputs
 

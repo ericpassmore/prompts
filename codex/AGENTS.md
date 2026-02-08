@@ -17,7 +17,7 @@ Stages must run in lifecycle order and must emit one of the exact verdicts below
 - `prepare-takeoff`: `READY FOR PLANNING` or `BLOCKED`
 - `prepare-phased-impl`: `READY FOR IMPLEMENTATION` or `BLOCKED`
 - `implement`: `READY FOR REVERIFICATION` or `BLOCKED`
-- `revalidate`: `READY TO RESUME` or `BLOCKED`
+- `revalidate`: `READY TO REPLAN`, `READY TO LAND`, or `BLOCKED`
 - `land-the-plan`: `LANDED` or `BLOCKED`
 
 If any stage emits `BLOCKED`, stop progression immediately.
@@ -52,7 +52,7 @@ If `prepare-takeoff` emits `BLOCKED`:
 During `prepare-takeoff`:
 
 - no planning, design, or implementation is allowed
-- no code/config changes are allowed except codex command bootstrap/update (./codex-commands.md), task scaffolding, and worktree creation
+- no code/config changes are allowed except codex command bootstrap/update (`./codex-commands.md`), task scaffolding, worktree creation, and Stage 2 readiness metadata updates in `./tasks/<TASK_NAME_IN_KEBAB_CASE>/spec.md`
 
 ---
 
@@ -153,8 +153,21 @@ All revalidation decisions must be documented.
 
 - `revalidate` must wipe prior working memory/history for active execution context.
 - `establish-goals` and `prepare-takeoff` remain locked and are context-only inputs during `revalidate`.
-- On successful `revalidate` (`READY TO RESUME`), work resumes at `prepare-phased-impl` and Stage 3 restarts.
-- Previous Stage 3 artifacts must be archived before restart at:
+- Trigger classes are explicit:
+  - drift-triggered revalidation (entered due to Section 8 drift signals)
+  - direct reverification revalidation (entered directly after `implement` emits `READY FOR REVERIFICATION`)
+- Drift-triggered `revalidate` may exit only as:
+  - `READY TO REPLAN`
+  - `BLOCKED`
+- Direct reverification `revalidate` may exit only as:
+  - `READY TO LAND`
+  - `BLOCKED`
+- On successful drift-triggered `revalidate` (`READY TO REPLAN`), work resumes at `prepare-phased-impl` and Stage 3 restarts.
+- On successful direct reverification `revalidate` (`READY TO LAND`), do not restart Stage 3; hand off to `land-the-plan`.
+- `READY TO LAND` is valid only when:
+  - `prepare-phased-impl` has been executed at least once total for the task
+  - current `revalidate` entry was direct from Stage 4 verdict `READY FOR REVERIFICATION`
+- Previous Stage 3 artifacts must be archived before each Stage 3 restart at:
   - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/archive/prepare-phased-impl-<SHORT_GIT_HASH>/`
 - If that exact directory already exists, append a numeric suffix:
   - `prepare-phased-impl-<SHORT_GIT_HASH>-<N>`

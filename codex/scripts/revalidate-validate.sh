@@ -7,6 +7,8 @@ ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 TASK_DIR="${ROOT_DIR}/tasks/${TASK_NAME}"
 REVALIDATE_FILE="${TASK_DIR}/revalidate.md"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PHASE_PLAN_FILE="${TASK_DIR}/phase-plan.md"
+ARCHIVE_DIR="${TASK_DIR}/archive"
 
 usage() {
   echo "Usage (canonical): ./.codex/scripts/revalidate-validate.sh <task-name> [base-branch]"
@@ -50,11 +52,46 @@ if ! review_output="$("${review_cmd[@]}" 2>&1)"; then
 fi
 
 verdict=""
+trigger_source=""
 if [[ -f "${REVALIDATE_FILE}" ]]; then
-  verdict="$(sed -nE 's/^- Final verdict:[[:space:]]*(READY TO RESUME|BLOCKED)[[:space:]]*$/\1/p' "${REVALIDATE_FILE}" | head -n 1)"
-  if [[ -z "${verdict}" ]]; then
-    issues+=("Missing or invalid '- Final verdict:' in ${REVALIDATE_FILE}. Use READY TO RESUME or BLOCKED.")
+  trigger_source="$(sed -nE 's/^- Trigger source:[[:space:]]*(drift|ready-for-reverification)[[:space:]]*$/\1/p' "${REVALIDATE_FILE}" | head -n 1)"
+  if [[ -z "${trigger_source}" ]]; then
+    issues+=("Missing or invalid '- Trigger source:' in ${REVALIDATE_FILE}. Use drift or ready-for-reverification.")
   fi
+
+  verdict="$(sed -nE 's/^- Final verdict:[[:space:]]*(READY TO REPLAN|READY TO LAND|BLOCKED)[[:space:]]*$/\1/p' "${REVALIDATE_FILE}" | head -n 1)"
+  if [[ -z "${verdict}" ]]; then
+    issues+=("Missing or invalid '- Final verdict:' in ${REVALIDATE_FILE}. Use READY TO REPLAN, READY TO LAND, or BLOCKED.")
+  fi
+fi
+
+stage3_runs=0
+if [[ -f "${PHASE_PLAN_FILE}" ]]; then
+  stage3_runs=$((stage3_runs + 1))
+fi
+
+archive_count=0
+if [[ -d "${ARCHIVE_DIR}" ]]; then
+  archive_count="$(find "${ARCHIVE_DIR}" -mindepth 1 -maxdepth 1 -type d -name 'prepare-phased-impl-*' | wc -l | tr -d '[:space:]')"
+fi
+stage3_runs=$((stage3_runs + archive_count))
+
+if [[ -n "${trigger_source}" && -n "${verdict}" ]]; then
+  case "${trigger_source}" in
+    drift)
+      if [[ "${verdict}" == "READY TO LAND" ]]; then
+        issues+=("Trigger source is drift; READY TO LAND is not permitted. Use READY TO REPLAN or BLOCKED.")
+      fi
+      ;;
+    ready-for-reverification)
+      if [[ "${verdict}" == "READY TO REPLAN" ]]; then
+        issues+=("Trigger source is ready-for-reverification; READY TO REPLAN is not permitted. Use READY TO LAND or BLOCKED.")
+      fi
+      if [[ "${verdict}" == "READY TO LAND" && "${stage3_runs}" -lt 2 ]]; then
+        issues+=("READY TO LAND requires at least 2 total Stage 3 executions; detected ${stage3_runs}.")
+      fi
+      ;;
+  esac
 fi
 
 if [[ "${#issues[@]}" -gt 0 ]]; then
@@ -71,5 +108,5 @@ if [[ "${verdict}" == "BLOCKED" ]]; then
   exit 1
 fi
 
-echo "READY TO RESUME"
+echo "${verdict}"
 exit 0

@@ -42,8 +42,8 @@ archive_base="${TASK_DIR}/archive/prepare-phased-impl-${short_hash}"
 archive_dir="${archive_base}"
 suffix=1
 while [[ -e "${archive_dir}" ]]; do
-  suffix=$((suffix + 1))
   archive_dir="${archive_base}-${suffix}"
+  suffix=$((suffix + 1))
 done
 
 mkdir -p "${archive_dir}"

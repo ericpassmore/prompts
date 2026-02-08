@@ -247,7 +247,7 @@ prefix_rule(
 prefix_rule(
     pattern=["/Users/eric/.codex/scripts/revalidate-validate.sh"],
     decision="allow",
-    justification="Validate Stage 5 Step 4/5 gates and emit READY TO RESUME or BLOCKED.",
+    justification="Validate Stage 5 Step 4/5 gates and emit READY TO REPLAN, READY TO LAND, or BLOCKED.",
     match=[
         "/Users/eric/.codex/scripts/revalidate-validate.sh add-feature-x",
         "/Users/eric/.codex/scripts/revalidate-validate.sh add-feature-x main",
@@ -257,7 +257,7 @@ prefix_rule(
 prefix_rule(
     pattern=["./.codex/scripts/revalidate-validate.sh"],
     decision="allow",
-    justification="Validate Stage 5 Step 4/5 gates and emit READY TO RESUME or BLOCKED (canonical repo path).",
+    justification="Validate Stage 5 Step 4/5 gates and emit READY TO REPLAN, READY TO LAND, or BLOCKED (canonical repo path).",
     match=[
         "./.codex/scripts/revalidate-validate.sh add-feature-x",
         "./.codex/scripts/revalidate-validate.sh add-feature-x main",
@@ -267,7 +267,7 @@ prefix_rule(
 prefix_rule(
     pattern=["./codex/scripts/revalidate-validate.sh"],
     decision="allow",
-    justification="Validate Stage 5 Step 4/5 gates and emit READY TO RESUME or BLOCKED (repo-local fallback path).",
+    justification="Validate Stage 5 Step 4/5 gates and emit READY TO REPLAN, READY TO LAND, or BLOCKED (repo-local fallback path).",
     match=[
         "./codex/scripts/revalidate-validate.sh add-feature-x",
         "./codex/scripts/revalidate-validate.sh add-feature-x main",
