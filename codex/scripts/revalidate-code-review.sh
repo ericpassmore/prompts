@@ -6,7 +6,10 @@ BASE_BRANCH_OVERRIDE="${2:-}"
 ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 TASK_DIR="${ROOT_DIR}/tasks/${TASK_NAME}"
 REVIEW_FILE="${TASK_DIR}/revalidate-code-review.md"
-COMMANDS_FILE="${ROOT_DIR}/codex-commands.md"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/resolve-codex-root.sh"
 
 usage() {
   echo "Usage (canonical): ./.codex/scripts/revalidate-code-review.sh <task-name> [base-branch]"
@@ -36,6 +39,8 @@ is_valid_branch() {
 
 resolve_base_branch() {
   local candidate=""
+  local codex_root=""
+  local config_file=""
 
   if [[ -n "${BASE_BRANCH_OVERRIDE}" ]]; then
     if ! is_valid_branch "${BASE_BRANCH_OVERRIDE}"; then
@@ -46,8 +51,36 @@ resolve_base_branch() {
     return 0
   fi
 
-  if [[ -f "${COMMANDS_FILE}" ]]; then
-    candidate="$(sed -nE 's/^[[:space:]-]*([Cc]ode review[[:space:]]+)?[Bb]ase branch:[[:space:]]*`?([A-Za-z0-9._\/-]+)`?.*$/\2/p' "${COMMANDS_FILE}" | head -n 1)"
+  if ! codex_root="$(resolve_codex_root codex-config.yaml project-structure.md)"; then
+    echo "BLOCKED: unable to resolve codex root. Missing codex-config.yaml and/or project-structure.md."
+    exit 1
+  fi
+
+  config_file="${codex_root}/codex-config.yaml"
+  if [[ ! -f "${config_file}" ]]; then
+    echo "Abort: missing codex config file: ${config_file}"
+    exit 1
+  fi
+
+  if [[ ! -f "${codex_root}/project-structure.md" ]]; then
+    echo "BLOCKED: missing required project structure file: ${codex_root}/project-structure.md"
+    exit 1
+  fi
+
+  candidate="$(sed -nE 's/^[[:space:]]*base_branch:[[:space:]]*"?([A-Za-z0-9._\/-]+)"?[[:space:]]*$/\1/p' "${config_file}" | head -n 1)"
+  if [[ -n "${candidate}" ]] && is_valid_branch "${candidate}"; then
+    echo "${candidate}"
+    return 0
+  fi
+
+  candidate="$(sed -nE 's/^[[:space:]-]*([Cc]ode review[[:space:]]+)?[Bb]ase branch:[[:space:]]*`?([A-Za-z0-9._\/-]+)`?.*$/\2/p' "${config_file}" | head -n 1)"
+  if [[ -n "${candidate}" ]] && is_valid_branch "${candidate}"; then
+    echo "${candidate}"
+    return 0
+  fi
+
+  if [[ -f "${ROOT_DIR}/codex/codex-config.yaml" ]]; then
+    candidate="$(sed -nE 's/^[[:space:]]*base_branch:[[:space:]]*"?([A-Za-z0-9._\/-]+)"?[[:space:]]*$/\1/p' "${ROOT_DIR}/codex/codex-config.yaml" | head -n 1)"
     if [[ -n "${candidate}" ]] && is_valid_branch "${candidate}"; then
       echo "${candidate}"
       return 0

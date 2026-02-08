@@ -22,10 +22,12 @@ Use the `expand-task-spec` skill.
 ## Instructions
 
 0) **Initial setup**
-   - Check whether `./codex-commands.md` exists at the root of the local repository.
-   - If it does not exist:
-     - Copy `/Users/eric/.codex/codex-commands.md` to `./codex-commands.md`.
-     - Update `./codex-commands.md` to reflect the local repository’s toolchain, scripts, and rules.
+   - Check whether `./codex/project-structure.md` and `./codex/codex-config.yaml` exist.
+   - If `./codex/project-structure.md` is missing:
+     - Abort immediately (`BLOCKED`).
+   - If `./codex/codex-config.yaml` is missing:
+     - Copy `/Users/eric/.codex/codex-config.yaml` to `./codex/codex-config.yaml`.
+     - Update `./codex/codex-config.yaml` to reflect the local repository’s codex settings.
 
 1) **Task scaffold (authoritative: user-level script only)**
    - Create/verify the task directory and required task files by running:
@@ -47,6 +49,6 @@ Use the `expand-task-spec` skill.
 
 5) Execute work phase-by-phase, honoring defined gates and acceptance criteria.
 
-6) Run lint, build, and tests using the pinned commands in `./codex-commands.md`.
+6) Run lint, build, and tests using the pinned commands in `./codex/project-structure.md` and task spec.
 
 7) Perform a code review and surface issues, risks, and follow-up recommendations.

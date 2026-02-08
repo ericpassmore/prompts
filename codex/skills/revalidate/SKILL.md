@@ -39,7 +39,7 @@ Direct shell reimplementation of these operations is not allowed.
 
 ## Command resolution
 
-Preferred (from persisted bootstrap reference in `./codex-commands.md`):
+Preferred (from persisted bootstrap reference in `codex-config.yaml`):
 
 ```bash
 CODEX_ROOT=<CODEX_ROOT> <CODEX_SCRIPTS_DIR>/<script>.sh ...
@@ -94,7 +94,7 @@ No additional reset records are required.
 Treat these as locked context-only inputs:
 
 - establish-goals outputs (`./goals/<TASK_NAME_IN_KEBAB_CASE>/goals.vN.md` in locked state)
-- prepare-takeoff outputs in `spec.md` and `codex-commands.md`
+- prepare-takeoff outputs in `spec.md`, `codex-config.yaml`, and `project-structure.md`
 
 Do not modify or reinterpret these locked artifacts in Stage 5.
 
@@ -120,7 +120,7 @@ Run:
 
 Script behavior:
 
-- reads base branch from `codex-commands.md` when specified
+- reads base branch from `codex-config.yaml` when specified
 - falls back to base branch `main`
 - if base-branch diff is empty/errors, falls back to `git diff`
 - scaffolds/updates:

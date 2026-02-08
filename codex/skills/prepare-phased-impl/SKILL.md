@@ -38,7 +38,7 @@ Direct shell reimplementation of these operations is not allowed.
 
 ## Command resolution
 
-Preferred (from persisted bootstrap reference in `./codex-commands.md`):
+Preferred (from persisted bootstrap reference in `codex-config.yaml`):
 
 ```bash
 CODEX_ROOT=<CODEX_ROOT> <CODEX_SCRIPTS_DIR>/<script>.sh ...
