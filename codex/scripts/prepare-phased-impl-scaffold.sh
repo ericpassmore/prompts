@@ -75,16 +75,19 @@ ensure_lifecycle_state_file() {
   local stage3_runs="0"
   local current_cycle="0"
   local last_validated_cycle="0"
+  local drift_revalidation_count="0"
 
   if [[ -f "${LIFECYCLE_STATE_FILE}" ]]; then
     stage3_runs="$(sed -nE 's/^- Stage 3 runs:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${LIFECYCLE_STATE_FILE}" | head -n 1)"
     current_cycle="$(sed -nE 's/^- Stage 3 current cycle:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${LIFECYCLE_STATE_FILE}" | head -n 1)"
     last_validated_cycle="$(sed -nE 's/^- Stage 3 last validated cycle:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${LIFECYCLE_STATE_FILE}" | head -n 1)"
+    drift_revalidation_count="$(sed -nE 's/^- Drift revalidation count:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${LIFECYCLE_STATE_FILE}" | head -n 1)"
   fi
 
   [[ "${stage3_runs}" =~ ^[0-9]+$ ]] || stage3_runs="0"
   [[ "${current_cycle}" =~ ^[0-9]+$ ]] || current_cycle="0"
   [[ "${last_validated_cycle}" =~ ^[0-9]+$ ]] || last_validated_cycle="0"
+  [[ "${drift_revalidation_count}" =~ ^[0-9]+$ ]] || drift_revalidation_count="0"
 
   current_cycle=$((current_cycle + 1))
 
@@ -93,6 +96,7 @@ ensure_lifecycle_state_file() {
 - Stage 3 runs: ${stage3_runs}
 - Stage 3 current cycle: ${current_cycle}
 - Stage 3 last validated cycle: ${last_validated_cycle}
+- Drift revalidation count: ${drift_revalidation_count}
 EOF
 }
 

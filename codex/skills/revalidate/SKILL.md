@@ -156,6 +156,7 @@ Verdict constraints:
   - current `revalidate` entry is direct from Stage 4 verdict `READY FOR REVERIFICATION`
   - Stage 3 has executed at least twice for the task (initial pass + at least one post-revalidation restart)
   - stage-count source of truth: `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` with `- Stage 3 runs: <N>`
+  - drift source-of-truth: `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` with `- Drift revalidation count: <N>` and `N >= 1`
   - no open review findings and review verdict `patch is correct`
   - unresolved actionable findings may proceed only with explicit risk acceptance in `./tasks/<TASK_NAME_IN_KEBAB_CASE>/risk-acceptance.md` containing:
     - `- Owner:`
@@ -175,6 +176,7 @@ Validator behavior:
 - executes `revalidate-code-review.sh` to enforce Step 4
 - enforces Step 0 trigger-source format and Step 5 final verdict format in `revalidate.md`
 - enforces Stage 3 run-count source from `lifecycle-state.md`
+- increments drift revalidation count in `lifecycle-state.md` when trigger source is `drift` and verdict is `READY TO REPLAN`
 - enforces landing strictness for review findings/verdict, with optional risk-acceptance waiver
 - emits exactly:
   - `READY TO REPLAN`

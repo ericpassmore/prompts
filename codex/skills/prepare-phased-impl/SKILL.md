@@ -194,5 +194,6 @@ All gates must pass:
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/phase-plan.md` with final verdict.
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/.scope-lock.md`.
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` with Stage 3 run metadata.
+  - includes `Stage 3 runs`, `Stage 3 current cycle`, `Stage 3 last validated cycle`, and `Drift revalidation count`
 - Active phase files matching chosen complexity.
 - Updated planning docs under `./tasks/<TASK_NAME_IN_KEBAB_CASE>/`.

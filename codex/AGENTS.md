@@ -169,6 +169,8 @@ All revalidation decisions must be documented.
   - current `revalidate` entry was direct from Stage 4 verdict `READY FOR REVERIFICATION`
 - Stage 3 run count source of truth is:
   - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` (`- Stage 3 runs: <N>`)
+- Post-revalidation restart evidence source of truth is:
+  - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` (`- Drift revalidation count: <N>`, where `N >= 1`)
 - `READY TO LAND` additionally requires:
   - no open actionable code-review findings
   - code-review verdict is `patch is correct`

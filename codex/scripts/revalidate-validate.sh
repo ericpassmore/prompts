@@ -63,6 +63,7 @@ review_verdict=""
 findings_json=""
 findings_compact=""
 stage3_runs="0"
+drift_revalidation_count="0"
 if [[ -f "${REVALIDATE_FILE}" ]]; then
   trigger_source="$(sed -nE 's/^- Trigger source:[[:space:]]*(drift|ready-for-reverification)[[:space:]]*$/\1/p' "${REVALIDATE_FILE}" | head -n 1)"
   if [[ -z "${trigger_source}" ]]; then
@@ -89,9 +90,14 @@ fi
 
 if [[ -f "${LIFECYCLE_STATE_FILE}" ]]; then
   stage3_runs="$(sed -nE 's/^- Stage 3 runs:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${LIFECYCLE_STATE_FILE}" | head -n 1)"
+  drift_revalidation_count="$(sed -nE 's/^- Drift revalidation count:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${LIFECYCLE_STATE_FILE}" | head -n 1)"
   if [[ -z "${stage3_runs}" ]]; then
     stage3_runs="0"
     issues+=("Missing or invalid '- Stage 3 runs:' in ${LIFECYCLE_STATE_FILE}.")
+  fi
+  if [[ -z "${drift_revalidation_count}" ]]; then
+    drift_revalidation_count="0"
+    issues+=("Missing or invalid '- Drift revalidation count:' in ${LIFECYCLE_STATE_FILE}.")
   fi
 fi
 
@@ -122,6 +128,9 @@ if [[ -n "${trigger_source}" && -n "${verdict}" ]]; then
       if [[ "${verdict}" == "READY TO LAND" && "${stage3_runs}" -lt 2 ]]; then
         issues+=("READY TO LAND requires at least 2 total Stage 3 executions; detected ${stage3_runs}.")
       fi
+      if [[ "${verdict}" == "READY TO LAND" && "${drift_revalidation_count}" -lt 1 ]]; then
+        issues+=("READY TO LAND requires at least 1 drift revalidation cycle before landing; detected ${drift_revalidation_count}.")
+      fi
       ;;
   esac
 fi
@@ -133,6 +142,38 @@ if [[ "${verdict}" == "READY TO LAND" ]]; then
     fi
   fi
 fi
+
+update_drift_revalidation_count() {
+  local lifecycle_exists="0"
+  local stage3_runs_local="0"
+  local current_cycle_local="0"
+  local last_validated_cycle_local="0"
+  local drift_revalidation_count_local="0"
+
+  [[ -f "${LIFECYCLE_STATE_FILE}" ]] && lifecycle_exists="1"
+
+  if [[ "${lifecycle_exists}" == "1" ]]; then
+    stage3_runs_local="$(sed -nE 's/^- Stage 3 runs:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${LIFECYCLE_STATE_FILE}" | head -n 1)"
+    current_cycle_local="$(sed -nE 's/^- Stage 3 current cycle:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${LIFECYCLE_STATE_FILE}" | head -n 1)"
+    last_validated_cycle_local="$(sed -nE 's/^- Stage 3 last validated cycle:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${LIFECYCLE_STATE_FILE}" | head -n 1)"
+    drift_revalidation_count_local="$(sed -nE 's/^- Drift revalidation count:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${LIFECYCLE_STATE_FILE}" | head -n 1)"
+  fi
+
+  [[ "${stage3_runs_local}" =~ ^[0-9]+$ ]] || stage3_runs_local="0"
+  [[ "${current_cycle_local}" =~ ^[0-9]+$ ]] || current_cycle_local="0"
+  [[ "${last_validated_cycle_local}" =~ ^[0-9]+$ ]] || last_validated_cycle_local="0"
+  [[ "${drift_revalidation_count_local}" =~ ^[0-9]+$ ]] || drift_revalidation_count_local="0"
+
+  drift_revalidation_count_local=$((drift_revalidation_count_local + 1))
+
+  cat > "${LIFECYCLE_STATE_FILE}" <<EOF
+# Lifecycle State
+- Stage 3 runs: ${stage3_runs_local}
+- Stage 3 current cycle: ${current_cycle_local}
+- Stage 3 last validated cycle: ${last_validated_cycle_local}
+- Drift revalidation count: ${drift_revalidation_count_local}
+EOF
+}
 
 if [[ "${#issues[@]}" -gt 0 ]]; then
   echo "BLOCKED"
@@ -146,6 +187,10 @@ if [[ "${verdict}" == "BLOCKED" ]]; then
   echo "BLOCKED"
   echo "- Final verdict in ${REVALIDATE_FILE} is BLOCKED."
   exit 1
+fi
+
+if [[ "${trigger_source}" == "drift" && "${verdict}" == "READY TO REPLAN" ]]; then
+  update_drift_revalidation_count
 fi
 
 echo "${verdict}"
