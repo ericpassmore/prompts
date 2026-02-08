@@ -94,15 +94,15 @@ fi
 
 if [[ -f "${FINAL_PHASE_FILE}" ]]; then
   if ! grep -Eq '^[[:space:]]*[-*][[:space:]]+\[[xX]\][[:space:]]+Lint:[[:space:]]+`[^`]+`.*\bPASS\b' "${FINAL_PHASE_FILE}"; then
-    issues+=("Missing Lint pass evidence in ${FINAL_PHASE_FILE}. Required format: '- [x] Lint: `<command>` PASS'")
+    issues+=("Missing Lint pass evidence in ${FINAL_PHASE_FILE}. Required format: '- [x] Lint: \`<command>\` PASS'")
   fi
 
   if ! grep -Eq '^[[:space:]]*[-*][[:space:]]+\[[xX]\][[:space:]]+Build:[[:space:]]+`[^`]+`.*\bPASS\b' "${FINAL_PHASE_FILE}"; then
-    issues+=("Missing Build pass evidence in ${FINAL_PHASE_FILE}. Required format: '- [x] Build: `<command>` PASS'")
+    issues+=("Missing Build pass evidence in ${FINAL_PHASE_FILE}. Required format: '- [x] Build: \`<command>\` PASS'")
   fi
 
   if ! grep -Eq '^[[:space:]]*[-*][[:space:]]+\[[xX]\][[:space:]]+Tests:[[:space:]]+`[^`]+`.*\bPASS\b' "${FINAL_PHASE_FILE}"; then
-    issues+=("Missing Tests pass evidence in ${FINAL_PHASE_FILE}. Required format: '- [x] Tests: `<command>` PASS'")
+    issues+=("Missing Tests pass evidence in ${FINAL_PHASE_FILE}. Required format: '- [x] Tests: \`<command>\` PASS'")
   fi
 
   unchecked_without_eval_count="$(

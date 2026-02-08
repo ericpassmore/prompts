@@ -3,7 +3,7 @@
 - Complexity: medium
 - Phase count: 3
 - Active phases: 1..3
-- Verdict: READY FOR REVERIFICATION
+- Verdict: BLOCKED
 
 ## Constraints
 - no code/config changes are allowed except phase-plan document updates under ./tasks/*
