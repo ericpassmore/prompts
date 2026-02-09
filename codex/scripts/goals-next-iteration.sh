@@ -23,7 +23,7 @@ fi
 
 LATEST_ITERATION=$(
   ls "$GOALS_DIR" 2>/dev/null \
-  | sed -n 's/^establish-goals\.v\([0-9]\+\)\.md$/\1/p' \
+  | sed -n 's/^establish-goals\.v\([0-9][0-9]*\)\.md$/\1/p' \
   | sort -n \
   | tail -n 1
 )
