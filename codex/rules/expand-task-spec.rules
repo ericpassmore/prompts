@@ -33,6 +33,40 @@ prefix_rule(
 )
 
 # -------------------------
+# Project initialization script
+# -------------------------
+
+prefix_rule(
+    pattern=["/Users/eric/.codex/scripts/project-init.sh"],
+    decision="allow",
+    justification="Bootstrap a new cloned repository with codex assets and open a setup PR.",
+    match=[
+        "/Users/eric/.codex/scripts/project-init.sh",
+        "/Users/eric/.codex/scripts/project-init.sh basic-python",
+    ],
+)
+
+prefix_rule(
+    pattern=["./.codex/scripts/project-init.sh"],
+    decision="allow",
+    justification="Bootstrap a new cloned repository with codex assets and open a setup PR (canonical repo path).",
+    match=[
+        "./.codex/scripts/project-init.sh",
+        "./.codex/scripts/project-init.sh basic-python",
+    ],
+)
+
+prefix_rule(
+    pattern=["./codex/scripts/project-init.sh"],
+    decision="allow",
+    justification="Bootstrap a new cloned repository with codex assets and open a setup PR (repo-local fallback path).",
+    match=[
+        "./codex/scripts/project-init.sh",
+        "./codex/scripts/project-init.sh basic-python",
+    ],
+)
+
+# -------------------------
 # Prepare-takeoff bootstrap script
 # -------------------------
 
