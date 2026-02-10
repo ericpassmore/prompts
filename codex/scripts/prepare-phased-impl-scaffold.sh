@@ -48,7 +48,6 @@ TASK_DIR="${ROOT_DIR}/tasks/${TASK_NAME}"
 SPEC_FILE="${TASK_DIR}/spec.md"
 FINAL_PHASE_FILE="${TASK_DIR}/final-phase.md"
 PHASE_PLAN_FILE="${TASK_DIR}/phase-plan.md"
-SCOPE_LOCK_FILE="${TASK_DIR}/.scope-lock.md"
 LIFECYCLE_STATE_FILE="${TASK_DIR}/lifecycle-state.md"
 
 if [[ ! -d "${TASK_DIR}" ]]; then
@@ -104,7 +103,14 @@ ensure_lifecycle_state_file
 
 # Enforce Stage 3 archival on restart/rerun when prior Stage 3 records exist.
 archived_prior_stage3=0
-if [[ -f "${PHASE_PLAN_FILE}" || -f "${SCOPE_LOCK_FILE}" ]]; then
+shopt -s nullglob
+existing_phase_files=( "${TASK_DIR}"/phase-[0-9]*.md )
+shopt -u nullglob
+
+# A standalone scope lock can exist on first run (Step 2 before scaffold) and
+# must not trigger archival. Archive only when actual prior Stage 3 planning
+# artifacts exist.
+if [[ -f "${PHASE_PLAN_FILE}" || "${#existing_phase_files[@]}" -gt 0 ]]; then
   "${SCRIPT_DIR}/prepare-phased-impl-archive.sh" "${TASK_NAME}"
   archived_prior_stage3=1
 fi
