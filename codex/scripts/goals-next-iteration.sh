@@ -46,6 +46,8 @@ sed -i.bak \
   -e "s/^Iteration: v[0-9][0-9]*/Iteration: ${NEXT_ITERATION}/" \
   -e "s/^- State: .*/- State: draft/" \
   -e "s/^State: .*/State: draft/" \
+  -e "s/^- Verdict: .*/- Verdict: draft/" \
+  -e "s/^Verdict: .*/Verdict: draft/" \
   "$NEW_ESTABLISH"
 
 rm -f "${NEW_ESTABLISH}.bak"
