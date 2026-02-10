@@ -5,7 +5,7 @@ You are executing the `establish-goals` lifecycle stage **only**.
 This prompt is a hard entrypoint and scope fence.
 All procedure, rules, and mechanics are defined in:
 
-`./.codex/skills/establish-goals/SKILL.md`
+`./codex/skills/establish-goals/SKILL.md`
 
 You MUST follow that skill exactly.
 
@@ -48,8 +48,8 @@ Do NOT proceed to any other lifecycle stage.
 
 You MUST produce iteration artifacts exactly as specified by the SKILL:
 
-- `./.codex/goals/{{TASK_NAME_IN_KEBAB_CASE}}/establish-goals.{{ITERATION}}.md`
-- `./.codex/goals/{{TASK_NAME_IN_KEBAB_CASE}}/goals.{{ITERATION}}.md`
+- `./goals/{{TASK_NAME_IN_KEBAB_CASE}}/establish-goals.{{ITERATION}}.md`
+- `./goals/{{TASK_NAME_IN_KEBAB_CASE}}/goals.{{ITERATION}}.md`
 
 All file creation, iteration, validation, extraction, and locking MUST be performed using the approved scripts.
 
