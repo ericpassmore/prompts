@@ -94,45 +94,41 @@ $HOME/.codex/scripts/task-scaffold.sh <TASK_NAME_IN_KEBAB_CASE>
 
 - Do not modify existing code.
 
-### 5. Create Isolated Git Worktree
+### 5. Run Existing-Worktree Safety Prep
 
-- Create a git worktree under:
-
-`$HOME/workspace/<repository>/<sanitized-branch>/<TASK_NAME_IN_KEBAB_CASE>`
-
+- Assume execution starts inside an already-managed existing worktree.
+- Do not create, initialize, switch, or remove any worktree in Stage 2.
 - Use the `CODEX_SCRIPTS_DIR` selected in `codex-config.yaml`.
 - Preferred command:
 
 ```bash
-CODEX_ROOT=<CODEX_ROOT> <CODEX_SCRIPTS_DIR>/prepare-takeoff-worktree.sh <TASK_NAME_IN_KEBAB_CASE> [branch]
+CODEX_ROOT=<CODEX_ROOT> <CODEX_SCRIPTS_DIR>/prepare-takeoff-worktree.sh <TASK_NAME_IN_KEBAB_CASE> [expected-branch]
 ```
 
 - Canonical command:
 
 ```bash
-./.codex/scripts/prepare-takeoff-worktree.sh <TASK_NAME_IN_KEBAB_CASE> [branch]
+./.codex/scripts/prepare-takeoff-worktree.sh <TASK_NAME_IN_KEBAB_CASE> [expected-branch]
 ```
 
 - Repository-local fallback:
 
 ```bash
-./codex/scripts/prepare-takeoff-worktree.sh <TASK_NAME_IN_KEBAB_CASE> [branch]
+./codex/scripts/prepare-takeoff-worktree.sh <TASK_NAME_IN_KEBAB_CASE> [expected-branch]
 ```
 
 - Home fallback:
 
 ```bash
-$HOME/.codex/scripts/prepare-takeoff-worktree.sh <TASK_NAME_IN_KEBAB_CASE> [branch]
+$HOME/.codex/scripts/prepare-takeoff-worktree.sh <TASK_NAME_IN_KEBAB_CASE> [expected-branch]
 ```
 
-- Non-interactive stage runs are the default behavior.
-- For manual shell handoff only, append `--interactive-shell`.
-- Branch behavior:
-  - If selected branch is `main` or `master`, create new branch `codex/<TASK_NAME_IN_KEBAB_CASE>`.
-  - Otherwise, use the selected existing local branch as-is.
-  - In all other conditions, fail and exit.
-- Sanitize branch directory segment before composing the worktree path.
-- Abort if the target path already exists.
+- The safety-prep helper must:
+  - run `git worktree prune`
+  - validate repository/branch context
+  - fail fast on unresolved merge conflicts
+  - report status summary for current worktree
+- If `expected-branch` is provided and does not match current branch, fail with `BLOCKED`.
 
 ### 6. Identify Governing Context
 
@@ -198,7 +194,7 @@ All gates must pass before planning starts.
 - Gate 3: Goal lock asserted and recorded.
 - Gate 4: Ambiguity check passed.
 - Gate 5: Task scaffold exists.
-- Gate 6: Worktree created at required path.
+- Gate 6: Existing-worktree safety prep completed without creating/switching/removing worktrees.
 - Gate 7: Governing context and tooling status recorded.
 - Gate 8: Scope boundaries declared.
 - Gate 9: Execution posture lock recorded.
@@ -209,7 +205,7 @@ All gates must pass before planning starts.
 ## Constraints
 
 - No planning, design, or implementation is permitted.
-- no code/config changes are allowed except codex bootstrap/config updates (`./codex/codex-config.yaml` and `./codex/project-structure.md`), task scaffolding, worktree creation, and Stage 2 readiness metadata updates in `./tasks/<TASK_NAME_IN_KEBAB_CASE>/spec.md`
+- no code/config changes are allowed except codex bootstrap/config updates (`./codex/codex-config.yaml` and `./codex/project-structure.md`), task scaffolding, existing-worktree safety prep, and Stage 2 readiness metadata updates in `./tasks/<TASK_NAME_IN_KEBAB_CASE>/spec.md`
 
 ## Required Outputs
 
@@ -219,7 +215,7 @@ All gates must pass before planning starts.
   - canonical and fallback script paths
 - `project-structure.md` present; stage aborts if missing
 - Fully scaffolded `./tasks/<TASK_NAME_IN_KEBAB_CASE>/`.
-- Git worktree created at `$HOME/workspace/<repository>/<sanitized-branch>/<TASK_NAME_IN_KEBAB_CASE>`.
+- Existing-worktree safety-prep evidence recorded (for example prune + status safety checks).
 - Updated `spec.md` with:
   - goal lock assertion
   - ambiguity check result

@@ -79,7 +79,7 @@ replace_bootstrap_block() {
 if ! SELECTED_CODEX_ROOT="$(resolve_codex_root scripts/task-scaffold.sh scripts/prepare-takeoff-worktree.sh project-structure.md)"; then
   echo "BLOCKED: unable to resolve CODEX_ROOT with required files."
   echo "Checked: ${ROOT_DIR}/.codex, ${ROOT_DIR}/codex, ${HOME}/.codex"
-  echo "Required: scripts/task-scaffold.sh, scripts/prepare-takeoff-worktree.sh, project-structure.md"
+  echo "Required: scripts/task-scaffold.sh, scripts/prepare-takeoff-worktree.sh (Stage 2 safety prep), project-structure.md"
   exit 1
 fi
 
