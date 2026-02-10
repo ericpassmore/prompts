@@ -7,7 +7,7 @@ description: Finalize completed work by validating results, committing changes, 
 
 ## Intent
 
-Finalize verified task work into a reviewer-ready pull request, merge it into the configured base branch, then cleanly release temporary stage resources and provide handoff details.
+Finalize verified task work into a reviewer-ready pull request, then cleanly release temporary stage resources and provide handoff details.
 
 ## Preconditions (hard)
 
@@ -15,7 +15,7 @@ Finalize verified task work into a reviewer-ready pull request, merge it into th
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/` exists.
 - Current git state may be a named branch or detached `HEAD`.
 - Repository has no unmerged/conflicted paths.
-- A remote push target exists for the resolved head branch (required by `git-commit`, PR creation, and merge flow).
+- A remote push target exists for the resolved head branch (required by `git-commit` and PR creation flow).
 
 If any hard precondition fails, emit `BLOCKED` and stop.
 
@@ -28,7 +28,7 @@ Stage 6 depends on:
 
 ## Required upstream skill (mandatory)
 
-`land-the-plan` MUST run the `git-commit` skill before creating/updating/merging a PR.
+`land-the-plan` MUST run the `git-commit` skill before creating/updating a PR.
 
 ## Command resolution
 
@@ -165,23 +165,9 @@ gh pr create --base <BASE_BRANCH> --head <RESOLVED_HEAD_BRANCH> --title "<PR_TIT
 ```
 
 If a PR for the head branch already exists, update it instead of creating a duplicate.
-Record the PR URL/number for merge.
+Record the PR URL/number for handoff.
 
-### Step 7 — Merge PR into resolved base branch
-
-Merge the PR created/updated in Step 6:
-
-```bash
-gh pr merge <PR_URL_OR_NUMBER> --merge
-```
-
-Requirements:
-
-- merged target must be resolved `BASE_BRANCH`
-- if repository policy requires a different merge mode (`--squash` or `--rebase`), use that policy mode and document it
-- on merge failure, emit `BLOCKED`
-
-### Step 8 — Release held resources
+### Step 7 — Release held resources
 
 Release all temporary stage resources:
 
@@ -192,20 +178,7 @@ After release:
 - stop modifying task/code files for this stage
 - provide handoff-ready landing details only
 
-### Step 9 — Revert bootstrap paths
-
-Run:
-
-```bash
-<CODEX_SCRIPTS_DIR>/codex-config-bootstrap-sync.sh revert
-```
-
-This must restore `codex-config.yaml` bootstrap paths to the preserved pre-override values when a detached-head worktree override was applied during `establish-goals`.
-
-If no override is active, script may no-op.
-If revert fails, emit `BLOCKED`.
-
-### Step 10 — Emit final verdict
+### Step 8 — Emit final verdict
 
 Emit exactly one verdict:
 
@@ -219,9 +192,7 @@ Emit exactly one verdict:
 - `git-commit` completed successfully
 - branch push succeeded
 - PR exists and is reviewer-ready
-- PR merge to resolved base branch succeeded
 - temporary stage resources were released
-- bootstrap paths were reverted (or explicit no-op because no override was active)
 
 ## Stage gates
 
@@ -236,10 +207,8 @@ All gates must pass:
 - Gate 6: PR body contains `Goals`, `Non-goals`, `ADR`, `Exceptions`, `Deferred work`.
 - Gate 7: deferred work section reflects actual `//TODO` markers (or explicit none).
 - Gate 8: PR created/updated successfully.
-- Gate 9: PR merged successfully to resolved base branch.
-- Gate 10: held resources released.
-- Gate 11: bootstrap path revert succeeded (or explicit no-op).
-- Gate 12: terminal verdict emitted (`LANDED` or `BLOCKED`).
+- Gate 9: held resources released.
+- Gate 10: terminal verdict emitted (`LANDED` or `BLOCKED`).
 
 ## Constraints
 
@@ -249,13 +218,11 @@ All gates must pass:
 - Do not run raw `git push -u origin <branch>`; use `git-push-branch-safe.sh`.
 - Do not invent TODO items; only include observed `//TODO`.
 - Do not skip required PR body sections.
-- Do not skip the PR merge step.
-- Do not skip bootstrap path revert at stage end.
 
 ## Required outputs
 
 - terminal stage verdict: `LANDED` or `BLOCKED`
-- resolved base branch used for the PR/merge
+- resolved base branch used for the PR
 - resolved head branch used for push/PR
 - PR URL
 - generated PR title
@@ -265,6 +232,4 @@ All gates must pass:
   - ADR
   - exceptions
   - deferred work (`//TODO`)
-- merge result summary (mode + target branch + resulting commit/PR state)
 - explicit release summary for held resources
-- bootstrap revert result summary
