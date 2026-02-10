@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-INTERACTIVE_SHELL="${PREPARE_TAKEOFF_INTERACTIVE_SHELL:-0}"
 POSITIONAL_ARGS=()
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -12,20 +11,15 @@ if [[ -f "${SCRIPT_DIR}/read-codex-paths.sh" ]]; then
 fi
 
 usage() {
-  echo "Usage (canonical): ./.codex/scripts/prepare-takeoff-worktree.sh <task-name> [branch] [--interactive-shell]"
-  echo "Usage (repo-local fallback): ./codex/scripts/prepare-takeoff-worktree.sh <task-name> [branch] [--interactive-shell]"
-  echo "Usage (home fallback): ${HOME}/.codex/scripts/prepare-takeoff-worktree.sh <task-name> [branch] [--interactive-shell]"
-  echo "Example: ./.codex/scripts/prepare-takeoff-worktree.sh add-performer-search main"
+  echo "Usage (canonical): ./.codex/scripts/prepare-takeoff-worktree.sh <task-name> [expected-branch]"
+  echo "Usage (repo-local fallback): ./codex/scripts/prepare-takeoff-worktree.sh <task-name> [expected-branch]"
+  echo "Usage (home fallback): ${HOME}/.codex/scripts/prepare-takeoff-worktree.sh <task-name> [expected-branch]"
+  echo "Example: ./.codex/scripts/prepare-takeoff-worktree.sh add-performer-search codex/add-performer-search"
+  echo "Note: this helper no longer creates or switches worktrees."
 }
 
 for arg in "$@"; do
   case "${arg}" in
-    --interactive-shell)
-      INTERACTIVE_SHELL=1
-      ;;
-    --no-interactive-shell)
-      INTERACTIVE_SHELL=0
-      ;;
     -h|--help)
       usage
       exit 0
@@ -37,7 +31,7 @@ for arg in "$@"; do
 done
 
 TASK_NAME="${POSITIONAL_ARGS[0]:-}"
-BRANCH_NAME="${POSITIONAL_ARGS[1]:-}"
+EXPECTED_BRANCH="${POSITIONAL_ARGS[1]:-}"
 
 if [[ "${#POSITIONAL_ARGS[@]}" -gt 2 ]]; then
   echo "Abort: too many positional arguments."
@@ -61,87 +55,50 @@ if [[ -z "${REPO_ROOT}" ]]; then
   exit 1
 fi
 
-if [[ -z "${BRANCH_NAME}" ]]; then
-  BRANCH_NAME="$(git branch --show-current)"
-fi
-
-if [[ -z "${BRANCH_NAME}" ]]; then
-  echo "Abort: branch is empty (detached HEAD). Pass an explicit branch name."
-  exit 1
-fi
-
-sanitize_branch_for_path() {
-  local raw="$1"
-  raw="${raw//\//-}"
-  raw="${raw//:/-}"
-  printf '%s' "${raw}" | sed -E 's/[^A-Za-z0-9._-]+/-/g; s/-+/-/g; s/^-+//; s/-+$//'
-}
-
-REPO_NAME="$(basename "${REPO_ROOT}")"
-
 cd "${REPO_ROOT}"
 
-TARGET_BRANCH="${BRANCH_NAME}"
-SOURCE_BRANCH="${BRANCH_NAME}"
+CURRENT_BRANCH="$(git branch --show-current)"
 
-if [[ "${BRANCH_NAME}" == "main" || "${BRANCH_NAME}" == "master" ]]; then
-  if ! git show-ref --verify --quiet "refs/heads/${BRANCH_NAME}"; then
-    echo "Abort: base branch must exist locally: ${BRANCH_NAME}"
+if [[ -z "${CURRENT_BRANCH}" ]]; then
+  if [[ -n "${EXPECTED_BRANCH}" ]]; then
+    echo "Abort: expected branch '${EXPECTED_BRANCH}' but repository is in detached HEAD state."
+    echo "Worktree/branch switching is managed outside the agent."
     exit 1
   fi
-
-  TARGET_BRANCH="codex/${TASK_NAME}"
-
-  if git show-ref --verify --quiet "refs/heads/${TARGET_BRANCH}"; then
-    echo "Abort: target branch already exists locally: ${TARGET_BRANCH}"
-    exit 1
-  fi
-
-  if git show-ref --verify --quiet "refs/remotes/origin/${TARGET_BRANCH}"; then
-    echo "Abort: target branch already exists on origin: ${TARGET_BRANCH}"
-    exit 1
-  fi
-else
-  if ! git show-ref --verify --quiet "refs/heads/${BRANCH_NAME}"; then
-    echo "Abort: non-main/master branch must already exist locally: ${BRANCH_NAME}"
-    exit 1
-  fi
+  CURRENT_BRANCH="(detached HEAD)"
 fi
 
-BRANCH_DIR_NAME="$(sanitize_branch_for_path "${TARGET_BRANCH}")"
-if [[ -z "${BRANCH_DIR_NAME}" ]]; then
-  echo "Abort: sanitized branch path segment is empty for branch: ${TARGET_BRANCH}"
+if [[ -n "${EXPECTED_BRANCH}" && "${EXPECTED_BRANCH}" != "${CURRENT_BRANCH}" ]]; then
+  echo "Abort: expected branch '${EXPECTED_BRANCH}' but current branch is '${CURRENT_BRANCH}'."
+  echo "Worktree/branch switching is managed outside the agent."
   exit 1
 fi
 
-WORKTREE_DIR="${HOME}/workspace/${REPO_NAME}/${BRANCH_DIR_NAME}/${TASK_NAME}"
-WORKTREE_PARENT="$(dirname "${WORKTREE_DIR}")"
+if [[ "${CURRENT_BRANCH}" == "main" || "${CURRENT_BRANCH}" == "master" ]]; then
+  echo "Warning: running Stage 2 prep from protected branch '${CURRENT_BRANCH}'."
+fi
 
-if [[ -e "${WORKTREE_DIR}" ]]; then
-  echo "Abort: target worktree path already exists: ${WORKTREE_DIR}"
+git worktree prune
+
+MERGE_CONFLICTS="$(git diff --name-only --diff-filter=U)"
+if [[ -n "${MERGE_CONFLICTS}" ]]; then
+  echo "Abort: unresolved merge conflicts detected."
+  while IFS= read -r path; do
+    [[ -z "${path}" ]] && continue
+    echo "  - ${path}"
+  done <<< "${MERGE_CONFLICTS}"
   exit 1
 fi
 
-mkdir -p "${WORKTREE_PARENT}"
+STATUS_PORCELAIN="$(git status --porcelain)"
+STATUS_COUNT="$(printf '%s\n' "${STATUS_PORCELAIN}" | sed '/^$/d' | wc -l | tr -d ' ')"
 
-if [[ "${BRANCH_NAME}" == "main" || "${BRANCH_NAME}" == "master" ]]; then
-  git worktree add -b "${TARGET_BRANCH}" "${WORKTREE_DIR}" "${SOURCE_BRANCH}"
-else
-  git worktree add "${WORKTREE_DIR}" "${TARGET_BRANCH}"
+echo "Stage 2 safety prep complete."
+echo "Repository: ${REPO_ROOT}"
+echo "Task: ${TASK_NAME}"
+echo "Branch: ${CURRENT_BRANCH}"
+echo "Uncommitted entries: ${STATUS_COUNT}"
+if [[ "${STATUS_COUNT}" -gt 0 ]]; then
+  echo "Status summary:"
+  printf '%s\n' "${STATUS_PORCELAIN}" | sed '/^$/d' | sed 's/^/  /'
 fi
-
-cd "${WORKTREE_DIR}"
-
-echo "Worktree created: ${WORKTREE_DIR}"
-echo "Branch in worktree: ${TARGET_BRANCH}"
-echo "Current directory: $(pwd)"
-
-if [[ "${INTERACTIVE_SHELL}" == "1" ]]; then
-  if [[ -z "${SHELL:-}" ]]; then
-    echo "Abort: SHELL is not set."
-    exit 1
-  fi
-  exec "${SHELL}"
-fi
-
-echo "Non-interactive mode: worktree setup complete."

@@ -196,10 +196,9 @@ Run the trusted helper script:
 1. **Always** run **Script: Commit Preflight**.
 2. The preflight script must:
    * abort when merge conflicts/unmerged paths are present
-   * abort when branch name is empty (detached HEAD or invalid state)
-   * abort when branch is `main` or `master`
-   * abort when no upstream is configured
-   * run `git pull --ff-only` and classify pull failures:
+   * accept detached `HEAD` state and report explicit detached-mode behavior
+   * when on a named branch, abort when no upstream is configured
+   * when on a named branch, run `git pull --ff-only` and classify pull failures:
      * upstream/reference issues (`couldn't find remote ref`, `no such ref`, `no tracking information`)
      * all other failures as manual-intervention required
 
@@ -298,5 +297,7 @@ Refactor authentication system for better organization of code
 
 **Final Step, After any `git commit` command**
 
-1. **Always** run `git push origin <current-branch-name>`
+1. **Always** push commit(s) to origin using one of:
+   * named branch mode: `git push origin <current-branch-name>`
+   * detached `HEAD` mode: `git push origin HEAD:<target-branch-name>`
 2. **Always** summarize the messages from git and report to the user

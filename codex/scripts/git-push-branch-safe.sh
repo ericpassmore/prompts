@@ -13,18 +13,6 @@ is_valid_branch() {
   [[ "${branch}" =~ ^[A-Za-z0-9._/-]+$ ]] && [[ "${branch}" != *".."* ]] && [[ "${branch}" != */. ]] && [[ "${branch}" != ./* ]]
 }
 
-is_protected_branch() {
-  local branch="$1"
-  case "${branch}" in
-    main|master|dev|qa|release/*)
-      return 0
-      ;;
-    *)
-      return 1
-      ;;
-  esac
-}
-
 BRANCH_NAME="${1:-}"
 if [[ -z "${BRANCH_NAME}" ]]; then
   usage
@@ -36,16 +24,11 @@ if ! is_valid_branch "${BRANCH_NAME}"; then
   exit 1
 fi
 
-if is_protected_branch "${BRANCH_NAME}"; then
-  echo "Abort: pushing protected branch '${BRANCH_NAME}' with -u is not allowed."
-  echo "Blocked patterns: main, master, dev, qa, release/*"
-  exit 1
-fi
-
 CURRENT_BRANCH="$(git branch --show-current)"
 if [[ -z "${CURRENT_BRANCH}" ]]; then
-  echo "Abort: detached HEAD or invalid branch state."
-  exit 1
+  echo "Notice: detached HEAD detected; pushing HEAD to '${BRANCH_NAME}'."
+  git push -u origin "HEAD:${BRANCH_NAME}"
+  exit 0
 fi
 
 if [[ "${CURRENT_BRANCH}" != "${BRANCH_NAME}" ]]; then

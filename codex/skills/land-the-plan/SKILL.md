@@ -7,15 +7,15 @@ description: Finalize completed work by validating results, committing changes, 
 
 ## Intent
 
-Finalize verified task work into a reviewer-ready pull request, then cleanly release execution resources and relinquish the active git workspace.
+Finalize verified task work into a reviewer-ready pull request, then cleanly release temporary stage resources and provide handoff details from the current worktree context.
 
 ## Preconditions (hard)
 
 - `revalidate` has emitted `READY TO LAND`.
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/` exists.
-- Current branch is non-empty and is not `main` or `master`.
+- Current git state may be a named branch or detached `HEAD`.
 - Repository has no unmerged/conflicted paths.
-- A remote push target exists for the active branch (required by `git-commit` and PR creation).
+- A remote push target exists for the resolved head branch (required by `git-commit` and PR creation).
 
 If any hard precondition fails, emit `BLOCKED` and stop.
 
@@ -72,11 +72,12 @@ PR body MUST include these sections:
 
 ## Stage procedure
 
-### Step 0 — Confirm task identity and branch
+### Step 0 — Confirm task identity and resolve head branch
 
 - Confirm `<TASK_NAME_IN_KEBAB_CASE>`.
-- Confirm active branch via `git branch --show-current`.
-- Abort if branch is empty, `main`, or `master`.
+- Resolve active branch via `git branch --show-current`.
+- If active branch is empty (detached `HEAD`), resolve landing head branch as `codex/<TASK_NAME_IN_KEBAB_CASE>`.
+- If active branch is present, use it as landing head branch.
 
 ### Step 1 — Enforce `READY TO LAND` hard gate
 
@@ -101,21 +102,15 @@ Run the `git-commit` skill workflow completely:
 - staged diff review (text only)
 - commit message generation
 - commit creation
-- push to `origin/<current-branch>`
+- push to `origin/<resolved-head-branch>`
 
 When an upstream push is required with `-u`, use the safe push helper script:
 
 ```bash
-<CODEX_SCRIPTS_DIR>/git-push-branch-safe.sh <CURRENT_BRANCH>
+<CODEX_SCRIPTS_DIR>/git-push-branch-safe.sh <RESOLVED_HEAD_BRANCH>
 ```
 
-This script blocks `git push -u origin <branch>` for protected branch names:
-
-- `main`
-- `master`
-- `dev`
-- `release/*`
-- `qa`
+This script validates branch arguments and supports detached `HEAD` pushes via `git push -u origin HEAD:<branch>`.
 
 If `git-commit` fails, emit `BLOCKED`.
 
@@ -153,18 +148,16 @@ Do not omit sections; use explicit `None` when a section has no entries.
 Create PR against resolved base branch:
 
 ```bash
-gh pr create --base <BASE_BRANCH> --head <CURRENT_BRANCH> --title "<PR_TITLE>" --body-file <PR_BODY_FILE>
+gh pr create --base <BASE_BRANCH> --head <RESOLVED_HEAD_BRANCH> --title "<PR_TITLE>" --body-file <PR_BODY_FILE>
 ```
 
 If a PR for the head branch already exists, update it instead of creating a duplicate.
 
-### Step 7 — Release held resources and relinquish workspace
+### Step 7 — Release held resources
 
 Release all temporary stage resources:
 
 - remove transient files created for PR composition
-- release task-specific worktree resources when applicable
-- prune stale worktree metadata if any worktrees were removed
 
 After release:
 
@@ -183,7 +176,7 @@ Emit exactly one verdict:
 - `READY TO LAND` precondition passed
 - `git-commit` completed successfully
 - PR exists and is reviewer-ready
-- resources were released and workspace relinquished
+- temporary stage resources were released
 
 ## Stage gates
 
@@ -197,7 +190,7 @@ All gates must pass:
 - Gate 5: PR body contains `Goals`, `Non-goals`, `ADR`, `Exceptions`, `Deferred work`.
 - Gate 6: deferred work section reflects actual `//TODO` markers (or explicit none).
 - Gate 7: PR created/updated successfully.
-- Gate 8: held resources released and workspace relinquished.
+- Gate 8: held resources released.
 - Gate 9: terminal verdict emitted (`LANDED` or `BLOCKED`).
 
 ## Constraints
@@ -207,12 +200,12 @@ All gates must pass:
 - Do not run raw `git push -u origin <branch>`; use `git-push-branch-safe.sh`.
 - Do not invent TODO items; only include observed `//TODO`.
 - Do not skip required PR body sections.
-- Do not keep task worktree resources held after successful landing.
 
 ## Required outputs
 
 - terminal stage verdict: `LANDED` or `BLOCKED`
 - resolved base branch used for the PR
+- resolved head branch used for push/PR
 - PR URL
 - generated PR title
 - generated PR body containing:
@@ -221,4 +214,4 @@ All gates must pass:
   - ADR
   - exceptions
   - deferred work (`//TODO`)
-- explicit release summary for held resources and workspace relinquish actions
+- explicit release summary for held resources

@@ -129,27 +129,13 @@ prefix_rule(
 )
 
 # -----------------------
-# Worktree lifecycle
+# Existing-worktree safety prep
 # -----------------------
-
-prefix_rule(
-    pattern = ["git", "worktree", "list", "--porcelain"],
-    decision = "allow",
-    justification = "List worktrees for deterministic workspace release.",
-    match = ["git worktree list --porcelain"],
-)
-
-prefix_rule(
-    pattern = ["git", "worktree", "remove"],
-    decision = "allow",
-    justification = "Release non-primary task worktrees during landing.",
-    match = ["git worktree remove /path/to/worktree"],
-)
 
 prefix_rule(
     pattern = ["git", "worktree", "prune"],
     decision = "allow",
-    justification = "Prune stale worktree metadata after release.",
+    justification = "Prune stale worktree metadata during Stage 2 safety prep.",
     match = ["git worktree prune"],
 )
 
@@ -256,7 +242,7 @@ prefix_rule(
 prefix_rule(
     pattern = ["/Users/eric/.codex/scripts/git-push-branch-safe.sh"],
     decision = "allow",
-    justification = "Trusted helper script to enforce protected-branch restrictions for 'git push -u origin <branch>'.",
+    justification = "Trusted helper script for validated branch push including detached HEAD mode.",
     match = [
         "/Users/eric/.codex/scripts/git-push-branch-safe.sh feature/add-feature-x",
     ],
@@ -265,7 +251,7 @@ prefix_rule(
 prefix_rule(
     pattern = ["./.codex/scripts/git-push-branch-safe.sh"],
     decision = "allow",
-    justification = "Trusted helper script to enforce protected-branch restrictions for 'git push -u origin <branch>' (canonical repo path).",
+    justification = "Trusted helper script for validated branch push including detached HEAD mode (canonical repo path).",
     match = [
         "./.codex/scripts/git-push-branch-safe.sh feature/add-feature-x",
     ],
@@ -274,7 +260,7 @@ prefix_rule(
 prefix_rule(
     pattern = ["./codex/scripts/git-push-branch-safe.sh"],
     decision = "allow",
-    justification = "Trusted helper script to enforce protected-branch restrictions for 'git push -u origin <branch>' (repo-local fallback path).",
+    justification = "Trusted helper script for validated branch push including detached HEAD mode (repo-local fallback path).",
     match = [
         "./codex/scripts/git-push-branch-safe.sh feature/add-feature-x",
     ],
@@ -283,29 +269,29 @@ prefix_rule(
 prefix_rule(
     pattern = ["/Users/eric/.codex/scripts/prepare-takeoff-worktree.sh"],
     decision = "allow",
-    justification = "Trusted helper script to create task worktrees under $HOME/workspace.",
+    justification = "Trusted helper script for Stage 2 existing-worktree safety prep.",
     match = [
         "/Users/eric/.codex/scripts/prepare-takeoff-worktree.sh add-feature-x",
-        "/Users/eric/.codex/scripts/prepare-takeoff-worktree.sh add-feature-x feature/add-feature-x",
+        "/Users/eric/.codex/scripts/prepare-takeoff-worktree.sh add-feature-x codex/add-feature-x",
     ],
 )
 
 prefix_rule(
     pattern = ["./.codex/scripts/prepare-takeoff-worktree.sh"],
     decision = "allow",
-    justification = "Trusted helper script to create task worktrees under $HOME/workspace (canonical repo path).",
+    justification = "Trusted helper script for Stage 2 existing-worktree safety prep (canonical repo path).",
     match = [
         "./.codex/scripts/prepare-takeoff-worktree.sh add-feature-x",
-        "./.codex/scripts/prepare-takeoff-worktree.sh add-feature-x feature/add-feature-x",
+        "./.codex/scripts/prepare-takeoff-worktree.sh add-feature-x codex/add-feature-x",
     ],
 )
 
 prefix_rule(
     pattern = ["./codex/scripts/prepare-takeoff-worktree.sh"],
     decision = "allow",
-    justification = "Trusted helper script to create task worktrees under $HOME/workspace (repo-local fallback path).",
+    justification = "Trusted helper script for Stage 2 existing-worktree safety prep (repo-local fallback path).",
     match = [
         "./codex/scripts/prepare-takeoff-worktree.sh add-feature-x",
-        "./codex/scripts/prepare-takeoff-worktree.sh add-feature-x feature/add-feature-x",
+        "./codex/scripts/prepare-takeoff-worktree.sh add-feature-x codex/add-feature-x",
     ],
 )
