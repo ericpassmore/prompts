@@ -7,7 +7,7 @@ description: Finalize completed work by validating results, committing changes, 
 
 ## Intent
 
-Finalize verified task work into a reviewer-ready pull request, then cleanly release temporary stage resources and provide handoff details from the current worktree context.
+Finalize verified task work into a reviewer-ready pull request, merge it into the configured base branch, then cleanly release temporary stage resources and provide handoff details.
 
 ## Preconditions (hard)
 
@@ -15,7 +15,7 @@ Finalize verified task work into a reviewer-ready pull request, then cleanly rel
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/` exists.
 - Current git state may be a named branch or detached `HEAD`.
 - Repository has no unmerged/conflicted paths.
-- A remote push target exists for the resolved head branch (required by `git-commit` and PR creation).
+- A remote push target exists for the resolved head branch (required by `git-commit`, PR creation, and merge flow).
 
 If any hard precondition fails, emit `BLOCKED` and stop.
 
@@ -28,7 +28,7 @@ Stage 6 depends on:
 
 ## Required upstream skill (mandatory)
 
-`land-the-plan` MUST run the `git-commit` skill before creating or updating a PR.
+`land-the-plan` MUST run the `git-commit` skill before creating/updating/merging a PR.
 
 ## Command resolution
 
@@ -76,8 +76,24 @@ PR body MUST include these sections:
 
 - Confirm `<TASK_NAME_IN_KEBAB_CASE>`.
 - Resolve active branch via `git branch --show-current`.
-- If active branch is empty (detached `HEAD`), resolve landing head branch as `codex/<TASK_NAME_IN_KEBAB_CASE>`.
-- If active branch is present, use it as landing head branch.
+- If active branch is present, use it as `RESOLVED_HEAD_BRANCH`.
+- If active branch is empty (detached `HEAD`), run:
+
+```bash
+<CODEX_SCRIPTS_DIR>/git-land-branch-safe.sh <TASK_NAME_IN_KEBAB_CASE> [agent-id] [timestamp]
+```
+
+Detached-head branch requirements (mandatory):
+
+- run `git fetch origin --prune` (latest remote branches)
+- construct branch name exactly as:
+  - `land-the-plan/<TASK_NAME_IN_KEBAB_CASE>/<agent-id>-<timestamp>`
+- verify local branch does not exist
+- verify remote `origin` branch does not exist
+- create branch and switch to it
+
+On success, set `RESOLVED_HEAD_BRANCH` to the created branch.
+If any check fails, emit `BLOCKED`.
 
 ### Step 1 — Enforce `READY TO LAND` hard gate
 
@@ -95,29 +111,26 @@ Otherwise emit `BLOCKED`.
 
 ### Step 2 — Execute `git-commit` skill (mandatory)
 
-Run the `git-commit` skill workflow completely:
+Run the `git-commit` skill workflow completely on `RESOLVED_HEAD_BRANCH`:
 
 - branch/update safety checks
 - secure file tracking policy
 - staged diff review (text only)
 - commit message generation
 - commit creation
-- push to `origin/<resolved-head-branch>`
+- push to `origin/<RESOLVED_HEAD_BRANCH>`
 
-When an upstream push is required with `-u`, use the safe push helper script:
+If upstream push is required with `-u`, use:
 
 ```bash
 <CODEX_SCRIPTS_DIR>/git-push-branch-safe.sh <RESOLVED_HEAD_BRANCH>
 ```
-
-This script validates branch arguments and supports detached `HEAD` pushes via `git push -u origin HEAD:<branch>`.
 
 If `git-commit` fails, emit `BLOCKED`.
 
 ### Step 3 — Resolve base branch for PR
 
 Resolve base branch using the **Base branch resolution** rules in this skill.
-
 If a valid configured value is missing, fallback to `main`.
 
 ### Step 4 — Build PR input context
@@ -152,8 +165,23 @@ gh pr create --base <BASE_BRANCH> --head <RESOLVED_HEAD_BRANCH> --title "<PR_TIT
 ```
 
 If a PR for the head branch already exists, update it instead of creating a duplicate.
+Record the PR URL/number for merge.
 
-### Step 7 — Release held resources
+### Step 7 — Merge PR into resolved base branch
+
+Merge the PR created/updated in Step 6:
+
+```bash
+gh pr merge <PR_URL_OR_NUMBER> --merge
+```
+
+Requirements:
+
+- merged target must be resolved `BASE_BRANCH`
+- if repository policy requires a different merge mode (`--squash` or `--rebase`), use that policy mode and document it
+- on merge failure, emit `BLOCKED`
+
+### Step 8 — Release held resources
 
 Release all temporary stage resources:
 
@@ -162,9 +190,22 @@ Release all temporary stage resources:
 After release:
 
 - stop modifying task/code files for this stage
-- provide handoff-ready PR details only
+- provide handoff-ready landing details only
 
-### Step 8 — Emit final verdict
+### Step 9 — Revert bootstrap paths
+
+Run:
+
+```bash
+<CODEX_SCRIPTS_DIR>/codex-config-bootstrap-sync.sh revert
+```
+
+This must restore `codex-config.yaml` bootstrap paths to the preserved pre-override values when a detached-head worktree override was applied during `establish-goals`.
+
+If no override is active, script may no-op.
+If revert fails, emit `BLOCKED`.
+
+### Step 10 — Emit final verdict
 
 Emit exactly one verdict:
 
@@ -174,9 +215,13 @@ Emit exactly one verdict:
 `LANDED` is allowed only when:
 
 - `READY TO LAND` precondition passed
+- detached-head branch preparation checks passed (when applicable)
 - `git-commit` completed successfully
+- branch push succeeded
 - PR exists and is reviewer-ready
+- PR merge to resolved base branch succeeded
 - temporary stage resources were released
+- bootstrap paths were reverted (or explicit no-op because no override was active)
 
 ## Stage gates
 
@@ -184,27 +229,33 @@ All gates must pass:
 
 - Gate 1: `revalidate-validate.sh` returns `READY TO LAND`.
 - Gate 1A: no open review findings; review verdict is `patch is correct` (or explicit risk-acceptance waiver is present).
-- Gate 2: `git-commit` skill completed (including push).
-- Gate 3: base branch resolved from `codex-config.yaml` or fallback `main`.
-- Gate 4: PR title/body generated by Codex.
-- Gate 5: PR body contains `Goals`, `Non-goals`, `ADR`, `Exceptions`, `Deferred work`.
-- Gate 6: deferred work section reflects actual `//TODO` markers (or explicit none).
-- Gate 7: PR created/updated successfully.
-- Gate 8: held resources released.
-- Gate 9: terminal verdict emitted (`LANDED` or `BLOCKED`).
+- Gate 2: detached-head branch prep checks pass (fetch + name + non-existence + create/switch) when in detached `HEAD`.
+- Gate 3: `git-commit` skill completed (including push).
+- Gate 4: base branch resolved from `codex-config.yaml` or fallback `main`.
+- Gate 5: PR title/body generated by Codex.
+- Gate 6: PR body contains `Goals`, `Non-goals`, `ADR`, `Exceptions`, `Deferred work`.
+- Gate 7: deferred work section reflects actual `//TODO` markers (or explicit none).
+- Gate 8: PR created/updated successfully.
+- Gate 9: PR merged successfully to resolved base branch.
+- Gate 10: held resources released.
+- Gate 11: bootstrap path revert succeeded (or explicit no-op).
+- Gate 12: terminal verdict emitted (`LANDED` or `BLOCKED`).
 
 ## Constraints
 
 - Do not run `land-the-plan` unless `READY TO LAND` is satisfied.
 - Do not bypass the `git-commit` skill.
+- Do not bypass detached-head branch prep checks when starting from detached `HEAD`.
 - Do not run raw `git push -u origin <branch>`; use `git-push-branch-safe.sh`.
 - Do not invent TODO items; only include observed `//TODO`.
 - Do not skip required PR body sections.
+- Do not skip the PR merge step.
+- Do not skip bootstrap path revert at stage end.
 
 ## Required outputs
 
 - terminal stage verdict: `LANDED` or `BLOCKED`
-- resolved base branch used for the PR
+- resolved base branch used for the PR/merge
 - resolved head branch used for push/PR
 - PR URL
 - generated PR title
@@ -214,4 +265,6 @@ All gates must pass:
   - ADR
   - exceptions
   - deferred work (`//TODO`)
+- merge result summary (mode + target branch + resulting commit/PR state)
 - explicit release summary for held resources
+- bootstrap revert result summary

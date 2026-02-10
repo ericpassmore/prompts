@@ -26,6 +26,34 @@ prefix_rule(
     match = ["git fetch --prune"],
 )
 
+prefix_rule(
+    pattern = ["git", "fetch", "origin"],
+    decision = "allow",
+    justification = "Fetch latest origin refs for detached-head landing branch checks.",
+    match = [
+        "git fetch origin",
+        "git fetch origin --prune",
+    ],
+)
+
+prefix_rule(
+    pattern = ["git", "ls-remote", "--exit-code", "--heads", "origin"],
+    decision = "allow",
+    justification = "Check whether a remote branch already exists before creating a landing branch.",
+    match = [
+        "git ls-remote --exit-code --heads origin land-the-plan/task/agent-20260210120000",
+    ],
+)
+
+prefix_rule(
+    pattern = ["git", "switch", "-c"],
+    decision = "allow",
+    justification = "Create and switch to a newly validated landing branch.",
+    match = [
+        "git switch -c land-the-plan/task/agent-20260210120000",
+    ],
+)
+
 # -----------------------
 # Diff / inspection
 # -----------------------
@@ -172,6 +200,16 @@ prefix_rule(
     ],
 )
 
+prefix_rule(
+    pattern = ["gh", "pr", "merge"],
+    decision = "allow",
+    justification = "Merge landed PR into resolved base branch during land-the-plan.",
+    match = [
+        "gh pr merge 123 --merge",
+        "gh pr merge https://github.com/org/repo/pull/123 --merge",
+    ],
+)
+
 # ----------------------
 # Auto-allow trusted helper scripts (exact path prefix)
 # ----------------------
@@ -195,6 +233,16 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern = ["/Users/eric/.codex/scripts/codex-config-bootstrap-sync.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to apply/revert detached-head worktree bootstrap path overrides in codex-config.yaml.",
+    match = [
+        "/Users/eric/.codex/scripts/codex-config-bootstrap-sync.sh apply",
+        "/Users/eric/.codex/scripts/codex-config-bootstrap-sync.sh revert",
+    ],
+)
+
+prefix_rule(
     pattern = ["./.codex/scripts/git-commit-preflight.sh"],
     decision = "allow",
     justification = "Trusted helper script for git-commit preflight checks (canonical repo path).",
@@ -204,11 +252,31 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern = ["./.codex/scripts/codex-config-bootstrap-sync.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to apply/revert detached-head worktree bootstrap path overrides in codex-config.yaml (canonical repo path).",
+    match = [
+        "./.codex/scripts/codex-config-bootstrap-sync.sh apply",
+        "./.codex/scripts/codex-config-bootstrap-sync.sh revert",
+    ],
+)
+
+prefix_rule(
     pattern = ["./codex/scripts/git-commit-preflight.sh"],
     decision = "allow",
     justification = "Trusted helper script for git-commit preflight checks (repo-local fallback path).",
     match = [
         "./codex/scripts/git-commit-preflight.sh",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./codex/scripts/codex-config-bootstrap-sync.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to apply/revert detached-head worktree bootstrap path overrides in codex-config.yaml (repo-local fallback path).",
+    match = [
+        "./codex/scripts/codex-config-bootstrap-sync.sh apply",
+        "./codex/scripts/codex-config-bootstrap-sync.sh revert",
     ],
 )
 
@@ -249,6 +317,15 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern = ["/Users/eric/.codex/scripts/git-land-branch-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to fetch, validate, and create detached-head landing branches safely.",
+    match = [
+        "/Users/eric/.codex/scripts/git-land-branch-safe.sh add-feature-x codex-agent 20260210153045",
+    ],
+)
+
+prefix_rule(
     pattern = ["./.codex/scripts/git-push-branch-safe.sh"],
     decision = "allow",
     justification = "Trusted helper script for validated branch push including detached HEAD mode (canonical repo path).",
@@ -258,11 +335,29 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern = ["./.codex/scripts/git-land-branch-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to fetch, validate, and create detached-head landing branches safely (canonical repo path).",
+    match = [
+        "./.codex/scripts/git-land-branch-safe.sh add-feature-x codex-agent 20260210153045",
+    ],
+)
+
+prefix_rule(
     pattern = ["./codex/scripts/git-push-branch-safe.sh"],
     decision = "allow",
     justification = "Trusted helper script for validated branch push including detached HEAD mode (repo-local fallback path).",
     match = [
         "./codex/scripts/git-push-branch-safe.sh feature/add-feature-x",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./codex/scripts/git-land-branch-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to fetch, validate, and create detached-head landing branches safely (repo-local fallback path).",
+    match = [
+        "./codex/scripts/git-land-branch-safe.sh add-feature-x codex-agent 20260210153045",
     ],
 )
 

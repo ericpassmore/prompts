@@ -17,6 +17,13 @@ if [ -z "$branch" ]; then
 fi
 
 if ! upstream="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null)"; then
+  if [[ "${branch}" == land-the-plan/* ]]; then
+    echo "Preflight notice: branch '${branch}' has no upstream yet."
+    echo "Allowed for first commit on land-the-plan namespace branches."
+    echo "Preflight OK on branch '${branch}' (no upstream yet)."
+    exit 0
+  fi
+
   echo "Abort: branch '$branch' has no upstream and must be pushed first."
   echo "Run: git push -u origin $branch"
   exit 1

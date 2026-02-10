@@ -198,6 +198,7 @@ Run the trusted helper script:
    * abort when merge conflicts/unmerged paths are present
    * accept detached `HEAD` state and report explicit detached-mode behavior
    * when on a named branch, abort when no upstream is configured
+   * exception: allow no-upstream first-commit flow for `land-the-plan/*` branches
    * when on a named branch, run `git pull --ff-only` and classify pull failures:
      * upstream/reference issues (`couldn't find remote ref`, `no such ref`, `no tracking information`)
      * all other failures as manual-intervention required
@@ -300,4 +301,5 @@ Refactor authentication system for better organization of code
 1. **Always** push commit(s) to origin using one of:
    * named branch mode: `git push origin <current-branch-name>`
    * detached `HEAD` mode: `git push origin HEAD:<target-branch-name>`
+   * when upstream setup is required, use Stage-safe helper policy (for example `git-push-branch-safe.sh`)
 2. **Always** summarize the messages from git and report to the user
