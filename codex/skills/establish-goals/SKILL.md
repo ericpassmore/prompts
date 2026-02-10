@@ -77,6 +77,12 @@ All goal artifacts are stored under:
 
 `./goals/<TASK_NAME_IN_KEBAB_CASE>/`
 
+The establish-goals phase also maintains:
+
+- `./goals/task-manifest.csv`
+  - repository-wide manifest ordered by first create date
+  - tracks only `number`, `taskname`, and `first_create_date`
+
 For each iteration `vN`, the following files MUST exist:
 
 - `establish-goals.vN.md`
@@ -135,6 +141,7 @@ This MUST create:
 
 - `establish-goals.v0.md`
 - `goals.v0.md`
+- ensure `./goals/task-manifest.csv` is updated with the task's first create date
 
 ---
 
