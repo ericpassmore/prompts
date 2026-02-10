@@ -106,6 +106,7 @@ Earlier iterations MUST NOT be modified.
 
 All file creation, iteration, validation, and extraction MUST be performed using the following scripts:
 
+- `codex-config-bootstrap-sync.sh`
 - `goals-scaffold.sh`
 - `goals-next-iteration.sh`
 - `goals-extract.sh`
@@ -124,6 +125,26 @@ If none exist, STOP as blocked.
 ---
 
 ## Procedure
+
+### Step -1 — Sync bootstrap paths for detached-head worktrees
+
+At establish-goals entry, run:
+
+`<CODEX_SCRIPTS_DIR>/codex-config-bootstrap-sync.sh apply`
+
+Rules:
+
+- runs only in detached `HEAD` mode; otherwise no-op
+- resolves codex root from current working directory in order:
+  - `./.codex`
+  - `./codex`
+  - `$HOME/.codex`
+- preserves existing bootstrap values in `codex-config.yaml`
+- updates bootstrap paths to current worktree-resolved codex root/scripts
+
+If sync fails, stop as `BLOCKED`.
+
+---
 
 ### Step 0 — Confirm task identity
 
