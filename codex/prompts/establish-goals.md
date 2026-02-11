@@ -26,7 +26,7 @@ You MUST NOT proceed past `establish-goals`.
 
 ## Hard stop rule (mandatory)
 
-If the current iteration produces **ZERO goals**:
+If the current iteration cannot produce **at least one verifiable goal**:
 
 - mark the iteration as `blocked`
 - ask only the blocking clarification questions

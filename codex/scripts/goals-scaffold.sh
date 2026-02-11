@@ -154,7 +154,7 @@ cat > "$GOALS_FILE" <<EOF
 - Iteration: ${ITERATION}
 - State: draft
 
-## Goals (0–5)
+## Goals (1-10, verifiable)
 
 ## Non-goals
 

@@ -3,6 +3,8 @@ set -euo pipefail
 
 TASK_NAME="${1:-}"
 ITERATION="${2:-}"
+SIGNALS_FILE_ARG="${3:-}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [[ -z "$TASK_NAME" || -z "$ITERATION" ]]; then
   echo "ERROR: TASK_NAME_IN_KEBAB_CASE and iteration (vN) are required"
@@ -27,18 +29,43 @@ STATE=$(sed -n 's/^- State: //p; s/^State: //p' "$GOALS_FILE" | head -n 1)
 GOAL_COUNT=$(sed -n '/^## Goals/,/^## /p' "$GOALS_FILE" | awk '/^[0-9]+\./ {count++} END {print count+0}')
 SUCCESS_COUNT=$(sed -n '/^## Success criteria/,/^## /p' "$GOALS_FILE" | awk '/^-/ {count++} END {print count+0}')
 
-if [[ "$GOAL_COUNT" -gt 5 ]]; then
-  echo "ERROR: Too many goals (${GOAL_COUNT}); max is 5"
+if [[ "$GOAL_COUNT" -gt 10 ]]; then
+  echo "ERROR: Too many goals (${GOAL_COUNT}); max is 10"
   exit 1
 fi
 
-if [[ "$GOAL_COUNT" -eq 0 ]]; then
-  if [[ "$STATE" == "locked" ]]; then
-    echo "ERROR: Locked state requires at least one goal"
+if [[ "$GOAL_COUNT" -lt 1 ]]; then
+  if [[ "$STATE" == "blocked" ]]; then
+    echo "BLOCKED"
+    exit 0
+  fi
+  echo "ERROR: At least one goal is required unless State=blocked"
+  exit 1
+fi
+
+if [[ -n "${SIGNALS_FILE_ARG}" ]]; then
+  score_script="${SCRIPT_DIR}/complexity-score.sh"
+  if [[ ! -x "${score_script}" ]]; then
+    echo "ERROR: Missing executable complexity scorer: ${score_script}"
     exit 1
   fi
-  if [[ "$STATE" != "blocked" ]]; then
-    echo "ERROR: Zero goals requires State=blocked"
+
+  signals_file="${SIGNALS_FILE_ARG}"
+  if [[ "${signals_file}" != /* ]]; then
+    signals_file="./${signals_file}"
+  fi
+
+  if [[ ! -f "${signals_file}" ]]; then
+    echo "ERROR: Missing complexity signals file: ${signals_file}"
+    exit 1
+  fi
+
+  score_json="$("${score_script}" "${signals_file}" --format json)"
+  goals_min="$(echo "${score_json}" | jq -r '.ranges.goals.min')"
+  goals_max="$(echo "${score_json}" | jq -r '.ranges.goals.max')"
+
+  if (( GOAL_COUNT < goals_min || GOAL_COUNT > goals_max )); then
+    echo "ERROR: Goal count ${GOAL_COUNT} outside complexity range ${goals_min}-${goals_max}"
     exit 1
   fi
 fi

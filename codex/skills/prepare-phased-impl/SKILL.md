@@ -24,6 +24,7 @@ Stage 3 depends on the same rule files as Stage 2:
 
 - `codex/rules/expand-task-spec.rules`
 - `codex/rules/git-safe.rules`
+- `codex/skills/complexity-scaling/SKILL.md`
 
 ## Approved scripts (mandatory)
 
@@ -33,6 +34,7 @@ All Stage 3 setup/locking/validation operations MUST run through:
 - `prepare-phased-impl-scaffold.sh`
 - `prepare-phased-impl-scope-lock.sh`
 - `prepare-phased-impl-validate.sh`
+- `complexity-score.sh` (when deriving complexity from scored signals JSON)
 
 Direct shell reimplementation of these operations is not allowed.
 
@@ -56,10 +58,14 @@ Fallback order:
 
 - Confirm `<TASK_NAME_IN_KEBAB_CASE>`.
 - Select one complexity value:
-  - `simple`
-  - `medium`
-  - `complex`
-  - `1|2|3|4` (explicit phase count override)
+  - `surgical`
+  - `focused`
+  - `multi-surface`
+  - `cross-system`
+  - `program`
+  - compatibility labels: `simple|medium|complex|very-complex`
+  - explicit phase count override: `2..20`
+  - deterministic scored input: `@<path-to-complexity-signals.json>`
 
 Complexity drives phase count dynamically.
 
@@ -93,16 +99,21 @@ This writes `./tasks/<TASK_NAME_IN_KEBAB_CASE>/.scope-lock.md` from `spec.md` sc
 Run:
 
 ```bash
-<CODEX_SCRIPTS_DIR>/prepare-phased-impl-scaffold.sh <TASK_NAME_IN_KEBAB_CASE> <simple|medium|complex|1|2|3|4>
+<CODEX_SCRIPTS_DIR>/prepare-phased-impl-scaffold.sh <TASK_NAME_IN_KEBAB_CASE> <complexity-label|2..20>
+```
+
+or (deterministic scored input):
+
+```bash
+<CODEX_SCRIPTS_DIR>/prepare-phased-impl-scaffold.sh <TASK_NAME_IN_KEBAB_CASE> @<path-to-complexity-signals.json>
 ```
 
 Script behavior:
 
 - enforces hard precondition: `spec.md` must contain `READY FOR PLANNING`
-- maps complexity to phase count:
-  - `simple` -> 2
-  - `medium` -> 3
-  - `complex` -> 4
+- maps complexity labels to default phase counts within the policy ranges in `codex/skills/complexity-scaling/SKILL.md`
+- accepts explicit phase count override only in `2..20`
+- when provided a scored input file (`@...`), derives phase count using `complexity-score.sh`
 - creates missing `phase-<n>.md` files for active phases
 - writes `./tasks/<TASK_NAME_IN_KEBAB_CASE>/phase-plan.md` with `PENDING` verdict
 - initializes/advances `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` Stage 3 cycle metadata
