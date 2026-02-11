@@ -102,6 +102,33 @@ prefix_rule(
 # -------------------------
 
 prefix_rule(
+    pattern=["/Users/eric/.codex/scripts/complexity-score.sh"],
+    decision="allow",
+    justification="Compute deterministic complexity level and recommended goals/phases from scored JSON signals.",
+    match=[
+        "/Users/eric/.codex/scripts/complexity-score.sh ./tasks/add-feature-x/complexity-signals.json --format json",
+    ],
+)
+
+prefix_rule(
+    pattern=["./.codex/scripts/complexity-score.sh"],
+    decision="allow",
+    justification="Compute deterministic complexity level and recommended goals/phases from scored JSON signals (canonical repo path).",
+    match=[
+        "./.codex/scripts/complexity-score.sh ./tasks/add-feature-x/complexity-signals.json --format json",
+    ],
+)
+
+prefix_rule(
+    pattern=["./codex/scripts/complexity-score.sh"],
+    decision="allow",
+    justification="Compute deterministic complexity level and recommended goals/phases from scored JSON signals (repo-local fallback path).",
+    match=[
+        "./codex/scripts/complexity-score.sh ./tasks/add-feature-x/complexity-signals.json --format json",
+    ],
+)
+
+prefix_rule(
     pattern=["/Users/eric/.codex/scripts/prepare-phased-impl-archive.sh"],
     decision="allow",
     justification="Archive previous Stage 3 planning artifacts using short-hash archive GUIDs before restart.",

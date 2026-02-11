@@ -15,9 +15,9 @@ if [[ -f "${SCRIPT_DIR}/read-codex-paths.sh" ]]; then
 fi
 
 usage() {
-  echo "Usage (canonical): ./.codex/scripts/prepare-phased-impl-scaffold.sh <task-name> [simple|medium|complex|1|2|3|4]"
-  echo "Usage (repo-local fallback): ./codex/scripts/prepare-phased-impl-scaffold.sh <task-name> [simple|medium|complex|1|2|3|4]"
-  echo "Usage (home fallback): ${HOME}/.codex/scripts/prepare-phased-impl-scaffold.sh <task-name> [simple|medium|complex|1|2|3|4]"
+  echo "Usage (canonical): ./.codex/scripts/prepare-phased-impl-scaffold.sh <task-name> [simple|medium|complex|very-complex|surgical|focused|multi-surface|cross-system|program|2..20|@/path/to/complexity-signals.json]"
+  echo "Usage (repo-local fallback): ./codex/scripts/prepare-phased-impl-scaffold.sh <task-name> [simple|medium|complex|very-complex|surgical|focused|multi-surface|cross-system|program|2..20|@/path/to/complexity-signals.json]"
+  echo "Usage (home fallback): ${HOME}/.codex/scripts/prepare-phased-impl-scaffold.sh <task-name> [simple|medium|complex|very-complex|surgical|focused|multi-surface|cross-system|program|2..20|@/path/to/complexity-signals.json]"
 }
 
 if [[ -z "${TASK_NAME}" ]]; then
@@ -31,19 +31,73 @@ if [[ ! "${TASK_NAME}" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
 fi
 
 phase_count_from_complexity() {
-  case "$1" in
-    simple) echo "2" ;;
-    medium) echo "3" ;;
-    complex) echo "4" ;;
-    1|2|3|4) echo "$1" ;;
+  local input="$1"
+  case "${input}" in
+    simple|surgical) echo "2" ;;
+    focused) echo "4" ;;
+    medium) echo "6" ;;
+    multi-surface) echo "8" ;;
+    complex) echo "12" ;;
+    cross-system) echo "13" ;;
+    very-complex|program) echo "18" ;;
     *)
-      echo "Abort: complexity must be simple, medium, complex, or a phase count in [1..4]."
-      exit 2
+      if [[ "$1" =~ ^[0-9]+$ ]] && (( 10#$1 >= 2 && 10#$1 <= 20 )); then
+        echo "$1"
+      else
+        echo "Abort: complexity must be a supported label or a phase count in [2..20]."
+        exit 2
+      fi
       ;;
   esac
 }
 
-PHASE_COUNT="$(phase_count_from_complexity "${COMPLEXITY_INPUT}")"
+COMPLEXITY_DESCRIPTOR="${COMPLEXITY_INPUT}"
+SCORING_DETAILS=""
+PHASE_COUNT=""
+
+if [[ "${COMPLEXITY_INPUT}" == @* ]]; then
+  scores_file="${COMPLEXITY_INPUT#@}"
+  if [[ -z "${scores_file}" ]]; then
+    echo "Abort: complexity signals file path must be provided after '@'."
+    exit 2
+  fi
+
+  if [[ "${scores_file}" == /* ]]; then
+    resolved_scores_file="${scores_file}"
+  else
+    resolved_scores_file="${ROOT_DIR}/${scores_file}"
+  fi
+
+  if [[ ! -f "${resolved_scores_file}" ]]; then
+    echo "Abort: complexity signals file not found: ${resolved_scores_file}"
+    exit 1
+  fi
+
+  score_script="${SCRIPT_DIR}/complexity-score.sh"
+  if [[ ! -x "${score_script}" ]]; then
+    echo "Abort: missing executable complexity scorer: ${score_script}"
+    exit 1
+  fi
+
+  score_json="$("${score_script}" "${resolved_scores_file}" --format json)"
+  PHASE_COUNT="$(echo "${score_json}" | jq -r '.recommended.phases')"
+  recommended_goals="$(echo "${score_json}" | jq -r '.recommended.goals')"
+  level="$(echo "${score_json}" | jq -r '.level')"
+  level_name="$(echo "${score_json}" | jq -r '.level_name')"
+  total_score="$(echo "${score_json}" | jq -r '.total_score')"
+  force_l1="$(echo "${score_json}" | jq -r '.force_l1')"
+
+  if [[ ! "${PHASE_COUNT}" =~ ^[0-9]+$ ]] || (( 10#${PHASE_COUNT} < 2 || 10#${PHASE_COUNT} > 20 )); then
+    echo "Abort: invalid recommended phase count from complexity scorer."
+    exit 1
+  fi
+
+  COMPLEXITY_DESCRIPTOR="scored:${level} (${level_name})"
+  SCORING_DETAILS="score=${total_score}; recommended-goals=${recommended_goals}; forced-l1=${force_l1}; signals=${resolved_scores_file}"
+else
+  PHASE_COUNT="$(phase_count_from_complexity "${COMPLEXITY_INPUT}")"
+fi
+
 TASK_DIR="${ROOT_DIR}/tasks/${TASK_NAME}"
 SPEC_FILE="${TASK_DIR}/spec.md"
 FINAL_PHASE_FILE="${TASK_DIR}/final-phase.md"
@@ -144,7 +198,10 @@ if ! grep -q '^## Implementation phase strategy$' "${SPEC_FILE}"; then
   {
     echo
     echo "## Implementation phase strategy"
-    echo "- Complexity: ${COMPLEXITY_INPUT}"
+    echo "- Complexity: ${COMPLEXITY_DESCRIPTOR}"
+    if [[ -n "${SCORING_DETAILS}" ]]; then
+      echo "- Complexity scoring details: ${SCORING_DETAILS}"
+    fi
     echo "- Active phases: 1..${PHASE_COUNT}"
     echo "- No new scope introduced: required"
   } >> "${SPEC_FILE}"
@@ -153,7 +210,7 @@ fi
 cat > "${PHASE_PLAN_FILE}" <<EOF
 # Phase Plan
 - Task name: ${TASK_NAME}
-- Complexity: ${COMPLEXITY_INPUT}
+- Complexity: ${COMPLEXITY_DESCRIPTOR}
 - Phase count: ${PHASE_COUNT}
 - Active phases: 1..${PHASE_COUNT}
 - Verdict: PENDING
@@ -162,6 +219,14 @@ cat > "${PHASE_PLAN_FILE}" <<EOF
 - no code/config changes are allowed except phase-plan document updates under ./tasks/*
 - no new scope is allowed; scope drift is BLOCKED
 EOF
+
+if [[ -n "${SCORING_DETAILS}" ]]; then
+  {
+    echo
+    echo "## Complexity scoring details"
+    echo "- ${SCORING_DETAILS}"
+  } >> "${PHASE_PLAN_FILE}"
+fi
 
 echo "Prepared phased implementation plan scaffold for ${TASK_NAME}"
 echo "Phase count: ${PHASE_COUNT}"

@@ -127,9 +127,11 @@ fi
 
 phase_count=""
 if [[ -f "${PHASE_PLAN_FILE}" ]]; then
-  phase_count="$(sed -n 's/^- Phase count: \([1-4]\)$/\1/p' "${PHASE_PLAN_FILE}" | head -n 1)"
+  phase_count="$(sed -nE 's/^- Phase count:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${PHASE_PLAN_FILE}" | head -n 1)"
   if [[ -z "${phase_count}" ]]; then
-    issues+=("Unable to parse '- Phase count: <1-4>' from ${PHASE_PLAN_FILE}")
+    issues+=("Unable to parse '- Phase count: <2-20>' from ${PHASE_PLAN_FILE}")
+  elif (( 10#${phase_count} < 2 || 10#${phase_count} > 20 )); then
+    issues+=("Invalid phase count '${phase_count}' in ${PHASE_PLAN_FILE}; expected 2-20")
   fi
 fi
 

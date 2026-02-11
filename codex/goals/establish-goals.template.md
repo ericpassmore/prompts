@@ -38,15 +38,18 @@
 1.
 2.
 
-## Goals (0–5, verifiable)
-
-> If ambiguity is blocking, it is valid to have 0 goals.
+## Goals (1-10, verifiable)
 
 1.
 2.
 3.
 4.
 5.
+6.
+7.
+8.
+9.
+10.
 
 ## Non-goals (explicit exclusions)
 

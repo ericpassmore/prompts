@@ -5,7 +5,7 @@
 - [ ] I listed ambiguities and separated blocking vs non-blocking.
 - [ ] I asked targeted questions for blocking ambiguities.
 - [ ] Any assumptions are explicitly labeled.
-- [ ] Goals are 0–5 and verifiable.
+- [ ] Goals are 1-10 and verifiable.
 - [ ] Non-goals are explicit.
 - [ ] Success criteria are objective and tied to goals.
 - [ ] Status is set correctly: draft / blocked / ready-for-confirmation / locked.

@@ -1,13 +1,13 @@
 ---
 name: establish-goals
-description: Clarify an ambiguous or incomplete request and produce 0–5 explicit, verifiable goals before any planning or implementation.
+description: Clarify an ambiguous or incomplete request and produce 1-10 explicit, verifiable goals before any planning or implementation.
 ---
 
 # SKILL: establish-goals
 
 ## Purpose
 
-Execute the `establish-goals` lifecycle stage in isolation to eliminate ambiguity and produce **0–5 verifiable goals** with explicit success criteria.
+Execute the `establish-goals` lifecycle stage in isolation to eliminate ambiguity and produce **1-10 verifiable goals** with explicit success criteria.
 
 This skill establishes the contractual foundation for downstream execution and ends at goal lock.
 
@@ -36,9 +36,17 @@ This skill explicitly excludes:
 
 ---
 
+## Rule dependencies
+
+Goal count should scale with complexity according to:
+
+- `codex/skills/complexity-scaling/SKILL.md`
+
+---
+
 ## Hard stop rule (mandatory)
 
-If an iteration produces **ZERO goals**, execution MUST STOP.
+If an iteration cannot produce **at least one verifiable goal**, execution MUST STOP.
 
 The agent MUST NOT proceed to:
 
@@ -111,6 +119,7 @@ All file creation, iteration, validation, and extraction MUST be performed using
 - `goals-next-iteration.sh`
 - `goals-extract.sh`
 - `goals-validate.sh`
+- `complexity-score.sh` (for deterministic level/range selection when signals are available)
 
 Direct manual file creation or copying is NOT permitted.
 
@@ -175,7 +184,7 @@ Edit `establish-goals.vN.md` to populate:
 - Ambiguities (blocking vs non-blocking)
 - Questions for user (blocking first)
 - Assumptions (explicit; never implicit)
-- Goals (0–5, verifiable)
+- Goals (1-10, verifiable)
 - Non-goals (explicit exclusions)
 - Success criteria (objective, mapped to goals)
 - Risks / tradeoffs
@@ -221,12 +230,16 @@ Validate the iteration using:
 
 `<CODEX_SCRIPTS_DIR>/goals-validate.sh <TASK_NAME_IN_KEBAB_CASE> vN`
 
+Optional complexity-linked validation:
+
+`<CODEX_SCRIPTS_DIR>/goals-validate.sh <TASK_NAME_IN_KEBAB_CASE> vN <path-to-complexity-signals.json>`
+
 This validation enforces:
 
-- goal count ∈ [0,5]
-- zero goals ⇒ State = blocked
+- goal count ∈ [1,10]
 - goals present ⇒ success criteria required
 - locked state consistency
+- when a signals file is provided: goal count must be within the scored level range
 
 Validation failures MUST be resolved before proceeding.
 
@@ -234,7 +247,7 @@ Validation failures MUST be resolved before proceeding.
 
 ### Step 6 — Hard stop enforcement
 
-If goals == 0:
+If at least one verifiable goal cannot be stated:
 
 - State MUST be `blocked`
 - Ask ONLY the blocking clarification questions
@@ -277,7 +290,7 @@ This step completes the `establish-goals` skill.
 
 This skill is complete ONLY when:
 
-- goals exist (1–5)
+- goals exist (1-10)
 - goals are verifiable
 - State = `locked`
 - validation passes
