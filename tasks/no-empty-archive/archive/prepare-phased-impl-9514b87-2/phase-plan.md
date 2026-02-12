@@ -1,0 +1,10 @@
+# Phase Plan
+- Task name: no-empty-archive
+- Complexity: surgical
+- Phase count: 2
+- Active phases: 1..2
+- Verdict: READY FOR IMPLEMENTATION
+
+## Constraints
+- no code/config changes are allowed except phase-plan document updates under ./tasks/*
+- no new scope is allowed; scope drift is BLOCKED
