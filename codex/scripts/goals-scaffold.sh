@@ -41,6 +41,14 @@ current_date_utc() {
   date -u "+%Y-%m-%d"
 }
 
+default_time_hhmmss() {
+  echo "000000"
+}
+
+default_git_hash() {
+  echo "-------"
+}
+
 file_epoch() {
   local file_path="$1"
   if stat -f "%m" "$file_path" >/dev/null 2>&1; then
@@ -59,8 +67,10 @@ epoch_to_date() {
   date -u -d "@$epoch" "+%Y-%m-%d"
 }
 
-infer_first_create_date() {
+infer_first_create_metadata() {
   local manifest_date
+  local manifest_hhmmss
+  local manifest_hash
   local task_dir="./goals/$1"
   local earliest_epoch=""
   local file_path
@@ -68,8 +78,12 @@ infer_first_create_date() {
 
   if [[ -f "$MANIFEST_FILE" ]]; then
     manifest_date="$(awk -F',' -v task="$1" 'NR > 1 && $2 == task { print $3; exit }' "$MANIFEST_FILE")"
+    manifest_hhmmss="$(awk -F',' -v task="$1" 'NR > 1 && $2 == task { print $4; exit }' "$MANIFEST_FILE")"
+    manifest_hash="$(awk -F',' -v task="$1" 'NR > 1 && $2 == task { print $5; exit }' "$MANIFEST_FILE")"
     if [[ -n "$manifest_date" ]]; then
-      echo "$manifest_date"
+      [[ -n "${manifest_hhmmss}" ]] || manifest_hhmmss="$(default_time_hhmmss)"
+      [[ -n "${manifest_hash}" ]] || manifest_hash="$(default_git_hash)"
+      printf "%s,%s,%s\n" "$manifest_date" "$manifest_hhmmss" "$manifest_hash"
       return 0
     fi
   fi
@@ -92,11 +106,11 @@ infer_first_create_date() {
   done
 
   if [[ -n "$earliest_epoch" ]]; then
-    epoch_to_date "$earliest_epoch"
+    printf "%s,%s,%s\n" "$(epoch_to_date "$earliest_epoch")" "$(default_time_hhmmss)" "$(default_git_hash)"
     return 0
   fi
 
-  current_date_utc
+  printf "%s,%s,%s\n" "$(current_date_utc)" "$(default_time_hhmmss)" "$(default_git_hash)"
 }
 
 rebuild_task_manifest() {
@@ -104,7 +118,10 @@ rebuild_task_manifest() {
   local tmp_sorted
   local task_dir
   local task
+  local metadata
   local first_create_date
+  local first_create_hhmmss
+  local first_create_git_hash
   local number=0
 
   tmp_unsorted="$(mktemp)"
@@ -118,18 +135,24 @@ rebuild_task_manifest() {
       continue
     fi
 
-    first_create_date="$(infer_first_create_date "$task")"
-    printf "%s,%s\n" "$task" "$first_create_date" >> "$tmp_unsorted"
+    metadata="$(infer_first_create_metadata "$task")"
+    IFS=',' read -r first_create_date first_create_hhmmss first_create_git_hash <<< "$metadata"
+
+    [[ -n "${first_create_date}" ]] || first_create_date="$(current_date_utc)"
+    [[ -n "${first_create_hhmmss}" ]] || first_create_hhmmss="$(default_time_hhmmss)"
+    [[ -n "${first_create_git_hash}" ]] || first_create_git_hash="$(default_git_hash)"
+
+    printf "%s,%s,%s,%s\n" "$task" "$first_create_date" "$first_create_hhmmss" "$first_create_git_hash" >> "$tmp_unsorted"
   done
 
-  sort -t',' -k2,2 -k1,1 "$tmp_unsorted" > "$tmp_sorted"
+  sort -t',' -k2,2 -k3,3 -k1,1 "$tmp_unsorted" > "$tmp_sorted"
 
   {
-    echo "number,taskname,first_create_date"
-    while IFS=',' read -r task first_create_date; do
+    echo "number,taskname,first_create_date,first_create_hhmmss,first_create_git_hash"
+    while IFS=',' read -r task first_create_date first_create_hhmmss first_create_git_hash; do
       [[ -n "$task" ]] || continue
       number=$((number + 1))
-      printf "%d,%s,%s\n" "$number" "$task" "$first_create_date"
+      printf "%d,%s,%s,%s,%s\n" "$number" "$task" "$first_create_date" "$first_create_hhmmss" "$first_create_git_hash"
     done < "$tmp_sorted"
   } > "$MANIFEST_FILE"
 

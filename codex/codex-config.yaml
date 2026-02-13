@@ -9,10 +9,11 @@ notes:
 
 
 
+
 # PREPARE-TAKEOFF BOOTSTRAP START
 bootstrap:
-  codex_root: "/Users/eric/.codex/worktrees/9d00/prompts/codex"
-  codex_scripts_dir: "/Users/eric/.codex/worktrees/9d00/prompts/codex/scripts"
+  codex_root: "/Users/eric/.codex/worktrees/e9b1/prompts/codex"
+  codex_scripts_dir: "/Users/eric/.codex/worktrees/e9b1/prompts/codex/scripts"
   canonical_scripts_path: "./.codex/scripts"
   repository_local_fallback_scripts_path: "./codex/scripts"
   home_fallback_scripts_path: "$HOME/.codex/scripts"
