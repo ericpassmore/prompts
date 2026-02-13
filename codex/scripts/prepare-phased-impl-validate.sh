@@ -4,11 +4,16 @@ set -euo pipefail
 TASK_NAME="${1:-}"
 ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 TASK_DIR="${ROOT_DIR}/tasks/${TASK_NAME}"
+GOALS_DIR="${ROOT_DIR}/goals/${TASK_NAME}"
 SPEC_FILE="${TASK_DIR}/spec.md"
 PHASE_PLAN_FILE="${TASK_DIR}/phase-plan.md"
 LOCK_FILE="${TASK_DIR}/.scope-lock.md"
 FINAL_PHASE_FILE="${TASK_DIR}/final-phase.md"
 LIFECYCLE_STATE_FILE="${TASK_DIR}/lifecycle-state.md"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/resolve-codex-root.sh"
 
 usage() {
   echo "Usage (canonical): ./.codex/scripts/prepare-phased-impl-validate.sh <task-name>"
@@ -36,6 +41,41 @@ extract_section_from_file() {
     /^## / && in_section {exit}
     in_section {print}
   ' "${file}" | sed 's/[[:space:]]\+$//'
+}
+
+latest_goals_file() {
+  local latest=""
+
+  if [[ -d "${GOALS_DIR}" ]]; then
+    latest="$(ls "${GOALS_DIR}"/goals.v*.md 2>/dev/null | sort -V | tail -n 1 || true)"
+  fi
+
+  if [[ -z "${latest}" && -d "${GOALS_DIR}" ]]; then
+    latest="$(ls "${GOALS_DIR}"/goals.*.md 2>/dev/null | sort -V | tail -n 1 || true)"
+  fi
+
+  echo "${latest}"
+}
+
+resolve_complexity_signals_file() {
+  local task_signals="${TASK_DIR}/complexity-signals.json"
+  local codex_root=""
+
+  if [[ -f "${task_signals}" ]]; then
+    echo "${task_signals}"
+    return 0
+  fi
+
+  if ! codex_root="$(resolve_codex_root tasks/_templates/complexity-signals.template.json)"; then
+    return 1
+  fi
+
+  if [[ -f "${codex_root}/tasks/_templates/complexity-signals.template.json" ]]; then
+    echo "${codex_root}/tasks/_templates/complexity-signals.template.json"
+    return 0
+  fi
+
+  return 1
 }
 
 set_verdict() {
@@ -125,13 +165,82 @@ if [[ -f "${SPEC_FILE}" ]]; then
   fi
 fi
 
+goals_file="$(latest_goals_file)"
+goal_count=""
+if [[ -z "${goals_file}" ]]; then
+  issues+=("Missing goals artifact under ${GOALS_DIR} (expected goals.vN.md)")
+elif [[ ! -f "${goals_file}" ]]; then
+  issues+=("Goals artifact not found: ${goals_file}")
+else
+  goals_state="$(sed -n 's/^- State: //p; s/^State: //p' "${goals_file}" | head -n 1)"
+  if [[ "${goals_state}" != "locked" ]]; then
+    issues+=("Goals artifact must be locked before Stage 3 validation: ${goals_file}")
+  fi
+
+  goal_count="$(sed -n '/^## Goals/,/^## /p' "${goals_file}" | awk '/^[0-9]+\./ {count++} END {print count+0}')"
+  if [[ ! "${goal_count}" =~ ^[0-9]+$ ]]; then
+    issues+=("Unable to parse goal count from ${goals_file}")
+  elif (( 10#${goal_count} < 0 || 10#${goal_count} > 20 )); then
+    issues+=("Invalid goal count '${goal_count}' in ${goals_file}; expected 0-20")
+  elif (( 10#${goal_count} == 0 )); then
+    issues+=("Zero goals detected in ${goals_file}; Stage 3 requires at least one goal.")
+  fi
+fi
+
+complexity_signals_file=""
+complexity_ranges_ready="false"
+complexity_goals_min=""
+complexity_goals_max=""
+complexity_phases_min=""
+complexity_phases_max=""
+if complexity_signals_file="$(resolve_complexity_signals_file)"; then
+  score_script="${SCRIPT_DIR}/complexity-score.sh"
+  if [[ ! -x "${score_script}" ]]; then
+    issues+=("Missing executable complexity scorer: ${score_script}")
+  else
+    if score_json="$("${score_script}" "${complexity_signals_file}" --format json 2>&1)"; then
+      complexity_goals_min="$(printf '%s' "${score_json}" | jq -r '.ranges.goals.min // empty' 2>/dev/null || true)"
+      complexity_goals_max="$(printf '%s' "${score_json}" | jq -r '.ranges.goals.max // empty' 2>/dev/null || true)"
+      complexity_phases_min="$(printf '%s' "${score_json}" | jq -r '.ranges.phases.min // empty' 2>/dev/null || true)"
+      complexity_phases_max="$(printf '%s' "${score_json}" | jq -r '.ranges.phases.max // empty' 2>/dev/null || true)"
+
+      if [[ "${complexity_goals_min}" =~ ^[0-9]+$ && \
+            "${complexity_goals_max}" =~ ^[0-9]+$ && \
+            "${complexity_phases_min}" =~ ^[0-9]+$ && \
+            "${complexity_phases_max}" =~ ^[0-9]+$ ]]; then
+        complexity_ranges_ready="true"
+      else
+        issues+=("Unable to parse complexity ranges from scorer output using ${complexity_signals_file}")
+      fi
+    else
+      issues+=("Complexity scoring failed for ${complexity_signals_file}: ${score_json}")
+    fi
+  fi
+else
+  issues+=("Unable to resolve complexity signals file. Expected ${TASK_DIR}/complexity-signals.json or codex template fallback.")
+fi
+
 phase_count=""
 if [[ -f "${PHASE_PLAN_FILE}" ]]; then
   phase_count="$(sed -nE 's/^- Phase count:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${PHASE_PLAN_FILE}" | head -n 1)"
   if [[ -z "${phase_count}" ]]; then
-    issues+=("Unable to parse '- Phase count: <2-20>' from ${PHASE_PLAN_FILE}")
-  elif (( 10#${phase_count} < 2 || 10#${phase_count} > 20 )); then
-    issues+=("Invalid phase count '${phase_count}' in ${PHASE_PLAN_FILE}; expected 2-20")
+    issues+=("Unable to parse '- Phase count: <1-12>' from ${PHASE_PLAN_FILE}")
+  elif (( 10#${phase_count} < 1 || 10#${phase_count} > 12 )); then
+    issues+=("Invalid phase count '${phase_count}' in ${PHASE_PLAN_FILE}; expected 1-12")
+  fi
+fi
+
+if [[ "${complexity_ranges_ready}" == "true" ]]; then
+  if [[ "${goal_count}" =~ ^[0-9]+$ ]]; then
+    if (( 10#${goal_count} < 10#${complexity_goals_min} || 10#${goal_count} > 10#${complexity_goals_max} )); then
+      issues+=("Goal count ${goal_count} outside complexity range ${complexity_goals_min}-${complexity_goals_max} (signals: ${complexity_signals_file})")
+    fi
+  fi
+
+  if [[ "${phase_count}" =~ ^[0-9]+$ ]]; then
+    if (( 10#${phase_count} < 10#${complexity_phases_min} || 10#${phase_count} > 10#${complexity_phases_max} )); then
+      issues+=("Phase count ${phase_count} outside complexity range ${complexity_phases_min}-${complexity_phases_max} (signals: ${complexity_signals_file})")
+    fi
   fi
 fi
 

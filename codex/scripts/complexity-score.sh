@@ -29,8 +29,8 @@ Input JSON schema (required keys):
     "reversible_with_straightforward_verification": true|false
   },
   "overrides": {
-    "goals": <optional int in 1..10>,
-    "phases": <optional int in 2..20>,
+    "goals": <optional int in 0..20>,
+    "phases": <optional int in 1..12>,
     "reason": "<required non-empty string when goals/phases override is used>"
   }
 }
@@ -182,21 +182,21 @@ total_score=$((scope + behavior + dependency + uncertainty + verification))
 level="L1"
 level_name="surgical"
 goals_min=1
-goals_max=2
-phases_min=2
-phases_max=3
+goals_max=3
+phases_min=1
+phases_max=1
 
 if [[ "${force_l1}" != "true" ]]; then
   if (( total_score <= 4 )); then
-    level="L1"; level_name="surgical"; goals_min=1; goals_max=2; phases_min=2; phases_max=3
+    level="L1"; level_name="surgical"; goals_min=1; goals_max=3; phases_min=1; phases_max=1
   elif (( total_score <= 8 )); then
-    level="L2"; level_name="focused"; goals_min=2; goals_max=4; phases_min=3; phases_max=6
+    level="L2"; level_name="focused"; goals_min=3; goals_max=5; phases_min=2; phases_max=4
   elif (( total_score <= 12 )); then
-    level="L3"; level_name="multi-surface"; goals_min=3; goals_max=6; phases_min=6; phases_max=10
+    level="L3"; level_name="multi-surface"; goals_min=5; goals_max=8; phases_min=4; phases_max=6
   elif (( total_score <= 16 )); then
-    level="L4"; level_name="cross-system"; goals_min=5; goals_max=8; phases_min=10; phases_max=15
+    level="L4"; level_name="cross-system"; goals_min=8; goals_max=13; phases_min=6; phases_max=9
   else
-    level="L5"; level_name="program"; goals_min=7; goals_max=10; phases_min=15; phases_max=20
+    level="L5"; level_name="program"; goals_min=13; goals_max=20; phases_min=9; phases_max=12
   fi
 fi
 
@@ -247,8 +247,8 @@ goals_override_applied="false"
 phases_override_applied="false"
 
 if [[ -n "${override_goals}" ]]; then
-  if [[ ! "${override_goals}" =~ ^[0-9]+$ ]] || (( 10#${override_goals} < 1 || 10#${override_goals} > 10 )); then
-    echo "ERROR: overrides.goals must be an integer in 1..10"
+  if [[ ! "${override_goals}" =~ ^[0-9]+$ ]] || (( 10#${override_goals} < 0 || 10#${override_goals} > 20 )); then
+    echo "ERROR: overrides.goals must be an integer in 0..20"
     exit 1
   fi
   recommended_goals="${override_goals}"
@@ -256,8 +256,8 @@ if [[ -n "${override_goals}" ]]; then
 fi
 
 if [[ -n "${override_phases}" ]]; then
-  if [[ ! "${override_phases}" =~ ^[0-9]+$ ]] || (( 10#${override_phases} < 2 || 10#${override_phases} > 20 )); then
-    echo "ERROR: overrides.phases must be an integer in 2..20"
+  if [[ ! "${override_phases}" =~ ^[0-9]+$ ]] || (( 10#${override_phases} < 1 || 10#${override_phases} > 12 )); then
+    echo "ERROR: overrides.phases must be an integer in 1..12"
     exit 1
   fi
   recommended_phases="${override_phases}"

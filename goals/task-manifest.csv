@@ -1,6 +1,7 @@
-number,taskname,first_create_date
-1,migrate-to-config-and-project-structure,2026-02-07
-2,auto-worktree-pr,2026-02-10
-3,remove-worktree,2026-02-10
-4,no-empty-archive,2026-02-12
-5,move-pr-to-mcp,2026-02-13
+number,taskname,first_create_date,first_create_hhmmss,first_create_git_hash
+1,migrate-to-config-and-project-structure,2026-02-07,000000,-------
+2,auto-worktree-pr,2026-02-10,000000,-------
+3,remove-worktree,2026-02-10,000000,-------
+4,no-empty-archive,2026-02-12,000000,-------
+5,improve-task-grain,2026-02-13,000000,-------
+6,move-pr-to-mcp,2026-02-13,000000,-------
