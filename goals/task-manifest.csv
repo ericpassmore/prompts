@@ -6,4 +6,5 @@ number,taskname,first_create_date,first_create_hhmmss,first_create_git_hash
 5,align-complexity-policy,2026-02-13,000000,-------
 6,improve-task-grain,2026-02-13,000000,-------
 7,move-pr-to-mcp,2026-02-13,000000,-------
-8,fix-task-manifest-attributes,2026-02-13,220739,5bef31a
+8,strenthen-complexity-lock,2026-02-13,000000,-------
+9,fix-task-manifest-attributes,2026-02-13,220739,5bef31a

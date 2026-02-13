@@ -1,0 +1,23 @@
+{
+  "selected_signals_path": "/Users/eric/.codex/worktrees/c1bd/prompts/tasks/strenthen-complexity-lock/complexity-signals.json",
+  "selected_signals_sha256": "0f5a0596bb1ef0073740baabcfc081f578c37376bb3dfa3e075dd788ae51038a",
+  "score_script_path": "/Users/eric/.codex/worktrees/c1bd/prompts/codex/scripts/complexity-score.sh",
+  "score_script_sha256": "c16bce4b75d094fca9ef3af384aa5d7883372551f518022cd16a91d0b167c801",
+  "ranges": {
+    "goals": {
+      "min": 3,
+      "max": 5
+    },
+    "phases": {
+      "min": 2,
+      "max": 4
+    }
+  },
+  "recommended": {
+    "goals": 4,
+    "phases": 3
+  },
+  "complexity_input": "@tasks/strenthen-complexity-lock/complexity-signals.json",
+  "complexity_descriptor": "scored:L2 (focused)",
+  "captured_at": "2026-02-13T23:50:23Z"
+}

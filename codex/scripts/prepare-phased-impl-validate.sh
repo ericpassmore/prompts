@@ -193,10 +193,27 @@ complexity_goals_max=""
 complexity_phases_min=""
 complexity_phases_max=""
 selected_signals_file=""
+lock_signals_path=""
+lock_signals_sha256=""
+lock_metadata_complete="true"
 if [[ -f "${COMPLEXITY_LOCK_FILE}" ]]; then
-  selected_signals_file="$(jq -r '.selected_signals_path // empty' "${COMPLEXITY_LOCK_FILE}" 2>/dev/null || true)"
-fi
-if [[ -z "${selected_signals_file}" ]]; then
+  lock_signals_path="$(jq -r '.selected_signals_path // empty' "${COMPLEXITY_LOCK_FILE}" 2>/dev/null || true)"
+  lock_signals_sha256="$(jq -r '.selected_signals_sha256 // empty' "${COMPLEXITY_LOCK_FILE}" 2>/dev/null || true)"
+
+  if [[ -z "${lock_signals_path}" ]]; then
+    issues+=("Complexity lock metadata incomplete: missing 'selected_signals_path' in ${COMPLEXITY_LOCK_FILE}. Remediation: rerun prepare-phased-impl-scaffold.sh, then enter revalidate.")
+    lock_metadata_complete="false"
+  fi
+
+  if [[ -z "${lock_signals_sha256}" ]]; then
+    issues+=("Complexity lock metadata incomplete: missing 'selected_signals_sha256' in ${COMPLEXITY_LOCK_FILE}. Remediation: rerun prepare-phased-impl-scaffold.sh, then enter revalidate.")
+    lock_metadata_complete="false"
+  fi
+
+  if [[ "${lock_metadata_complete}" == "true" ]]; then
+    selected_signals_file="${lock_signals_path}"
+  fi
+else
   selected_signals_file="${COMPLEXITY_SIGNALS_FILE}"
 fi
 
@@ -211,7 +228,6 @@ fi
 if [[ -f "${COMPLEXITY_LOCK_FILE}" && -f "${PHASE_PLAN_FILE}" ]]; then
   phase_plan_signals_path="$(signals_path_from_phase_plan)"
   if [[ -n "${phase_plan_signals_path}" ]]; then
-    lock_signals_path="$(jq -r '.selected_signals_path // empty' "${COMPLEXITY_LOCK_FILE}" 2>/dev/null || true)"
     if [[ -n "${lock_signals_path}" && "${phase_plan_signals_path}" != "${lock_signals_path}" ]]; then
       issues+=("Complexity drift detected: phase-plan signals path '${phase_plan_signals_path}' differs from locked path '${lock_signals_path}'. BLOCKED; run revalidate before continuing.")
     fi
@@ -222,6 +238,8 @@ complexity_signals_file="${selected_signals_file}"
 score_script="${SCRIPT_DIR}/complexity-score.sh"
 if [[ ! -x "${score_script}" ]]; then
   issues+=("Missing executable complexity scorer: ${score_script}")
+elif [[ -z "${complexity_signals_file}" ]]; then
+  issues+=("Complexity lock metadata incomplete: selected signals path could not be resolved from ${COMPLEXITY_LOCK_FILE}. BLOCKED; run revalidate after regenerating lock metadata.")
 elif [[ ! -f "${complexity_signals_file}" ]]; then
   issues+=("Selected complexity signals file not found: ${complexity_signals_file}. BLOCKED; run revalidate after restoring the selected signals file.")
 else
@@ -245,8 +263,6 @@ else
 fi
 
 if [[ -f "${COMPLEXITY_LOCK_FILE}" && "${complexity_ranges_ready}" == "true" ]]; then
-  lock_signals_path="$(jq -r '.selected_signals_path // empty' "${COMPLEXITY_LOCK_FILE}" 2>/dev/null || true)"
-  lock_signals_sha256="$(jq -r '.selected_signals_sha256 // empty' "${COMPLEXITY_LOCK_FILE}" 2>/dev/null || true)"
   lock_goals_min="$(jq -r '.ranges.goals.min // empty' "${COMPLEXITY_LOCK_FILE}" 2>/dev/null || true)"
   lock_goals_max="$(jq -r '.ranges.goals.max // empty' "${COMPLEXITY_LOCK_FILE}" 2>/dev/null || true)"
   lock_phases_min="$(jq -r '.ranges.phases.min // empty' "${COMPLEXITY_LOCK_FILE}" 2>/dev/null || true)"
