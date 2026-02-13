@@ -312,7 +312,6 @@ require_clean_worktree() {
 create_commit_and_pr() {
   local pr_title="Initialize Codex setup scaffold"
   local pr_body=""
-  local pr_output=""
 
   git remote get-url origin >/dev/null 2>&1 || abort "missing git remote 'origin'"
   git add "${TARGET_CODEX_DIR}"
@@ -332,17 +331,16 @@ This PR bootstraps repository setup for Codex:
 EOF
 )"
 
-  if pr_output="$(gh pr create --base main --head "${SETUP_BRANCH}" --title "${pr_title}" --body "${pr_body}" 2>&1)"; then
-    log "PR created: ${pr_output}"
-    return 0
-  fi
-
-  if pr_output="$(gh pr view --json url --jq .url 2>/dev/null)"; then
-    log "PR already exists: ${pr_output}"
-    return 0
-  fi
-
-  abort "unable to create PR with gh CLI: ${pr_output}"
+  log ""
+  log "GitHub MCP handoff required: create or update the PR using GitHub MCP."
+  log "Use the following values in your MCP prompt:"
+  log "  - base: main"
+  log "  - head: ${SETUP_BRANCH}"
+  log "  - title: ${pr_title}"
+  log "  - body:"
+  printf '%s\n' "${pr_body}"
+  log ""
+  log "Instruction: if a PR for '${SETUP_BRANCH}' already exists, update it instead of creating a duplicate."
 }
 
 main() {
@@ -358,7 +356,6 @@ main() {
   require_cmd git
   require_cmd awk
   require_cmd cp
-  require_cmd gh
   ensure_git_repo
   require_clean_worktree
   verify_codex_sources

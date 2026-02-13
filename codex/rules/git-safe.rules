@@ -167,49 +167,6 @@ prefix_rule(
     match = ["git worktree prune"],
 )
 
-# -----------------------
-# GitHub PR handoff
-# -----------------------
-
-prefix_rule(
-    pattern = ["gh", "pr", "create"],
-    decision = "allow",
-    justification = "Create reviewer-facing pull requests during land-the-plan.",
-    match = [
-        "gh pr create --base main --head feature-branch --title T --body-file /tmp/pr-body.md",
-    ],
-)
-
-prefix_rule(
-    pattern = ["gh", "pr", "edit"],
-    decision = "allow",
-    justification = "Update an existing pull request instead of creating duplicates.",
-    match = [
-        "gh pr edit 123 --title T --body-file /tmp/pr-body.md",
-        "gh pr edit --title T --body-file /tmp/pr-body.md",
-    ],
-)
-
-prefix_rule(
-    pattern = ["gh", "pr", "view"],
-    decision = "allow",
-    justification = "Read existing pull request metadata for handoff details.",
-    match = [
-        "gh pr view",
-        "gh pr view --json url",
-    ],
-)
-
-prefix_rule(
-    pattern = ["gh", "pr", "merge"],
-    decision = "allow",
-    justification = "Merge landed PR into resolved base branch during land-the-plan.",
-    match = [
-        "gh pr merge 123 --merge",
-        "gh pr merge https://github.com/org/repo/pull/123 --merge",
-    ],
-)
-
 # ----------------------
 # Auto-allow trusted helper scripts (exact path prefix)
 # ----------------------
