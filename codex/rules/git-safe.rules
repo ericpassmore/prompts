@@ -319,6 +319,33 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern = ["/Users/eric/.codex/scripts/task-manifest-land-update.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to stamp task-manifest metadata during landing and safely commit/push that update.",
+    match = [
+        "/Users/eric/.codex/scripts/task-manifest-land-update.sh add-feature-x",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./.codex/scripts/task-manifest-land-update.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to stamp task-manifest metadata during landing and safely commit/push that update (canonical repo path).",
+    match = [
+        "./.codex/scripts/task-manifest-land-update.sh add-feature-x",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./codex/scripts/task-manifest-land-update.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to stamp task-manifest metadata during landing and safely commit/push that update (repo-local fallback path).",
+    match = [
+        "./codex/scripts/task-manifest-land-update.sh add-feature-x",
+    ],
+)
+
+prefix_rule(
     pattern = ["/Users/eric/.codex/scripts/prepare-takeoff-worktree.sh"],
     decision = "allow",
     justification = "Trusted helper script for Stage 2 existing-worktree safety prep.",
