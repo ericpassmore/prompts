@@ -11,8 +11,8 @@ Provide deterministic complexity scoring and bounded recommendations that are re
 
 Hard global bounds:
 
-- Goals: `1..10`
-- Phases: `2..20`
+- Goals: `1..20`
+- Phases: `1..12`
 
 Executable implementation:
 
@@ -42,8 +42,8 @@ Required keys:
 
 Optional keys:
 
-- `overrides.goals`: integer `1..10`
-- `overrides.phases`: integer `2..20`
+- `overrides.goals`: integer `1..20`
+- `overrides.phases`: integer `1..12`
 - `overrides.reason`: required trimmed non-empty string when any override is set
 
 ## Signal Rubric (0/2/4 only)
@@ -79,11 +79,11 @@ Total score = sum of five signals (`0..20`).
 
 | Level | Score | Goals range | Phases range |
 | --- | --- | --- | --- |
-| L1 `surgical` | `0..4` | `1..2` | `2..3` |
-| L2 `focused` | `5..8` | `2..4` | `3..6` |
-| L3 `multi-surface` | `9..12` | `3..6` | `6..10` |
-| L4 `cross-system` | `13..16` | `5..8` | `10..15` |
-| L5 `program` | `17..20` | `7..10` | `15..20` |
+| L1 `surgical` | `0..4` | `1..3` | `1..1` |
+| L2 `focused` | `5..8` | `3..5` | `2..4` |
+| L3 `multi-surface` | `9..12` | `5..8` | `4..6` |
+| L4 `cross-system` | `13..16` | `8..13` | `6..9` |
+| L5 `program` | `17..20` | `13..20` | `9..12` |
 
 ## Forced L1 Rule (Anti-gaming)
 

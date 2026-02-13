@@ -64,7 +64,7 @@ Fallback order:
   - `cross-system`
   - `program`
   - compatibility labels: `simple|medium|complex|very-complex`
-  - explicit phase count override: `2..20`
+  - explicit phase count override: `1..12`
   - deterministic scored input: `@<path-to-complexity-signals.json>`
 
 Complexity drives phase count dynamically.
@@ -99,7 +99,7 @@ This writes `./tasks/<TASK_NAME_IN_KEBAB_CASE>/.scope-lock.md` from `spec.md` sc
 Run:
 
 ```bash
-<CODEX_SCRIPTS_DIR>/prepare-phased-impl-scaffold.sh <TASK_NAME_IN_KEBAB_CASE> <complexity-label|2..20>
+<CODEX_SCRIPTS_DIR>/prepare-phased-impl-scaffold.sh <TASK_NAME_IN_KEBAB_CASE> <complexity-label|1..12>
 ```
 
 or (deterministic scored input):
@@ -112,10 +112,12 @@ Script behavior:
 
 - enforces hard precondition: `spec.md` must contain `READY FOR PLANNING`
 - maps complexity labels to default phase counts within the policy ranges in `codex/skills/complexity-scaling/SKILL.md`
-- accepts explicit phase count override only in `2..20`
+- accepts explicit phase count override only in `1..12`
 - when provided a scored input file (`@...`), derives phase count using `complexity-score.sh`
+- requires task-local complexity signals at `./tasks/<TASK_NAME_IN_KEBAB_CASE>/complexity-signals.json`
 - creates missing `phase-<n>.md` files for active phases
 - writes `./tasks/<TASK_NAME_IN_KEBAB_CASE>/phase-plan.md` with `PENDING` verdict
+- writes `./tasks/<TASK_NAME_IN_KEBAB_CASE>/.complexity-lock.json` and treats post-lock signals path/content/range drift as `BLOCKED` in validation
 - initializes/advances `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` Stage 3 cycle metadata
 - appends implementation strategy section to `spec.md` when missing
 
@@ -204,6 +206,7 @@ All gates must pass:
 
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/phase-plan.md` with final verdict.
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/.scope-lock.md`.
+- `./tasks/<TASK_NAME_IN_KEBAB_CASE>/.complexity-lock.json`.
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` with Stage 3 run metadata.
   - includes `Stage 3 runs`, `Stage 3 current cycle`, `Stage 3 last validated cycle`, and `Drift revalidation count`
 - Active phase files matching chosen complexity.

@@ -29,8 +29,8 @@ STATE=$(sed -n 's/^- State: //p; s/^State: //p' "$GOALS_FILE" | head -n 1)
 GOAL_COUNT=$(sed -n '/^## Goals/,/^## /p' "$GOALS_FILE" | awk '/^[0-9]+\./ {count++} END {print count+0}')
 SUCCESS_COUNT=$(sed -n '/^## Success criteria/,/^## /p' "$GOALS_FILE" | awk '/^-/ {count++} END {print count+0}')
 
-if [[ "$GOAL_COUNT" -gt 10 ]]; then
-  echo "ERROR: Too many goals (${GOAL_COUNT}); max is 10"
+if [[ "$GOAL_COUNT" -gt 20 ]]; then
+  echo "ERROR: Too many goals (${GOAL_COUNT}); max is 20"
   exit 1
 fi
 

@@ -1,13 +1,13 @@
 ---
 name: establish-goals
-description: Clarify an ambiguous or incomplete request and produce 1-10 explicit, verifiable goals before any planning or implementation.
+description: Clarify an ambiguous or incomplete request and produce 1-20 explicit, verifiable goals before any planning or implementation.
 ---
 
 # SKILL: establish-goals
 
 ## Purpose
 
-Execute the `establish-goals` lifecycle stage in isolation to eliminate ambiguity and produce **1-10 verifiable goals** with explicit success criteria.
+Execute the `establish-goals` lifecycle stage in isolation to eliminate ambiguity and produce **1-20 verifiable goals** with explicit success criteria.
 
 This skill establishes the contractual foundation for downstream execution and ends at goal lock.
 
@@ -184,7 +184,7 @@ Edit `establish-goals.vN.md` to populate:
 - Ambiguities (blocking vs non-blocking)
 - Questions for user (blocking first)
 - Assumptions (explicit; never implicit)
-- Goals (1-10, verifiable)
+- Goals (1-20, verifiable)
 - Non-goals (explicit exclusions)
 - Success criteria (objective, mapped to goals)
 - Risks / tradeoffs
@@ -236,7 +236,7 @@ Optional complexity-linked validation:
 
 This validation enforces:
 
-- goal count ∈ [1,10]
+- goal count ∈ [1,20]
 - goals present ⇒ success criteria required
 - locked state consistency
 - when a signals file is provided: goal count must be within the scored level range

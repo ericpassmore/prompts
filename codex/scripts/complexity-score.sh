@@ -29,7 +29,7 @@ Input JSON schema (required keys):
     "reversible_with_straightforward_verification": true|false
   },
   "overrides": {
-    "goals": <optional int in 0..20>,
+    "goals": <optional int in 1..20>,
     "phases": <optional int in 1..12>,
     "reason": "<required non-empty string when goals/phases override is used>"
   }
@@ -247,8 +247,8 @@ goals_override_applied="false"
 phases_override_applied="false"
 
 if [[ -n "${override_goals}" ]]; then
-  if [[ ! "${override_goals}" =~ ^[0-9]+$ ]] || (( 10#${override_goals} < 0 || 10#${override_goals} > 20 )); then
-    echo "ERROR: overrides.goals must be an integer in 0..20"
+  if [[ ! "${override_goals}" =~ ^[0-9]+$ ]] || (( 10#${override_goals} < 1 || 10#${override_goals} > 20 )); then
+    echo "ERROR: overrides.goals must be an integer in 1..20"
     exit 1
   fi
   recommended_goals="${override_goals}"
