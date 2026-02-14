@@ -11,6 +11,8 @@ LOCK_FILE="${TASK_DIR}/.scope-lock.md"
 FINAL_PHASE_FILE="${TASK_DIR}/final-phase.md"
 LIFECYCLE_STATE_FILE="${TASK_DIR}/lifecycle-state.md"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COMPLEXITY_SIGNALS_FILE="${TASK_DIR}/complexity-signals.json"
+COMPLEXITY_LOCK_FILE="${TASK_DIR}/.complexity-lock.json"
 
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR}/resolve-codex-root.sh"
@@ -57,25 +59,24 @@ latest_goals_file() {
   echo "${latest}"
 }
 
-resolve_complexity_signals_file() {
-  local task_signals="${TASK_DIR}/complexity-signals.json"
-  local codex_root=""
-
-  if [[ -f "${task_signals}" ]]; then
-    echo "${task_signals}"
+sha256_file() {
+  local file_path="$1"
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "${file_path}" | awk '{print $1}'
     return 0
   fi
-
-  if ! codex_root="$(resolve_codex_root tasks/_templates/complexity-signals.template.json)"; then
-    return 1
-  fi
-
-  if [[ -f "${codex_root}/tasks/_templates/complexity-signals.template.json" ]]; then
-    echo "${codex_root}/tasks/_templates/complexity-signals.template.json"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "${file_path}" | awk '{print $1}'
     return 0
   fi
-
   return 1
+}
+
+signals_path_from_phase_plan() {
+  if [[ ! -f "${PHASE_PLAN_FILE}" ]]; then
+    return 0
+  fi
+  sed -nE 's/^- .*signals=([^;[:space:]]+).*$/\1/p' "${PHASE_PLAN_FILE}" | head -n 1
 }
 
 set_verdict() {
@@ -180,10 +181,8 @@ else
   goal_count="$(sed -n '/^## Goals/,/^## /p' "${goals_file}" | awk '/^[0-9]+\./ {count++} END {print count+0}')"
   if [[ ! "${goal_count}" =~ ^[0-9]+$ ]]; then
     issues+=("Unable to parse goal count from ${goals_file}")
-  elif (( 10#${goal_count} < 0 || 10#${goal_count} > 20 )); then
-    issues+=("Invalid goal count '${goal_count}' in ${goals_file}; expected 0-20")
-  elif (( 10#${goal_count} == 0 )); then
-    issues+=("Zero goals detected in ${goals_file}; Stage 3 requires at least one goal.")
+  elif (( 10#${goal_count} < 1 || 10#${goal_count} > 20 )); then
+    issues+=("Invalid goal count '${goal_count}' in ${goals_file}; expected 1-20")
   fi
 fi
 
@@ -193,31 +192,107 @@ complexity_goals_min=""
 complexity_goals_max=""
 complexity_phases_min=""
 complexity_phases_max=""
-if complexity_signals_file="$(resolve_complexity_signals_file)"; then
-  score_script="${SCRIPT_DIR}/complexity-score.sh"
-  if [[ ! -x "${score_script}" ]]; then
-    issues+=("Missing executable complexity scorer: ${score_script}")
-  else
-    if score_json="$("${score_script}" "${complexity_signals_file}" --format json 2>&1)"; then
-      complexity_goals_min="$(printf '%s' "${score_json}" | jq -r '.ranges.goals.min // empty' 2>/dev/null || true)"
-      complexity_goals_max="$(printf '%s' "${score_json}" | jq -r '.ranges.goals.max // empty' 2>/dev/null || true)"
-      complexity_phases_min="$(printf '%s' "${score_json}" | jq -r '.ranges.phases.min // empty' 2>/dev/null || true)"
-      complexity_phases_max="$(printf '%s' "${score_json}" | jq -r '.ranges.phases.max // empty' 2>/dev/null || true)"
+selected_signals_file=""
+lock_signals_path=""
+lock_signals_sha256=""
+lock_metadata_complete="true"
+if [[ -f "${COMPLEXITY_LOCK_FILE}" ]]; then
+  lock_signals_path="$(jq -r '.selected_signals_path // empty' "${COMPLEXITY_LOCK_FILE}" 2>/dev/null || true)"
+  lock_signals_sha256="$(jq -r '.selected_signals_sha256 // empty' "${COMPLEXITY_LOCK_FILE}" 2>/dev/null || true)"
 
-      if [[ "${complexity_goals_min}" =~ ^[0-9]+$ && \
-            "${complexity_goals_max}" =~ ^[0-9]+$ && \
-            "${complexity_phases_min}" =~ ^[0-9]+$ && \
-            "${complexity_phases_max}" =~ ^[0-9]+$ ]]; then
-        complexity_ranges_ready="true"
-      else
-        issues+=("Unable to parse complexity ranges from scorer output using ${complexity_signals_file}")
-      fi
-    else
-      issues+=("Complexity scoring failed for ${complexity_signals_file}: ${score_json}")
-    fi
+  if [[ -z "${lock_signals_path}" ]]; then
+    issues+=("Complexity lock metadata incomplete: missing 'selected_signals_path' in ${COMPLEXITY_LOCK_FILE}. Remediation: rerun prepare-phased-impl-scaffold.sh, then enter revalidate.")
+    lock_metadata_complete="false"
+  fi
+
+  if [[ -z "${lock_signals_sha256}" ]]; then
+    issues+=("Complexity lock metadata incomplete: missing 'selected_signals_sha256' in ${COMPLEXITY_LOCK_FILE}. Remediation: rerun prepare-phased-impl-scaffold.sh, then enter revalidate.")
+    lock_metadata_complete="false"
+  fi
+
+  if [[ "${lock_metadata_complete}" == "true" ]]; then
+    selected_signals_file="${lock_signals_path}"
   fi
 else
-  issues+=("Unable to resolve complexity signals file. Expected ${TASK_DIR}/complexity-signals.json or codex template fallback.")
+  selected_signals_file="${COMPLEXITY_SIGNALS_FILE}"
+fi
+
+if [[ ! -f "${COMPLEXITY_SIGNALS_FILE}" ]]; then
+  issues+=("Missing required complexity signals file: ${COMPLEXITY_SIGNALS_FILE}. Remediation: create it, rerun prepare-phased-impl-scaffold.sh, then enter revalidate.")
+fi
+
+if [[ ! -f "${COMPLEXITY_LOCK_FILE}" ]]; then
+  issues+=("Missing required complexity lock file: ${COMPLEXITY_LOCK_FILE}. Remediation: rerun prepare-phased-impl-scaffold.sh for this task, then enter revalidate.")
+fi
+
+if [[ -f "${COMPLEXITY_LOCK_FILE}" && -f "${PHASE_PLAN_FILE}" ]]; then
+  phase_plan_signals_path="$(signals_path_from_phase_plan)"
+  if [[ -n "${phase_plan_signals_path}" ]]; then
+    if [[ -n "${lock_signals_path}" && "${phase_plan_signals_path}" != "${lock_signals_path}" ]]; then
+      issues+=("Complexity drift detected: phase-plan signals path '${phase_plan_signals_path}' differs from locked path '${lock_signals_path}'. BLOCKED; run revalidate before continuing.")
+    fi
+  fi
+fi
+
+complexity_signals_file="${selected_signals_file}"
+score_script="${SCRIPT_DIR}/complexity-score.sh"
+if [[ ! -x "${score_script}" ]]; then
+  issues+=("Missing executable complexity scorer: ${score_script}")
+elif [[ -z "${complexity_signals_file}" ]]; then
+  issues+=("Complexity lock metadata incomplete: selected signals path could not be resolved from ${COMPLEXITY_LOCK_FILE}. BLOCKED; run revalidate after regenerating lock metadata.")
+elif [[ ! -f "${complexity_signals_file}" ]]; then
+  issues+=("Selected complexity signals file not found: ${complexity_signals_file}. BLOCKED; run revalidate after restoring the selected signals file.")
+else
+  if score_json="$("${score_script}" "${complexity_signals_file}" --format json 2>&1)"; then
+    complexity_goals_min="$(printf '%s' "${score_json}" | jq -r '.ranges.goals.min // empty' 2>/dev/null || true)"
+    complexity_goals_max="$(printf '%s' "${score_json}" | jq -r '.ranges.goals.max // empty' 2>/dev/null || true)"
+    complexity_phases_min="$(printf '%s' "${score_json}" | jq -r '.ranges.phases.min // empty' 2>/dev/null || true)"
+    complexity_phases_max="$(printf '%s' "${score_json}" | jq -r '.ranges.phases.max // empty' 2>/dev/null || true)"
+
+    if [[ "${complexity_goals_min}" =~ ^[0-9]+$ && \
+          "${complexity_goals_max}" =~ ^[0-9]+$ && \
+          "${complexity_phases_min}" =~ ^[0-9]+$ && \
+          "${complexity_phases_max}" =~ ^[0-9]+$ ]]; then
+      complexity_ranges_ready="true"
+    else
+      issues+=("Unable to parse complexity ranges from scorer output using ${complexity_signals_file}")
+    fi
+  else
+    issues+=("Complexity scoring failed for ${complexity_signals_file}: ${score_json}")
+  fi
+fi
+
+if [[ -f "${COMPLEXITY_LOCK_FILE}" && "${complexity_ranges_ready}" == "true" ]]; then
+  lock_goals_min="$(jq -r '.ranges.goals.min // empty' "${COMPLEXITY_LOCK_FILE}" 2>/dev/null || true)"
+  lock_goals_max="$(jq -r '.ranges.goals.max // empty' "${COMPLEXITY_LOCK_FILE}" 2>/dev/null || true)"
+  lock_phases_min="$(jq -r '.ranges.phases.min // empty' "${COMPLEXITY_LOCK_FILE}" 2>/dev/null || true)"
+  lock_phases_max="$(jq -r '.ranges.phases.max // empty' "${COMPLEXITY_LOCK_FILE}" 2>/dev/null || true)"
+
+  if [[ -n "${lock_signals_path}" && "${complexity_signals_file}" != "${lock_signals_path}" ]]; then
+    issues+=("Complexity drift detected: selected signals path changed from '${lock_signals_path}' to '${complexity_signals_file}'. BLOCKED; run revalidate before continuing.")
+  fi
+
+  if [[ -n "${lock_signals_sha256}" ]]; then
+    if current_signals_sha256="$(sha256_file "${complexity_signals_file}")"; then
+      if [[ "${current_signals_sha256}" != "${lock_signals_sha256}" ]]; then
+        issues+=("Complexity drift detected: selected signals content changed since Stage 3 lock. BLOCKED; run revalidate before continuing.")
+      fi
+    else
+      issues+=("Unable to compute SHA-256 for ${complexity_signals_file} to enforce complexity drift policy.")
+    fi
+  fi
+
+  if [[ "${lock_goals_min}" =~ ^[0-9]+$ && "${lock_goals_max}" =~ ^[0-9]+$ && \
+        "${lock_phases_min}" =~ ^[0-9]+$ && "${lock_phases_max}" =~ ^[0-9]+$ ]]; then
+    if [[ "${lock_goals_min}" != "${complexity_goals_min}" || \
+          "${lock_goals_max}" != "${complexity_goals_max}" || \
+          "${lock_phases_min}" != "${complexity_phases_min}" || \
+          "${lock_phases_max}" != "${complexity_phases_max}" ]]; then
+      issues+=("Complexity drift detected: scorer-derived ranges changed since Stage 3 lock (${lock_goals_min}-${lock_goals_max}/${lock_phases_min}-${lock_phases_max} -> ${complexity_goals_min}-${complexity_goals_max}/${complexity_phases_min}-${complexity_phases_max}). BLOCKED; run revalidate before continuing.")
+    fi
+  else
+    issues+=("Complexity lock file has invalid range metadata: ${COMPLEXITY_LOCK_FILE}")
+  fi
 fi
 
 phase_count=""

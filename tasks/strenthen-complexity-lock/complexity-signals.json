@@ -1,0 +1,24 @@
+{
+  "scope": 2,
+  "behavior": 2,
+  "dependency": 2,
+  "uncertainty": 2,
+  "verification": 0,
+  "evidence": {
+    "scope": "files=4 surface=codex-scripts-stage3-validator",
+    "behavior": "tightens Stage 3 validation behavior only",
+    "dependency": "interfaces=none",
+    "uncertainty": "known script pattern and deterministic checks",
+    "verification": "checks=bash-n,stage3-validator",
+    "guardrails": "no schema/api contract change; no new deps; localized surface false; reversible with straightforward verification"
+  },
+  "guardrails": {
+    "no_schema_or_api_contract_change": true,
+    "no_new_external_dependencies": true,
+    "localized_surface": false,
+    "reversible_with_straightforward_verification": true
+  },
+  "overrides": {
+    "reason": ""
+  }
+}

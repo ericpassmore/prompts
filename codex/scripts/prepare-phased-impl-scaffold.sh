@@ -15,9 +15,9 @@ if [[ -f "${SCRIPT_DIR}/read-codex-paths.sh" ]]; then
 fi
 
 usage() {
-  echo "Usage (canonical): ./.codex/scripts/prepare-phased-impl-scaffold.sh <task-name> [simple|medium|complex|very-complex|surgical|focused|multi-surface|cross-system|program|2..20|@/path/to/complexity-signals.json]"
-  echo "Usage (repo-local fallback): ./codex/scripts/prepare-phased-impl-scaffold.sh <task-name> [simple|medium|complex|very-complex|surgical|focused|multi-surface|cross-system|program|2..20|@/path/to/complexity-signals.json]"
-  echo "Usage (home fallback): ${HOME}/.codex/scripts/prepare-phased-impl-scaffold.sh <task-name> [simple|medium|complex|very-complex|surgical|focused|multi-surface|cross-system|program|2..20|@/path/to/complexity-signals.json]"
+  echo "Usage (canonical): ./.codex/scripts/prepare-phased-impl-scaffold.sh <task-name> [simple|medium|complex|very-complex|surgical|focused|multi-surface|cross-system|program|1..12|@/path/to/complexity-signals.json]"
+  echo "Usage (repo-local fallback): ./codex/scripts/prepare-phased-impl-scaffold.sh <task-name> [simple|medium|complex|very-complex|surgical|focused|multi-surface|cross-system|program|1..12|@/path/to/complexity-signals.json]"
+  echo "Usage (home fallback): ${HOME}/.codex/scripts/prepare-phased-impl-scaffold.sh <task-name> [simple|medium|complex|very-complex|surgical|focused|multi-surface|cross-system|program|1..12|@/path/to/complexity-signals.json]"
 }
 
 if [[ -z "${TASK_NAME}" ]]; then
@@ -33,76 +33,62 @@ fi
 phase_count_from_complexity() {
   local input="$1"
   case "${input}" in
-    simple|surgical) echo "2" ;;
-    focused) echo "4" ;;
-    medium) echo "6" ;;
-    multi-surface) echo "8" ;;
-    complex) echo "12" ;;
-    cross-system) echo "13" ;;
-    very-complex|program) echo "18" ;;
+    simple|surgical) echo "1" ;;
+    focused) echo "3" ;;
+    medium) echo "4" ;;
+    multi-surface) echo "5" ;;
+    complex) echo "7" ;;
+    cross-system) echo "8" ;;
+    very-complex|program) echo "10" ;;
     *)
-      if [[ "$1" =~ ^[0-9]+$ ]] && (( 10#$1 >= 2 && 10#$1 <= 20 )); then
+      if [[ "$1" =~ ^[0-9]+$ ]] && (( 10#$1 >= 1 && 10#$1 <= 12 )); then
         echo "$1"
       else
-        echo "Abort: complexity must be a supported label or a phase count in [2..20]."
+        echo "Abort: complexity must be a supported label or a phase count in [1..12]."
         exit 2
       fi
       ;;
   esac
 }
 
-COMPLEXITY_DESCRIPTOR="${COMPLEXITY_INPUT}"
-SCORING_DETAILS=""
-PHASE_COUNT=""
-
-if [[ "${COMPLEXITY_INPUT}" == @* ]]; then
-  scores_file="${COMPLEXITY_INPUT#@}"
-  if [[ -z "${scores_file}" ]]; then
-    echo "Abort: complexity signals file path must be provided after '@'."
-    exit 2
+sha256_file() {
+  local file_path="$1"
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "${file_path}" | awk '{print $1}'
+    return 0
   fi
-
-  if [[ "${scores_file}" == /* ]]; then
-    resolved_scores_file="${scores_file}"
-  else
-    resolved_scores_file="${ROOT_DIR}/${scores_file}"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "${file_path}" | awk '{print $1}'
+    return 0
   fi
-
-  if [[ ! -f "${resolved_scores_file}" ]]; then
-    echo "Abort: complexity signals file not found: ${resolved_scores_file}"
-    exit 1
-  fi
-
-  score_script="${SCRIPT_DIR}/complexity-score.sh"
-  if [[ ! -x "${score_script}" ]]; then
-    echo "Abort: missing executable complexity scorer: ${score_script}"
-    exit 1
-  fi
-
-  score_json="$("${score_script}" "${resolved_scores_file}" --format json)"
-  PHASE_COUNT="$(echo "${score_json}" | jq -r '.recommended.phases')"
-  recommended_goals="$(echo "${score_json}" | jq -r '.recommended.goals')"
-  level="$(echo "${score_json}" | jq -r '.level')"
-  level_name="$(echo "${score_json}" | jq -r '.level_name')"
-  total_score="$(echo "${score_json}" | jq -r '.total_score')"
-  force_l1="$(echo "${score_json}" | jq -r '.force_l1')"
-
-  if [[ ! "${PHASE_COUNT}" =~ ^[0-9]+$ ]] || (( 10#${PHASE_COUNT} < 2 || 10#${PHASE_COUNT} > 20 )); then
-    echo "Abort: invalid recommended phase count from complexity scorer."
-    exit 1
-  fi
-
-  COMPLEXITY_DESCRIPTOR="scored:${level} (${level_name})"
-  SCORING_DETAILS="score=${total_score}; recommended-goals=${recommended_goals}; forced-l1=${force_l1}; signals=${resolved_scores_file}"
-else
-  PHASE_COUNT="$(phase_count_from_complexity "${COMPLEXITY_INPUT}")"
-fi
+  echo "Abort: no sha256 tool available (requires shasum or sha256sum)."
+  exit 1
+}
 
 TASK_DIR="${ROOT_DIR}/tasks/${TASK_NAME}"
 SPEC_FILE="${TASK_DIR}/spec.md"
 FINAL_PHASE_FILE="${TASK_DIR}/final-phase.md"
 PHASE_PLAN_FILE="${TASK_DIR}/phase-plan.md"
 LIFECYCLE_STATE_FILE="${TASK_DIR}/lifecycle-state.md"
+COMPLEXITY_SIGNALS_FILE="${TASK_DIR}/complexity-signals.json"
+COMPLEXITY_LOCK_FILE="${TASK_DIR}/.complexity-lock.json"
+SCORE_SCRIPT="${SCRIPT_DIR}/complexity-score.sh"
+
+COMPLEXITY_DESCRIPTOR="${COMPLEXITY_INPUT}"
+SCORING_DETAILS=""
+PHASE_COUNT=""
+SELECTED_SIGNALS_FILE=""
+SCORE_JSON=""
+SCORE_TOTAL=""
+SCORE_LEVEL=""
+SCORE_LEVEL_NAME=""
+SCORE_FORCE_L1=""
+SCORE_RECOMMENDED_GOALS=""
+SCORE_RECOMMENDED_PHASES=""
+SCORE_GOALS_MIN=""
+SCORE_GOALS_MAX=""
+SCORE_PHASES_MIN=""
+SCORE_PHASES_MAX=""
 
 if [[ ! -d "${TASK_DIR}" ]]; then
   echo "Abort: missing task directory ${TASK_DIR}"
@@ -123,6 +109,64 @@ if [[ ! -f "${FINAL_PHASE_FILE}" ]]; then
   echo "Abort: missing ${FINAL_PHASE_FILE}"
   exit 1
 fi
+
+if [[ ! -x "${SCORE_SCRIPT}" ]]; then
+  echo "Abort: missing executable complexity scorer: ${SCORE_SCRIPT}"
+  exit 1
+fi
+
+if [[ "${COMPLEXITY_INPUT}" == @* ]]; then
+  scores_file="${COMPLEXITY_INPUT#@}"
+  if [[ -z "${scores_file}" ]]; then
+    echo "Abort: complexity signals file path must be provided after '@'."
+    exit 2
+  fi
+
+  if [[ "${scores_file}" == /* ]]; then
+    SELECTED_SIGNALS_FILE="${scores_file}"
+  else
+    SELECTED_SIGNALS_FILE="${ROOT_DIR}/${scores_file}"
+  fi
+else
+  SELECTED_SIGNALS_FILE="${COMPLEXITY_SIGNALS_FILE}"
+fi
+
+if [[ ! -f "${COMPLEXITY_SIGNALS_FILE}" ]]; then
+  echo "Abort: missing task complexity signals file ${COMPLEXITY_SIGNALS_FILE}."
+  echo "Remediation: create ${COMPLEXITY_SIGNALS_FILE} and re-run prepare-phased-impl-scaffold.sh."
+  exit 1
+fi
+
+if [[ ! -f "${SELECTED_SIGNALS_FILE}" ]]; then
+  echo "Abort: complexity signals file not found: ${SELECTED_SIGNALS_FILE}"
+  exit 1
+fi
+
+SCORE_JSON="$("${SCORE_SCRIPT}" "${SELECTED_SIGNALS_FILE}" --format json)"
+SCORE_RECOMMENDED_PHASES="$(echo "${SCORE_JSON}" | jq -r '.recommended.phases')"
+SCORE_RECOMMENDED_GOALS="$(echo "${SCORE_JSON}" | jq -r '.recommended.goals')"
+SCORE_LEVEL="$(echo "${SCORE_JSON}" | jq -r '.level')"
+SCORE_LEVEL_NAME="$(echo "${SCORE_JSON}" | jq -r '.level_name')"
+SCORE_TOTAL="$(echo "${SCORE_JSON}" | jq -r '.total_score')"
+SCORE_FORCE_L1="$(echo "${SCORE_JSON}" | jq -r '.force_l1')"
+SCORE_GOALS_MIN="$(echo "${SCORE_JSON}" | jq -r '.ranges.goals.min')"
+SCORE_GOALS_MAX="$(echo "${SCORE_JSON}" | jq -r '.ranges.goals.max')"
+SCORE_PHASES_MIN="$(echo "${SCORE_JSON}" | jq -r '.ranges.phases.min')"
+SCORE_PHASES_MAX="$(echo "${SCORE_JSON}" | jq -r '.ranges.phases.max')"
+
+if [[ ! "${SCORE_RECOMMENDED_PHASES}" =~ ^[0-9]+$ ]] || (( 10#${SCORE_RECOMMENDED_PHASES} < 1 || 10#${SCORE_RECOMMENDED_PHASES} > 12 )); then
+  echo "Abort: invalid recommended phase count from complexity scorer."
+  exit 1
+fi
+
+if [[ "${COMPLEXITY_INPUT}" == @* ]]; then
+  PHASE_COUNT="${SCORE_RECOMMENDED_PHASES}"
+  COMPLEXITY_DESCRIPTOR="scored:${SCORE_LEVEL} (${SCORE_LEVEL_NAME})"
+else
+  PHASE_COUNT="$(phase_count_from_complexity "${COMPLEXITY_INPUT}")"
+fi
+
+SCORING_DETAILS="score=${SCORE_TOTAL}; recommended-goals=${SCORE_RECOMMENDED_GOALS}; forced-l1=${SCORE_FORCE_L1}; signals=${SELECTED_SIGNALS_FILE}"
 
 ensure_lifecycle_state_file() {
   local stage3_runs="0"
@@ -225,12 +269,48 @@ if [[ -n "${SCORING_DETAILS}" ]]; then
     echo
     echo "## Complexity scoring details"
     echo "- ${SCORING_DETAILS}"
+    echo "- Ranges: goals=${SCORE_GOALS_MIN}-${SCORE_GOALS_MAX}; phases=${SCORE_PHASES_MIN}-${SCORE_PHASES_MAX}"
   } >> "${PHASE_PLAN_FILE}"
 fi
+
+signals_sha256="$(sha256_file "${SELECTED_SIGNALS_FILE}")"
+score_script_sha256="$(sha256_file "${SCORE_SCRIPT}")"
+jq -n \
+  --arg selected_signals_path "${SELECTED_SIGNALS_FILE}" \
+  --arg selected_signals_sha256 "${signals_sha256}" \
+  --arg score_script_path "${SCORE_SCRIPT}" \
+  --arg score_script_sha256 "${score_script_sha256}" \
+  --argjson goals_min "${SCORE_GOALS_MIN}" \
+  --argjson goals_max "${SCORE_GOALS_MAX}" \
+  --argjson phases_min "${SCORE_PHASES_MIN}" \
+  --argjson phases_max "${SCORE_PHASES_MAX}" \
+  --argjson recommended_goals "${SCORE_RECOMMENDED_GOALS}" \
+  --argjson recommended_phases "${SCORE_RECOMMENDED_PHASES}" \
+  --arg complexity_input "${COMPLEXITY_INPUT}" \
+  --arg complexity_descriptor "${COMPLEXITY_DESCRIPTOR}" \
+  --arg captured_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  '{
+    selected_signals_path: $selected_signals_path,
+    selected_signals_sha256: $selected_signals_sha256,
+    score_script_path: $score_script_path,
+    score_script_sha256: $score_script_sha256,
+    ranges: {
+      goals: { min: $goals_min, max: $goals_max },
+      phases: { min: $phases_min, max: $phases_max }
+    },
+    recommended: {
+      goals: $recommended_goals,
+      phases: $recommended_phases
+    },
+    complexity_input: $complexity_input,
+    complexity_descriptor: $complexity_descriptor,
+    captured_at: $captured_at
+  }' > "${COMPLEXITY_LOCK_FILE}"
 
 echo "Prepared phased implementation plan scaffold for ${TASK_NAME}"
 echo "Phase count: ${PHASE_COUNT}"
 echo "Phase plan: ${PHASE_PLAN_FILE}"
+echo "Complexity lock: ${COMPLEXITY_LOCK_FILE}"
 echo "Lifecycle state: ${LIFECYCLE_STATE_FILE}"
 if [[ "${#created_files[@]}" -gt 0 ]]; then
   echo "Created phase files:"

@@ -38,7 +38,7 @@
 1.
 2.
 
-## Goals (1-10, verifiable)
+## Goals (1-20, verifiable)
 
 1.
 2.
