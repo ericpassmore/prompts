@@ -35,6 +35,7 @@ if [[ -z "${CURRENT_BRANCH}" ]]; then
 fi
 
 MANIFEST_FILE="${ROOT_DIR}/goals/task-manifest.csv"
+MANIFEST_FILE_REL="goals/task-manifest.csv"
 if [[ ! -f "${MANIFEST_FILE}" ]]; then
   echo "Abort: missing manifest file ${MANIFEST_FILE}"
   exit 1
@@ -56,6 +57,12 @@ fi
 
 SOURCE_COMMIT_HASH="$(git rev-parse --short=7 HEAD)"
 CURRENT_HHMMSS="$(date -u "+%H%M%S")"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COMPACT_HELPER="${SCRIPT_DIR}/task-artifacts-compact.sh"
+TASK_GOALS_DIR="${ROOT_DIR}/goals/${TASK_NAME}"
+TASK_ARTIFACT_DIR="${ROOT_DIR}/tasks/${TASK_NAME}"
+TASK_GOALS_DIR_REL="goals/${TASK_NAME}"
+TASK_ARTIFACT_DIR_REL="tasks/${TASK_NAME}"
 
 TMP_FILE="$(mktemp)"
 cleanup() {
@@ -96,27 +103,50 @@ if [[ "${awk_status}" -ne 0 ]]; then
   exit 1
 fi
 
+manifest_changed=0
 if cmp -s "${MANIFEST_FILE}" "${TMP_FILE}"; then
-  echo "No manifest update required for '${TASK_NAME}' (values already current)."
+  echo "Manifest metadata already current for '${TASK_NAME}'."
+  rm -f "${TMP_FILE}"
+else
+  mv "${TMP_FILE}" "${MANIFEST_FILE}"
+  manifest_changed=1
+fi
+
+if [[ ! -x "${COMPACT_HELPER}" ]]; then
+  echo "Abort: missing executable compaction helper ${COMPACT_HELPER}"
+  exit 1
+fi
+
+"${COMPACT_HELPER}" "${TASK_NAME}"
+
+git add -A "${MANIFEST_FILE}" "${TASK_ARTIFACT_DIR}"
+if [[ -d "${TASK_GOALS_DIR}" ]]; then
+  git add -A "${TASK_GOALS_DIR}"
+fi
+
+mapfile -t STAGED_SCOPED_FILES < <(
+  git diff --cached --name-only -- \
+    "${MANIFEST_FILE_REL}" \
+    "${TASK_ARTIFACT_DIR_REL}" \
+    "${TASK_GOALS_DIR_REL}"
+)
+
+if [[ "${#STAGED_SCOPED_FILES[@]}" -eq 0 ]]; then
+  echo "No staged manifest/compaction changes detected for '${TASK_NAME}'."
   exit 0
 fi
 
-mv "${TMP_FILE}" "${MANIFEST_FILE}"
-
-git add "${MANIFEST_FILE}"
-
-if git diff --cached --quiet -- "${MANIFEST_FILE}"; then
-  echo "No staged manifest changes detected after update for '${TASK_NAME}'."
-  exit 0
+if [[ "${manifest_changed}" -eq 1 ]]; then
+  COMMIT_MESSAGE="Update task manifest metadata and compact task artifacts for ${TASK_NAME}"
+else
+  COMMIT_MESSAGE="Compact task artifacts for ${TASK_NAME}"
 fi
 
-COMMIT_MESSAGE="Update task manifest metadata for ${TASK_NAME}"
-git commit -m "${COMMIT_MESSAGE}" -- "${MANIFEST_FILE}"
+git commit -m "${COMMIT_MESSAGE}" -- "${STAGED_SCOPED_FILES[@]}"
 
 if git rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
   git push origin "${CURRENT_BRANCH}"
 else
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   PUSH_HELPER="${SCRIPT_DIR}/git-push-branch-safe.sh"
 
   if [[ ! -x "${PUSH_HELPER}" ]]; then
@@ -127,5 +157,5 @@ else
   "${PUSH_HELPER}" "${CURRENT_BRANCH}"
 fi
 
-echo "Updated manifest metadata for task '${TASK_NAME}' (hhmmss=${CURRENT_HHMMSS}, commit=${SOURCE_COMMIT_HASH})."
-echo "Manifest commit created and pushed on branch '${CURRENT_BRANCH}'."
+echo "Updated land artifacts for task '${TASK_NAME}' (manifest_changed=${manifest_changed}, hhmmss=${CURRENT_HHMMSS}, commit=${SOURCE_COMMIT_HASH})."
+echo "Manifest/compaction commit created and pushed on branch '${CURRENT_BRANCH}'."
