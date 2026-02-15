@@ -85,19 +85,17 @@ Total score = sum of five signals (`0..20`).
 | L4 `cross-system` | `13..16` | `8..13` | `6..9` |
 | L5 `program` | `17..20` | `13..20` | `9..12` |
 
-## Forced L1 Rule (Anti-gaming)
+## Guardrails (Informational)
 
-Force L1 only when all guardrails are true:
+Guardrails are still required evidence fields and booleans:
 
 - `no_schema_or_api_contract_change`
 - `no_new_external_dependencies`
 - `localized_surface`
 - `reversible_with_straightforward_verification`
 
-Consistency gate:
-
-- when forced L1 is active, each signal (`scope`, `behavior`, `dependency`, `uncertainty`, `verification`) must be `<=2`
-- if any signal is `4`, the signals file is invalid and must be rejected
+Guardrails do not override score-band level selection.
+Complexity level is derived from total score bands only.
 
 ## Deterministic Count Formula
 
@@ -143,6 +141,16 @@ Consistency gate:
 - Adjustment rules above are the only permitted modifiers.
 - No free-form range nudging is allowed outside formula + overrides.
 
+## Upward-Only Enforcement Policy
+
+- Goal enforcement:
+  - enforce global bounds only (`1..20`)
+  - do not block based on complexity-scored goal min/max ranges
+- Phase enforcement:
+  - enforce complexity minimum phase count
+  - do not block for phase counts above complexity max when global bounds (`1..12`) are still valid
+- High-complexity scale-up pressure remains mandatory via minimum-phase enforcement.
+
 ## Commands
 
 Shell output:
@@ -166,4 +174,4 @@ Markdown summary:
 ## Integration
 
 - Stage 3 scaffolding may pass `@<signals-json-path>` to `prepare-phased-impl-scaffold.sh`.
-- Optional Stage 1 validation may pass the same signals file as a third argument to `goals-validate.sh` to enforce level-specific goal ranges.
+- Optional Stage 1 validation may pass the same signals file as a third argument to `goals-validate.sh` to validate scorer compatibility without complexity-based goal-count blocking.
