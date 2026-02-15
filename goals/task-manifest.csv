@@ -8,3 +8,6 @@ number,taskname,first_create_date,first_create_hhmmss,first_create_git_hash
 7,move-pr-to-mcp,2026-02-13,000000,-------
 8,strenthen-complexity-lock,2026-02-13,001739,94aec26
 9,fix-task-manifest-attributes,2026-02-13,220739,5bef31a
+10,complexity-upward-only-scaling,2026-02-15,161804,3e4afb6
+11,improve-feb-15-2026,2026-02-15,143642,f3e278e
+12,bug-fix-stale-path,2026-02-15,145828,7e68db1

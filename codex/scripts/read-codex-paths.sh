@@ -20,7 +20,13 @@ read_codex_paths() {
   local config_path=""
   local parsed_root=""
   local parsed_scripts=""
+  local parsed_root_abs=""
+  local parsed_scripts_abs=""
   local fallback_root=""
+  local expected_root=""
+  local expected_scripts=""
+  local env_root=""
+  local env_scripts=""
 
   if ! fallback_root="$(resolve_codex_root scripts codex-config.yaml project-structure.md)"; then
     echo "Abort: unable to resolve codex root from config. Ensure codex-config.yaml and project-structure.md exist."
@@ -49,14 +55,31 @@ read_codex_paths() {
     parsed_scripts="$(extract_bootstrap_value "codex_scripts_dir" "${block}")"
   fi
 
-  if [[ -n "${parsed_root}" && -n "${parsed_scripts}" && -d "${parsed_root}" && -d "${parsed_scripts}" && -f "${parsed_root}/project-structure.md" ]]; then
-    export CODEX_ROOT="${parsed_root}"
-    export CODEX_SCRIPTS_DIR="${parsed_scripts}"
-    return 0
+  expected_root="${fallback_root}"
+  expected_scripts="${fallback_root}/scripts"
+  if [[ -n "${parsed_root}" && -n "${parsed_scripts}" && -d "${parsed_root}" && -d "${parsed_scripts}" ]]; then
+    parsed_root_abs="$(cd "${parsed_root}" && pwd)"
+    parsed_scripts_abs="$(cd "${parsed_scripts}" && pwd)"
+    if [[ -f "${parsed_root_abs}/project-structure.md" ]]; then
+      expected_root="${parsed_root_abs}"
+      expected_scripts="${parsed_scripts_abs}"
+    fi
   fi
 
-  export CODEX_ROOT="${fallback_root}"
-  export CODEX_SCRIPTS_DIR="${fallback_root}/scripts"
+  # Fast path: environment values are reusable only when they match the
+  # expected root/scripts resolved for the current repository/bootstrap context.
+  if [[ -n "${CODEX_ROOT:-}" && -n "${CODEX_SCRIPTS_DIR:-}" && -d "${CODEX_ROOT}" && -d "${CODEX_SCRIPTS_DIR}" ]]; then
+    env_root="$(cd "${CODEX_ROOT}" && pwd)"
+    env_scripts="$(cd "${CODEX_SCRIPTS_DIR}" && pwd)"
+    if [[ "${env_root}" == "${expected_root}" && "${env_scripts}" == "${expected_scripts}" && -f "${env_scripts}/resolve-codex-root.sh" ]]; then
+      export CODEX_ROOT="${env_root}"
+      export CODEX_SCRIPTS_DIR="${env_scripts}"
+      return 0
+    fi
+  fi
+
+  export CODEX_ROOT="${expected_root}"
+  export CODEX_SCRIPTS_DIR="${expected_scripts}"
   return 0
 }
 

@@ -239,7 +239,7 @@ This validation enforces:
 - goal count ∈ [1,20]
 - goals present ⇒ success criteria required
 - locked state consistency
-- when a signals file is provided: goal count must be within the scored level range
+- when a signals file is provided: scorer input compatibility may be validated, without complexity-based goal-count blocking
 
 Validation failures MUST be resolved before proceeding.
 
@@ -290,7 +290,7 @@ This step completes the `establish-goals` skill.
 
 This skill is complete ONLY when:
 
-- goals exist (1-10)
+- goals exist (1-20)
 - goals are verifiable
 - State = `locked`
 - validation passes

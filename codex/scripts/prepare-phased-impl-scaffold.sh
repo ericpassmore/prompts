@@ -166,7 +166,7 @@ else
   PHASE_COUNT="$(phase_count_from_complexity "${COMPLEXITY_INPUT}")"
 fi
 
-SCORING_DETAILS="score=${SCORE_TOTAL}; recommended-goals=${SCORE_RECOMMENDED_GOALS}; forced-l1=${SCORE_FORCE_L1}; signals=${SELECTED_SIGNALS_FILE}"
+SCORING_DETAILS="score=${SCORE_TOTAL}; recommended-goals=${SCORE_RECOMMENDED_GOALS}; guardrails-all-true=${SCORE_FORCE_L1}; signals=${SELECTED_SIGNALS_FILE}"
 
 ensure_lifecycle_state_file() {
   local stage3_runs="0"

@@ -53,7 +53,7 @@ Fallback order:
 
 ## Drift policy (hard gate)
 
-Revalidate MUST enforce `codex/AGENTS.md` Section 8 as hard gate policy:
+Revalidate MUST enforce `codex/AGENTS.md` Section 5 as hard gate policy:
 
 - locked contract integrity
 - stage/surface enforcement

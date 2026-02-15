@@ -306,15 +306,9 @@ if [[ -f "${PHASE_PLAN_FILE}" ]]; then
 fi
 
 if [[ "${complexity_ranges_ready}" == "true" ]]; then
-  if [[ "${goal_count}" =~ ^[0-9]+$ ]]; then
-    if (( 10#${goal_count} < 10#${complexity_goals_min} || 10#${goal_count} > 10#${complexity_goals_max} )); then
-      issues+=("Goal count ${goal_count} outside complexity range ${complexity_goals_min}-${complexity_goals_max} (signals: ${complexity_signals_file})")
-    fi
-  fi
-
   if [[ "${phase_count}" =~ ^[0-9]+$ ]]; then
-    if (( 10#${phase_count} < 10#${complexity_phases_min} || 10#${phase_count} > 10#${complexity_phases_max} )); then
-      issues+=("Phase count ${phase_count} outside complexity range ${complexity_phases_min}-${complexity_phases_max} (signals: ${complexity_signals_file})")
+    if (( 10#${phase_count} < 10#${complexity_phases_min} )); then
+      issues+=("Phase count ${phase_count} below complexity minimum ${complexity_phases_min} (signals: ${complexity_signals_file})")
     fi
   fi
 fi
