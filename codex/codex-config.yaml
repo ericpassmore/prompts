@@ -12,6 +12,7 @@ notes:
 
 
 
+
 # PREPARE-TAKEOFF BOOTSTRAP START
 bootstrap:
   codex_root: "/Users/eric/.codex/worktrees/2994/prompts/codex"
