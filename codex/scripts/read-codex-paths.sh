@@ -21,6 +21,20 @@ read_codex_paths() {
   local parsed_root=""
   local parsed_scripts=""
   local fallback_root=""
+  local env_root=""
+  local env_scripts=""
+
+  # Fast path: when environment paths are already present and valid, avoid
+  # reparsing bootstrap metadata on every script source.
+  if [[ -n "${CODEX_ROOT:-}" && -n "${CODEX_SCRIPTS_DIR:-}" && -d "${CODEX_ROOT}" && -d "${CODEX_SCRIPTS_DIR}" ]]; then
+    env_root="$(cd "${CODEX_ROOT}" && pwd)"
+    env_scripts="$(cd "${CODEX_SCRIPTS_DIR}" && pwd)"
+    if [[ -f "${env_root}/codex-config.yaml" && -f "${env_root}/project-structure.md" && -f "${env_scripts}/resolve-codex-root.sh" ]]; then
+      export CODEX_ROOT="${env_root}"
+      export CODEX_SCRIPTS_DIR="${env_scripts}"
+      return 0
+    fi
+  fi
 
   if ! fallback_root="$(resolve_codex_root scripts codex-config.yaml project-structure.md)"; then
     echo "Abort: unable to resolve codex root from config. Ensure codex-config.yaml and project-structure.md exist."

@@ -1,0 +1,23 @@
+{
+  "selected_signals_path": "/Users/eric/.codex/worktrees/2994/prompts/tasks/improve-feb-15-2026/complexity-signals.json",
+  "selected_signals_sha256": "cb46dd8d407a4b213dab30eb4b3ac8841aeb8de2dcddf5a651cb579199e9e394",
+  "score_script_path": "/Users/eric/.codex/worktrees/2994/prompts/codex/scripts/complexity-score.sh",
+  "score_script_sha256": "c16bce4b75d094fca9ef3af384aa5d7883372551f518022cd16a91d0b167c801",
+  "ranges": {
+    "goals": {
+      "min": 5,
+      "max": 8
+    },
+    "phases": {
+      "min": 4,
+      "max": 6
+    }
+  },
+  "recommended": {
+    "goals": 6,
+    "phases": 6
+  },
+  "complexity_input": "4",
+  "complexity_descriptor": "4",
+  "captured_at": "2026-02-15T14:30:28Z"
+}

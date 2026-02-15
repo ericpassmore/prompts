@@ -22,6 +22,19 @@ Stages must run in lifecycle order and emit only these verdicts:
 
 If any stage emits `BLOCKED`, progression stops immediately.
 
+### 1.1 Codex Root Resolution Compatibility
+
+Execution MUST use bootstrap-resolved paths from `codex/codex-config.yaml` when available:
+
+- `CODEX_ROOT`
+- `CODEX_SCRIPTS_DIR`
+
+Repository note:
+
+- this repository is rooted at `./codex` (not `./.codex`)
+- fallback compatibility remains required for `./.codex` and `$HOME/.codex`
+- command examples may show canonical `./.codex/...` paths, but runtime resolution must honor bootstrap-selected paths first
+
 ---
 
 ## 2. Goal Lock Contract
@@ -59,6 +72,17 @@ Traceability is mandatory:
 - planned phase work maps to locked goals
 - implemented changes maps to approved phase work
 - reverification evidence maps to implemented changes
+
+### 3.1 Principles Traceability Matrix
+
+`codex/principles.md` is authoritative. This contract enforces those principles as follows:
+
+- `Lock Goals Before Action` -> Section 2 (`Goal Lock Contract`)
+- `Respect Stage Gates` -> Section 1 (`Stage Flow Contract`)
+- `Keep Changes Minimal` -> Section 3 (`Execution Invariants`)
+- `Fail Fast and Explicitly` -> Section 3 (`Execution Invariants`)
+- `Verify, Then Declare Done` -> Section 4 (`Verification and Completion Contract`)
+- `Revalidate on Drift` -> Section 5 and Section 6 (`Drift and Revalidation`)
 
 ---
 

@@ -20,12 +20,24 @@ resolve_codex_root() {
   local required_paths=("$@")
   local candidates=()
 
-  repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-
-  if [[ -n "${CODEX_ROOT:-}" ]]; then
-    candidates+=("${CODEX_ROOT}")
+  # Fast path: if CODEX_ROOT is already exported and satisfies all required paths,
+  # return immediately without invoking git/path discovery again.
+  if [[ -n "${CODEX_ROOT:-}" && -d "${CODEX_ROOT}" ]]; then
+    candidate_abs="$(cd "${CODEX_ROOT}" && pwd)"
+    ok=1
+    for rel in "${required_paths[@]}"; do
+      if [[ ! -e "${candidate_abs}/${rel}" ]]; then
+        ok=0
+        break
+      fi
+    done
+    if [[ "${ok}" -eq 1 ]]; then
+      printf '%s\n' "${candidate_abs}"
+      return 0
+    fi
   fi
 
+  repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
   candidates+=("${repo_root}/.codex" "${repo_root}/codex" "${HOME}/.codex")
 
   for candidate in "${candidates[@]}"; do
