@@ -290,7 +290,7 @@ This step completes the `establish-goals` skill.
 
 This skill is complete ONLY when:
 
-- goals exist (1-10)
+- goals exist (1-20)
 - goals are verifiable
 - State = `locked`
 - validation passes

@@ -14,6 +14,8 @@ set -euo pipefail
 resolve_codex_root() {
   local candidate
   local candidate_abs
+  local allowed_candidate
+  local is_allowed_explicit
   local rel
   local ok
   local repo_root
@@ -22,8 +24,35 @@ resolve_codex_root() {
 
   repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
-  if [[ -n "${CODEX_ROOT:-}" ]]; then
-    candidates+=("${CODEX_ROOT}")
+  # Fast path: if CODEX_ROOT is already exported and satisfies all required paths,
+  # return immediately without invoking git/path discovery again.
+  if [[ -n "${CODEX_ROOT:-}" && -d "${CODEX_ROOT}" ]]; then
+    candidate_abs="$(cd "${CODEX_ROOT}" && pwd)"
+
+    # Explicit CODEX_ROOT is accepted only when it matches one of the
+    # supported roots for the current repository context.
+    is_allowed_explicit=0
+    for allowed_candidate in "${repo_root}/.codex" "${repo_root}/codex" "${HOME}/.codex"; do
+      [[ -d "${allowed_candidate}" ]] || continue
+      if [[ "${candidate_abs}" == "$(cd "${allowed_candidate}" && pwd)" ]]; then
+        is_allowed_explicit=1
+        break
+      fi
+    done
+
+    if [[ "${is_allowed_explicit}" -eq 1 ]]; then
+      ok=1
+      for rel in "${required_paths[@]}"; do
+        if [[ ! -e "${candidate_abs}/${rel}" ]]; then
+          ok=0
+          break
+        fi
+      done
+      if [[ "${ok}" -eq 1 ]]; then
+        printf '%s\n' "${candidate_abs}"
+        return 0
+      fi
+    fi
   fi
 
   candidates+=("${repo_root}/.codex" "${repo_root}/codex" "${HOME}/.codex")

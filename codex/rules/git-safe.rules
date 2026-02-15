@@ -117,6 +117,15 @@ prefix_rule(
     match = ["git push origin feature-branch"],
 )
 
+prefix_rule(
+    pattern = ["gh", "pr", "create"],
+    decision = "allow",
+    justification = "Allow PR creation as fallback when GitHub MCP PR creation fails with permission/auth-access errors.",
+    match = [
+        "gh pr create --base main --head land-the-plan/task/agent-20260210120000 --title \"Title\" --body \"Body\"",
+    ],
+)
+
 # -----------------------
 # Commit (scoped)
 # -----------------------
