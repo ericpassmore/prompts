@@ -18,25 +18,44 @@ Objectives remain stable unless explicitly re-baselined.
 
 ---
 
-## 2. Reduce Ambiguity Every Iteration
+## 2. Reduce Ambiguity Scope Every Iteration
 
-Each refinement iteration MUST reduce at least one identified ambiguity:
+Ambiguity must be tracked quantitatively across all phases.
 
-* domain
-* technology
-* regulatory
-* integration
-* data model
-* testability
-* economic
+### Ambiguity Record Format
 
-If ambiguity does not decrease, the iteration is invalid and must:
+Each ambiguity must include:
+
+* Category:
+  * Domain
+  * Technology
+  * Regulatory
+  * Integration
+  * Data model
+  * Testability
+* Scope Impact (1-5)
+* Systemic Risk (1-5)
+* Regulatory Risk (1-5)
+* Breadth of Surface (1-5)
+
+### Ambiguity Score
+
+Ambiguity Score = Scope x max(Systemic, Regulatory) x Breadth
+
+The goal is not fewer ambiguities.
+The goal is:
+
+* Reduce total weighted ambiguity score
+* OR replace one high-score ambiguity with multiple low-score, bounded ambiguities
+
+Each iteration must satisfy one of those conditions.
+If not, the iteration is invalid and must:
 
 * force a decision,
 * convert uncertainty into an explicit assumption,
 * or declare BLOCKED.
 
-Refinement without ambiguity reduction is drift.
+Refinement without weighted ambiguity reduction or bounded decomposition is drift.
 
 ---
 
@@ -120,5 +139,4 @@ Execution optimizes implementation.
 Refinement optimizes problem clarity.
 
 They do not conflict. They govern different phases.
-
 

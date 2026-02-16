@@ -42,8 +42,8 @@ During this skill:
 ## 2. Refinement Loop Budget
 
 * Maximum total refinement cycles: 20
-* Must reduce weighted ambiguity within 2 consecutive cycles
-* If not → force decision or declare BLOCKED
+* Each iteration must satisfy the ambiguity system requirements in Section 3
+* If not -> force decision, convert uncertainty into an explicit assumption, or declare BLOCKED
 
 Track cycle count in:
 
@@ -53,7 +53,9 @@ lifecycle-state.md
 
 ---
 
-## 3. Ambiguity Scoring System
+## 3. Ambiguity System (Global to All Phases)
+
+Ambiguity must be tracked quantitatively.
 
 All ambiguities must be logged in:
 
@@ -61,7 +63,9 @@ All ambiguities must be logged in:
 ambiguity-register.md
 ```
 
-Each ambiguity includes:
+### Ambiguity Record Format
+
+Each ambiguity must include:
 
 * Category:
 
@@ -69,27 +73,49 @@ Each ambiguity includes:
   * Technology
   * Regulatory
   * Integration
-  * Data
+  * Data model
   * Testability
-  * Economic
-* Scope Impact (1–5)
-* Systemic Risk (1–5)
-* Regulatory Risk (1–5)
-* Breadth (1–5)
+* Scope Impact (1-5)
+* Systemic Risk (1-5)
+* Regulatory Risk (1-5)
+* Breadth of Surface (1-5)
 
-### Score Formula
+### Ambiguity Score
 
-```
-Score = Scope × max(Systemic, Regulatory) × Breadth
-```
+Ambiguity Score = Scope x max(Systemic, Regulatory) x Breadth
 
-Goal:
+The goal is not fewer ambiguities.
+The goal is:
 
-* Reduce total weighted ambiguity
-  OR
-* Replace large ambiguities with smaller bounded ones
+* Replace large, high-impact ambiguities with smaller, bounded ambiguities.
 
-Ambiguity must trend downward across cycles.
+Each iteration must:
+
+* Reduce total weighted ambiguity score
+* OR
+* Replace one high-score ambiguity with multiple low-score ambiguities.
+
+---
+
+## 4. Per-Iteration Baseline Alignment Gate
+
+After each refinement iteration, audit alignment to the original baseline.
+
+Minimum alignment check:
+
+* Actor unchanged?
+* Success metric unchanged?
+* Scope unchanged?
+
+If the alignment audit fails, refinement must pause.
+
+If objective change is intentional, explicit re-baselining is required with:
+
+* documented rationale
+* updated success metric
+* acknowledgment of prior objective retirement
+
+Silent objective drift is prohibited.
 
 ---
 
@@ -348,7 +374,11 @@ Must include:
   * Success metric unchanged?
   * Scope unchanged?
 
-If objective changed → explicit re-baselining required.
+If objective changed -> explicit re-baselining is required with:
+
+* documented rationale
+* updated success metric
+* acknowledgment of prior objective retirement
 
 ---
 
