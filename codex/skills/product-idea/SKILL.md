@@ -131,6 +131,29 @@ project-ideas/<IDEA_NAME>/regulatory/
 
 If required regulatory outputs are missing, inconclusive without exception, or stale, this skill is immediately `BLOCKED`.
 
+Scripted prerequisite check (authoritative):
+
+```bash
+<CODEX_SCRIPTS_DIR>/product-idea-regulatory-intake-validate.sh <IDEA_NAME> [expected-input-fingerprint] [current-utc]
+```
+
+Scope fingerprint helper (for deterministic fingerprint input):
+
+```bash
+<CODEX_SCRIPTS_DIR>/product-idea-scope-fingerprint.sh <IDEA_NAME>
+```
+
+---
+
+## 6. Conversation Intake and Delta Re-evaluation
+
+Large unstructured idea input (long conversations, scenarios, partial assumptions, partial technology choices) must be handled using two patterns:
+
+* Full distillation once in Phase 0.0 to extract signal from noise into durable artifacts.
+* Delta re-evaluation at the start of every subsequent phase to detect new or changed inputs and update artifacts without re-running full ingestion.
+
+If delta re-evaluation produces material changes to baseline objectives/constraints/scope, pause and require explicit re-baselining before proceeding.
+
 ---
 
 # Artifact Structure
@@ -144,6 +167,7 @@ project-ideas/<IDEA_NAME>/
 Required files:
 
 ```
+00-input-distillation.md
 00-baseline.md
 01-surface-map.md
 regulatory/regulatory-manifest.md
@@ -167,7 +191,51 @@ lifecycle-state.md
 
 ---
 
-# Phase 0 — Baseline Definition
+# Conversation Directory Convention
+
+Optional unstructured source input directory:
+
+`docs/idea/<IDEA_NAME>/`
+
+Behavior:
+
+* If `IDEA_NAME` is provided and `docs/idea/<IDEA_NAME>/` exists, ingest it during Phase 0.0.
+* If `IDEA_NAME` is not provided, list directories under `docs/idea/` and ask for a match.
+* If there is no match or no directory, continue without conversation corpus; skill execution remains valid.
+
+Accepted input can be multi-file, mixed-format notes and transcripts. Distilled outputs must still be written under `project-ideas/<IDEA_NAME>/`.
+
+---
+
+# Phase 0.0 — Conversation Distillation
+
+Artifact: `00-input-distillation.md`
+
+Purpose:
+
+* Convert large unstructured conversation input into structured execution signals before baseline lock.
+
+Must include:
+
+* Input corpus index (files considered, ignored, and why)
+* Extracted candidate objectives
+* Extracted candidate constraints and non-goals
+* Extracted scenarios and assumptions
+* Extracted risks and unresolved questions
+* Signal-to-noise summary and confidence notes
+
+### Gate: Distillation Readiness Gate
+
+Must pass:
+
+* Distilled signal is traceable to source input when source input exists
+* Candidate objectives/constraints are explicit enough to seed Phase 0.1 baseline
+* Unresolved questions are explicitly listed, not left implicit
+* If no conversation corpus is used, artifact records that condition explicitly
+
+---
+
+# Phase 0.1 — Baseline Definition
 
 ## Artifact: 00-baseline.md
 
@@ -186,12 +254,19 @@ Must pass:
 * Success measurable
 * Non-goals defined
 * Ambiguities scored
+* Baseline incorporates relevant distilled signals from Phase 0.0 (or explicit no-corpus record)
 
 ---
 
 # Phase 1 — Surface Mapping
 
 ## Artifact: 01-surface-map.md
+
+Delta re-evaluation required:
+
+* Re-scan conversation corpus for changes since last phase.
+* Update prior distilled signals only for deltas.
+* Record material deltas in `00-input-distillation.md`.
 
 Must define:
 
@@ -217,6 +292,11 @@ Must pass:
 
 # Phase 2 — Regulatory Prerequisite Intake (Mandatory)
 
+Delta re-evaluation required:
+
+* Re-scan conversation corpus for scope/jurisdiction changes that affect regulatory intake.
+* Record regulatory-relevant deltas in `00-input-distillation.md`.
+
 Regulatory analysis is produced by `regulatory-surface-detection` before this skill runs.
 
 Read outputs only from:
@@ -240,13 +320,22 @@ Manifest must include:
 * `generated_at`
 * `expires_at` (RFC 3339 UTC timestamp)
 * 2 sentence scope description
-* input fingerprint (hash of baseline/problem statement + scope)
+* `input_fingerprint` (hash of baseline/problem statement + scope)
+
+Scripted workflow:
+
+```bash
+expected_fingerprint="$(
+  <CODEX_SCRIPTS_DIR>/product-idea-scope-fingerprint.sh <IDEA_NAME>
+)"
+<CODEX_SCRIPTS_DIR>/product-idea-regulatory-intake-validate.sh <IDEA_NAME> "${expected_fingerprint}"
+```
 
 Blocking rule:
 
 * If manifest missing: `BLOCKED`
 * If manifest `INCONCLUSIVE` and no valid exception: `BLOCKED`
-* If manifest is stale (`input fingerprint` mismatch or current time >= `expires_at`): `BLOCKED`
+* If manifest is stale (`input_fingerprint` mismatch or current time >= `expires_at`): `BLOCKED`
 * If exception exists and is valid: continue with explicit risk flag
 
 Exception file for bypass:
@@ -271,12 +360,18 @@ Must pass:
 * Manifest fingerprint matches current baseline/problem statement + scope
 * Lightweight drift check passes (`generated_at`, `expires_at`, `status`, and 2 sentence scope description present and current)
 * If exception is used, explicit risk flag recorded in `decision-log.md`
+* Scripted intake validation exits successfully: `<CODEX_SCRIPTS_DIR>/product-idea-regulatory-intake-validate.sh <IDEA_NAME> [expected-input-fingerprint] [current-utc]`
 
 ---
 
-# Phase 3A — Model & Technology Exploration for Pragmatic Clarity
+# Phase 3.1 — Model & Technology Exploration for Pragmatic Clarity
 
 Artifact: `03a-model-exploration.md`
+
+Delta re-evaluation required:
+
+* Re-scan conversation corpus for model or technology assumptions that changed.
+* Record deltas in `00-input-distillation.md`.
 
 Purpose:
 
@@ -305,13 +400,18 @@ Must pass:
 
 ---
 
-# Phase 3B — Explicit Phase 4 Handoff
+# Phase 3.2 — Explicit Phase 4 Handoff
 
 Artifact: `03b-phase4-handoff.md`
 
+Delta re-evaluation required:
+
+* Re-scan conversation corpus for new capability implications or objective-axis impacts.
+* Record deltas in `00-input-distillation.md`.
+
 Purpose:
 
-* Convert model exploration into explicit inputs for Phase 4A and Phase 4B.
+* Convert model exploration into explicit inputs for Phase 4.1 and Phase 4.2.
 
 Must include:
 
@@ -341,9 +441,14 @@ Must pass:
 
 ---
 
-# Phase 4A — Capability Inventory
+# Phase 4.1 — Capability Inventory
 
 Artifact: `04a-capability-inventory.md`
+
+Delta re-evaluation required:
+
+* Re-scan conversation corpus for capability additions/removals or journey-scope changes.
+* Record deltas in `00-input-distillation.md`.
 
 Purpose:
 
@@ -378,9 +483,14 @@ Must pass:
 
 ---
 
-# Phase 4B — Objective Mapping and Axis Vector Scoring
+# Phase 4.2 — Objective Mapping and Axis Vector Scoring
 
 Artifact: `04b-objective-mapping.md`
+
+Delta re-evaluation required:
+
+* Re-scan conversation corpus for changed objective intent or axis-direction signals.
+* Record deltas in `00-input-distillation.md`.
 
 Optional companion artifact: `04b-capability-objective-matrix.csv`
 
@@ -438,6 +548,11 @@ Must pass:
 
 Artifact: `05-tradeoffs.md`
 
+Delta re-evaluation required:
+
+* Re-scan conversation corpus for newly surfaced objective conflicts or priority shifts.
+* Record deltas in `00-input-distillation.md`.
+
 ### Objective Tension Taxonomy (Reusable)
 
 For each objective, define an objective card:
@@ -484,6 +599,11 @@ Must pass:
 
 Artifact: `06-phase-model.md`
 
+Delta re-evaluation required:
+
+* Re-scan conversation corpus for new sequencing constraints or verification expectations.
+* Record deltas in `00-input-distillation.md`.
+
 Must define:
 
 * Phase boundaries
@@ -506,6 +626,11 @@ Must pass:
 # Phase 7 — Drift Audit
 
 Artifact: `07-drift-audit.md`
+
+Delta re-evaluation required:
+
+* Re-scan conversation corpus for late-stage objective/scope drift signals.
+* Record deltas in `00-input-distillation.md`.
 
 Must include:
 

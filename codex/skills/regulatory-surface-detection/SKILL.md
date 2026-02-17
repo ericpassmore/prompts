@@ -40,7 +40,7 @@ Write all outputs to:
 * `generated_at`
 * `expires_at` (RFC 3339 UTC timestamp)
 * 2 sentence scope description
-* input fingerprint (hash of baseline/problem statement + scope)
+* `input_fingerprint` (hash of baseline/problem statement + scope)
 
 Status semantics:
 
