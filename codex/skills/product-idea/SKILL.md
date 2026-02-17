@@ -42,8 +42,8 @@ During this skill:
 ## 2. Refinement Loop Budget
 
 * Maximum total refinement cycles: 20
-* Must reduce weighted ambiguity within 2 consecutive cycles
-* If not → force decision or declare BLOCKED
+* Each iteration must satisfy the ambiguity system requirements in Section 3
+* If not -> force decision, convert uncertainty into an explicit assumption, or declare BLOCKED
 
 Track cycle count in:
 
@@ -53,7 +53,9 @@ lifecycle-state.md
 
 ---
 
-## 3. Ambiguity Scoring System
+## 3. Ambiguity System (Global to All Phases)
+
+Ambiguity must be tracked quantitatively.
 
 All ambiguities must be logged in:
 
@@ -61,7 +63,9 @@ All ambiguities must be logged in:
 ambiguity-register.md
 ```
 
-Each ambiguity includes:
+### Ambiguity Record Format
+
+Each ambiguity must include:
 
 * Category:
 
@@ -69,27 +73,86 @@ Each ambiguity includes:
   * Technology
   * Regulatory
   * Integration
-  * Data
+  * Data model
   * Testability
-  * Economic
-* Scope Impact (1–5)
-* Systemic Risk (1–5)
-* Regulatory Risk (1–5)
-* Breadth (1–5)
+* Scope Impact (1-5)
+* Systemic Risk (1-5)
+* Regulatory Risk (1-5)
+* Breadth of Surface (1-5)
 
-### Score Formula
+### Ambiguity Score
+
+Ambiguity Score = Scope x max(Systemic, Regulatory) x Breadth
+
+The goal is not fewer ambiguities.
+The goal is:
+
+* Replace large, high-impact ambiguities with smaller, bounded ambiguities.
+
+Each iteration must:
+
+* Reduce total weighted ambiguity score
+* OR
+* Replace one high-score ambiguity with multiple low-score ambiguities.
+
+---
+
+## 4. Per-Iteration Baseline Alignment Gate
+
+After each refinement iteration, audit alignment to the original baseline.
+
+Minimum alignment check:
+
+* Actor unchanged?
+* Success metric unchanged?
+* Scope unchanged?
+
+If the alignment audit fails, refinement must pause.
+
+If objective change is intentional, explicit re-baselining is required with:
+
+* documented rationale
+* updated success metric
+* acknowledgment of prior objective retirement
+
+Silent objective drift is prohibited.
+
+---
+
+## 5. Regulatory Prerequisite Check (Run At Skill Start)
+
+`regulatory-surface-detection` must run before this skill.
+
+At skill start, product-idea must scan:
 
 ```
-Score = Scope × max(Systemic, Regulatory) × Breadth
+project-ideas/<IDEA_NAME>/regulatory/
 ```
 
-Goal:
+If required regulatory outputs are missing, inconclusive without exception, or stale, this skill is immediately `BLOCKED`.
 
-* Reduce total weighted ambiguity
-  OR
-* Replace large ambiguities with smaller bounded ones
+Scripted prerequisite check (authoritative):
 
-Ambiguity must trend downward across cycles.
+```bash
+<CODEX_SCRIPTS_DIR>/product-idea-regulatory-intake-validate.sh <IDEA_NAME> [expected-input-fingerprint] [current-utc]
+```
+
+Scope fingerprint helper (for deterministic fingerprint input):
+
+```bash
+<CODEX_SCRIPTS_DIR>/product-idea-scope-fingerprint.sh <IDEA_NAME>
+```
+
+---
+
+## 6. Conversation Intake and Delta Re-evaluation
+
+Large unstructured idea input (long conversations, scenarios, partial assumptions, partial technology choices) must be handled using two patterns:
+
+* Full distillation once in Phase 0.0 to extract signal from noise into durable artifacts.
+* Delta re-evaluation at the start of every subsequent phase to detect new or changed inputs and update artifacts without re-running full ingestion.
+
+If delta re-evaluation produces material changes to baseline objectives/constraints/scope, pause and require explicit re-baselining before proceeding.
 
 ---
 
@@ -104,12 +167,20 @@ project-ideas/<IDEA_NAME>/
 Required files:
 
 ```
+00-input-distillation.md
 00-baseline.md
 01-surface-map.md
-02-regulatory-surface.md
-02b-regulatory-evaluation.md (if needed)
-03-model-hypotheses.md
-04-capabilities.md
+regulatory/regulatory-manifest.md
+regulatory/02-regulatory-surface.md
+regulatory/02b-regulatory-evaluation.md (when surface exists)
+regulatory/regulatory-sources.md
+regulatory/regulatory-capability-implications.md
+regulatory/regulatory-exception.md (when bypass is used)
+03a-model-exploration.md
+03b-phase4-handoff.md
+04a-capability-inventory.md
+04b-objective-mapping.md
+04b-capability-objective-matrix.csv (optional)
 05-tradeoffs.md
 06-phase-model.md
 07-drift-audit.md
@@ -120,7 +191,51 @@ lifecycle-state.md
 
 ---
 
-# Phase 0 — Baseline Definition
+# Conversation Directory Convention
+
+Optional unstructured source input directory:
+
+`docs/idea/<IDEA_NAME>/`
+
+Behavior:
+
+* If `IDEA_NAME` is provided and `docs/idea/<IDEA_NAME>/` exists, ingest it during Phase 0.0.
+* If `IDEA_NAME` is not provided, list directories under `docs/idea/` and ask for a match.
+* If there is no match or no directory, continue without conversation corpus; skill execution remains valid.
+
+Accepted input can be multi-file, mixed-format notes and transcripts. Distilled outputs must still be written under `project-ideas/<IDEA_NAME>/`.
+
+---
+
+# Phase 0.0 — Conversation Distillation
+
+Artifact: `00-input-distillation.md`
+
+Purpose:
+
+* Convert large unstructured conversation input into structured execution signals before baseline lock.
+
+Must include:
+
+* Input corpus index (files considered, ignored, and why)
+* Extracted candidate objectives
+* Extracted candidate constraints and non-goals
+* Extracted scenarios and assumptions
+* Extracted risks and unresolved questions
+* Signal-to-noise summary and confidence notes
+
+### Gate: Distillation Readiness Gate
+
+Must pass:
+
+* Distilled signal is traceable to source input when source input exists
+* Candidate objectives/constraints are explicit enough to seed Phase 0.1 baseline
+* Unresolved questions are explicitly listed, not left implicit
+* If no conversation corpus is used, artifact records that condition explicitly
+
+---
+
+# Phase 0.1 — Baseline Definition
 
 ## Artifact: 00-baseline.md
 
@@ -139,12 +254,19 @@ Must pass:
 * Success measurable
 * Non-goals defined
 * Ambiguities scored
+* Baseline incorporates relevant distilled signals from Phase 0.0 (or explicit no-corpus record)
 
 ---
 
 # Phase 1 — Surface Mapping
 
 ## Artifact: 01-surface-map.md
+
+Delta re-evaluation required:
+
+* Re-scan conversation corpus for changes since last phase.
+* Update prior distilled signals only for deltas.
+* Record material deltas in `00-input-distillation.md`.
 
 Must define:
 
@@ -168,85 +290,95 @@ Must pass:
 
 ---
 
-# Phase 2 — Regulatory Surface Detection (Mandatory)
+# Phase 2 — Regulatory Prerequisite Intake (Mandatory)
 
-## Phase 2A — Regulatory Existence
+Delta re-evaluation required:
 
-Artifact: `02-regulatory-surface.md`
+* Re-scan conversation corpus for scope/jurisdiction changes that affect regulatory intake.
+* Record regulatory-relevant deltas in `00-input-distillation.md`.
 
-Determine:
+Regulatory analysis is produced by `regulatory-surface-detection` before this skill runs.
 
-* Jurisdictions involved
-* Activity classification
-* Is there statutory authority?
-* Is there enforcement?
-* Are there codified penalties?
+Read outputs only from:
 
-Research attempts allowed: max 2.
+`project-ideas/<IDEA_NAME>/regulatory/`
 
-If no statutory authority found after 2 attempts:
+Required output contract:
 
-* Conclude: No regulatory surface
-* Log assumption
-* Assign minimal ambiguity score
-* Proceed
+* `project-ideas/<IDEA_NAME>/regulatory/regulatory-manifest.md`
+* `project-ideas/<IDEA_NAME>/regulatory/02-regulatory-surface.md`
+* `project-ideas/<IDEA_NAME>/regulatory/02b-regulatory-evaluation.md` (when surface exists)
+* `project-ideas/<IDEA_NAME>/regulatory/regulatory-sources.md`
+* `project-ideas/<IDEA_NAME>/regulatory/regulatory-capability-implications.md`
 
-If regulatory surface exists:
+Manifest must include:
 
-* Identify economic exposure level:
+* `status`: `SURFACE_FOUND | NO_SURFACE | INCONCLUSIVE | EXCEPTION_APPROVED`
+* jurisdictions
+* regulator(s)
+* confidence level
+* `generated_at`
+* `expires_at` (RFC 3339 UTC timestamp)
+* 2 sentence scope description
+* `input_fingerprint` (hash of baseline/problem statement + scope)
 
-  * Low
-  * Medium
-  * High (multi-million revenue or material exposure)
+Scripted workflow:
 
-If High → Regulatory ambiguity multiplier = 2×
+```bash
+expected_fingerprint="$(
+  <CODEX_SCRIPTS_DIR>/product-idea-scope-fingerprint.sh <IDEA_NAME>
+)"
+<CODEX_SCRIPTS_DIR>/product-idea-regulatory-intake-validate.sh <IDEA_NAME> "${expected_fingerprint}"
+```
 
----
+Blocking rule:
 
-## Phase 2B — Regulatory Evaluation (If YES)
+* If manifest missing: `BLOCKED`
+* If manifest `INCONCLUSIVE` and no valid exception: `BLOCKED`
+* If manifest is stale (`input_fingerprint` mismatch or current time >= `expires_at`): `BLOCKED`
+* If exception exists and is valid: continue with explicit risk flag
 
-Artifact: `02b-regulatory-evaluation.md`
+Exception file for bypass:
 
-Must define:
+* `project-ideas/<IDEA_NAME>/regulatory/regulatory-exception.md`
 
-* Regulator(s)
-* Statutory references
-* Penalty classes
-* Compliance obligations
-* Reporting cadence
-* Audit requirements
-* Retention obligations
-* Liability chain
-* System capability implications
+Exception must include:
 
-Include:
+* rationale
+* scope
+* owner
+* expiry date
+* accepted risks
+* mitigation plan
 
-Recommended Research Sources:
-
-* Official government code databases
-* Regulator enforcement guidance
-* Industry compliance summaries
-* Legal advisory publications
-
-### Gate: Regulatory Sufficiency Gate
+### Gate: Regulatory Intake Gate
 
 Must pass:
 
-* Regulator clearly identified
-* Enforcement defined
-* Penalties known
-* Obligations enumerated
-* Ambiguity bounded
-
-Failure → BLOCKED
+* Output contract present and readable from the deterministic regulatory path
+* Manifest status is valid for progression (`SURFACE_FOUND | NO_SURFACE | EXCEPTION_APPROVED`)
+* Manifest fingerprint matches current baseline/problem statement + scope
+* Lightweight drift check passes (`generated_at`, `expires_at`, `status`, and 2 sentence scope description present and current)
+* If exception is used, explicit risk flag recorded in `decision-log.md`
+* Scripted intake validation exits successfully: `<CODEX_SCRIPTS_DIR>/product-idea-regulatory-intake-validate.sh <IDEA_NAME> [expected-input-fingerprint] [current-utc]`
 
 ---
 
-# Phase 3 — Model & Technology Exploration
+# Phase 3.1 — Model & Technology Exploration for Pragmatic Clarity
 
-Technology selection allowed.
+Artifact: `03a-model-exploration.md`
 
-Artifact: `03-model-hypotheses.md`
+Delta re-evaluation required:
+
+* Re-scan conversation corpus for model or technology assumptions that changed.
+* Record deltas in `00-input-distillation.md`.
+
+Purpose:
+
+* Use technology exploration to inform a pragmatic approach.
+* Rethink overly ambiguous framing before capability mapping starts.
+
+Technology selection is exploratory at this stage and must remain reversible.
 
 Must include:
 
@@ -255,37 +387,160 @@ Must include:
 * Tradeoff matrix
 * Broken assumptions
 * Risk surfaces
+* Notes on ambiguity reduction or decomposition from exploration outcomes
 
-### Gate: Positive Drift Gate
+### Gate: Pragmatic Exploration Gate
 
 Must pass:
 
-* Ambiguity reduced
+* Ambiguity reduced or decomposed with explicit evidence
 * Assumptions logged
 * No silent scope expansion
+* No irreversible commitment introduced
 
 ---
 
-# Phase 4 — Capability Definition
+# Phase 3.2 — Explicit Phase 4 Handoff
 
-Artifact: `04-capabilities.md`
+Artifact: `03b-phase4-handoff.md`
 
-Each capability must define:
+Delta re-evaluation required:
 
+* Re-scan conversation corpus for new capability implications or objective-axis impacts.
+* Record deltas in `00-input-distillation.md`.
+
+Purpose:
+
+* Convert model exploration into explicit inputs for Phase 4.1 and Phase 4.2.
+
+Must include:
+
+* Translation of each model candidate into capability implications
+* Model impact expression on four objective axes:
+  * Workflow Explicitness
+  * Economic Posture
+  * Technology Complexity
+  * Cultural Specificity
+* Candidate recommendation status per model option: carry-forward or prune
+* Rationale for each carry-forward or prune decision
+
+Prune/carry-forward rule:
+
+* A model candidate may be pruned only with explicit rationale tied to objective fit, risk, or feasibility.
+* At least one carry-forward candidate must remain to seed Phase 4 artifacts.
+* Pruned candidates must retain a brief risk note to avoid repeating invalid paths.
+
+### Gate: Handoff Readiness Gate
+
+Must pass:
+
+* Every model candidate translated into capability implications
+* Every model candidate expressed against the four objective axes
+* Carry-forward/prune decisions are explicit and justified
+* Phase 4 inputs are complete and actionable
+
+---
+
+# Phase 4.1 — Capability Inventory
+
+Artifact: `04a-capability-inventory.md`
+
+Delta re-evaluation required:
+
+* Re-scan conversation corpus for capability additions/removals or journey-scope changes.
+* Record deltas in `00-input-distillation.md`.
+
+Purpose:
+
+* Establish a complete, reviewable capability inventory before objective scoring.
+
+Required inputs:
+
+* Baseline objective set and success metrics
+* Latest ambiguity register
+* Surface map and core value scenarios
+* Regulatory prerequisite outputs from `project-ideas/<IDEA_NAME>/regulatory/`, or valid exception with explicit risk flag
+
+For each capability, define a capability card:
+
+* capability_id
+* Actor and journey step
 * Input surface
 * Output surface
 * Invariant
 * Failure condition
-* Measurable success signal
+* Success signal
+* Estimated implementation weight (S/M/L)
 
-### Gate: Testability Gate
+### Gate: Capability Coverage Gate
 
 Must pass:
 
-* All capabilities observable
-* Core value scenarios covered
-* No untestable behavior
-* Ambiguity trending downward
+* Core value scenarios are covered by named capabilities
+* Capability IDs are unique and stable for downstream mapping
+* Every capability has observable success and explicit failure condition
+* No high-risk surface remains uncataloged
+
+---
+
+# Phase 4.2 — Objective Mapping and Axis Vector Scoring
+
+Artifact: `04b-objective-mapping.md`
+
+Delta re-evaluation required:
+
+* Re-scan conversation corpus for changed objective intent or axis-direction signals.
+* Record deltas in `00-input-distillation.md`.
+
+Optional companion artifact: `04b-capability-objective-matrix.csv`
+
+Purpose:
+
+* Map inventoried capabilities to objectives and quantify support/conflict before Phase 5.
+
+For each objective, define an objective card:
+
+* objective_id
+* Desired outcome (one sentence)
+* Success measurements (2-3 measurable KPIs)
+* Axis vector:
+  * Workflow Explicitness (-2 to +2)
+  * Economic Posture (-2 to +2)
+  * Technology Complexity (-2 to +2)
+  * Cultural Specificity (-2 to +2)
+* Force (1-5)
+* Non-negotiable flag (yes/no)
+
+For each capability, record objective mapping fields:
+
+* Objective links (supports/conflicts/neutral per objective_id)
+* Axis effect vector on the same four axes (-2 to +2)
+* support_score per mapped objective (-2 to +2)
+* Weighted contribution: support_score x objective_force
+
+Mapping method:
+
+* Score each capability against each mapped objective with support_score (-2 to +2).
+* Compute weighted contribution: support_score x objective_force.
+* Flag cross-purpose candidates where one capability strongly supports one objective and strongly conflicts with another in overlapping scope.
+* Record option per flagged candidate: keep, split, defer, or redesign.
+
+Outputs to Phase 5:
+
+* Ranked conflict list (capability_id, objective pair, rationale)
+* Objective-capability matrix with weighted contributions
+* Proposed structural splits (default flow vs exception flow, locale split, or scale split)
+* Decision candidates with risk and KPI impact
+
+### Gate: Mapping Sufficiency Gate
+
+Must pass:
+
+* Every objective maps to one or more capabilities
+* Every core capability maps to one or more objectives
+* High-tension pairs have explicit options and decision path
+* Non-negotiable objectives preserved across candidate paths
+* No unmapped high-risk capability remains
 
 ---
 
@@ -293,9 +548,39 @@ Must pass:
 
 Artifact: `05-tradeoffs.md`
 
+Delta re-evaluation required:
+
+* Re-scan conversation corpus for newly surfaced objective conflicts or priority shifts.
+* Record deltas in `00-input-distillation.md`.
+
+### Objective Tension Taxonomy (Reusable)
+
+For each objective, define an objective card:
+
+* Desired outcome (one sentence)
+* Success measurements (2-3 measurable KPIs)
+* Primary axis: Workflow Explicitness (-2 to +2)
+* Secondary axes:
+  * Economic Posture (-2 low-cost/access to +2 resilience/compliance at higher cost)
+  * Technology Complexity (-2 simple stack to +2 distributed/high-scale architecture)
+  * Cultural Specificity (-2 uniform global behavior to +2 locale-specific behavior/rules)
+* Force (1-5): how strongly this objective pushes design
+* Scope overlap (0-1): actor/journey/market overlap with compared objective
+
+Cross-purpose tension exists when primary-axis directions oppose and both objectives have non-trivial force in overlapping scope.
+
+Use this comparison score:
+
+Tension Score = sum(axis_weight x abs(delta_per_axis)) x scope_overlap x min(force_a, force_b)
+
+Higher score means explicit prioritization and structural split are required.
+
 Must include:
 
-* Conflicting goals
+* Conflicting objectives and constraints
+* Objective cards for each conflicting objective
+* Cross-purpose assessment on primary and secondary axes
+* Tension Score and rationale
 * Priority decision
 * Justification
 * Risk impact
@@ -313,6 +598,11 @@ Must pass:
 # Phase 6 — Phase Model
 
 Artifact: `06-phase-model.md`
+
+Delta re-evaluation required:
+
+* Re-scan conversation corpus for new sequencing constraints or verification expectations.
+* Record deltas in `00-input-distillation.md`.
 
 Must define:
 
@@ -337,6 +627,11 @@ Must pass:
 
 Artifact: `07-drift-audit.md`
 
+Delta re-evaluation required:
+
+* Re-scan conversation corpus for late-stage objective/scope drift signals.
+* Record deltas in `00-input-distillation.md`.
+
 Must include:
 
 * Restated baseline
@@ -348,7 +643,11 @@ Must include:
   * Success metric unchanged?
   * Scope unchanged?
 
-If objective changed → explicit re-baselining required.
+If objective changed -> explicit re-baselining is required with:
+
+* documented rationale
+* updated success metric
+* acknowledgment of prior objective retirement
 
 ---
 
