@@ -119,6 +119,20 @@ Silent objective drift is prohibited.
 
 ---
 
+## 5. Regulatory Prerequisite Check (Run At Skill Start)
+
+`regulatory-surface-detection` must run before this skill.
+
+At skill start, product-idea must scan:
+
+```
+project-ideas/<IDEA_NAME>/regulatory/
+```
+
+If required regulatory outputs are missing, inconclusive without exception, or stale, this skill is immediately `BLOCKED`.
+
+---
+
 # Artifact Structure
 
 All artifacts stored under:
@@ -132,10 +146,17 @@ Required files:
 ```
 00-baseline.md
 01-surface-map.md
-02-regulatory-surface.md
-02b-regulatory-evaluation.md (if needed)
-03-model-hypotheses.md
-04-capabilities.md
+regulatory/regulatory-manifest.md
+regulatory/02-regulatory-surface.md
+regulatory/02b-regulatory-evaluation.md (when surface exists)
+regulatory/regulatory-sources.md
+regulatory/regulatory-capability-implications.md
+regulatory/regulatory-exception.md (when bypass is used)
+03a-model-exploration.md
+03b-phase4-handoff.md
+04a-capability-inventory.md
+04b-objective-mapping.md
+04b-capability-objective-matrix.csv (optional)
 05-tradeoffs.md
 06-phase-model.md
 07-drift-audit.md
@@ -194,85 +215,75 @@ Must pass:
 
 ---
 
-# Phase 2 — Regulatory Surface Detection (Mandatory)
+# Phase 2 — Regulatory Prerequisite Intake (Mandatory)
 
-## Phase 2A — Regulatory Existence
+Regulatory analysis is produced by `regulatory-surface-detection` before this skill runs.
 
-Artifact: `02-regulatory-surface.md`
+Read outputs only from:
 
-Determine:
+`project-ideas/<IDEA_NAME>/regulatory/`
 
-* Jurisdictions involved
-* Activity classification
-* Is there statutory authority?
-* Is there enforcement?
-* Are there codified penalties?
+Required output contract:
 
-Research attempts allowed: max 2.
+* `project-ideas/<IDEA_NAME>/regulatory/regulatory-manifest.md`
+* `project-ideas/<IDEA_NAME>/regulatory/02-regulatory-surface.md`
+* `project-ideas/<IDEA_NAME>/regulatory/02b-regulatory-evaluation.md` (when surface exists)
+* `project-ideas/<IDEA_NAME>/regulatory/regulatory-sources.md`
+* `project-ideas/<IDEA_NAME>/regulatory/regulatory-capability-implications.md`
 
-If no statutory authority found after 2 attempts:
+Manifest must include:
 
-* Conclude: No regulatory surface
-* Log assumption
-* Assign minimal ambiguity score
-* Proceed
+* `status`: `SURFACE_FOUND | NO_SURFACE | INCONCLUSIVE | EXCEPTION_APPROVED`
+* jurisdictions
+* regulator(s)
+* confidence level
+* `generated_at`
+* `expires_at` (RFC 3339 UTC timestamp)
+* 2 sentence scope description
+* input fingerprint (hash of baseline/problem statement + scope)
 
-If regulatory surface exists:
+Blocking rule:
 
-* Identify economic exposure level:
+* If manifest missing: `BLOCKED`
+* If manifest `INCONCLUSIVE` and no valid exception: `BLOCKED`
+* If manifest is stale (`input fingerprint` mismatch or current time >= `expires_at`): `BLOCKED`
+* If exception exists and is valid: continue with explicit risk flag
 
-  * Low
-  * Medium
-  * High (multi-million revenue or material exposure)
+Exception file for bypass:
 
-If High → Regulatory ambiguity multiplier = 2×
+* `project-ideas/<IDEA_NAME>/regulatory/regulatory-exception.md`
 
----
+Exception must include:
 
-## Phase 2B — Regulatory Evaluation (If YES)
+* rationale
+* scope
+* owner
+* expiry date
+* accepted risks
+* mitigation plan
 
-Artifact: `02b-regulatory-evaluation.md`
-
-Must define:
-
-* Regulator(s)
-* Statutory references
-* Penalty classes
-* Compliance obligations
-* Reporting cadence
-* Audit requirements
-* Retention obligations
-* Liability chain
-* System capability implications
-
-Include:
-
-Recommended Research Sources:
-
-* Official government code databases
-* Regulator enforcement guidance
-* Industry compliance summaries
-* Legal advisory publications
-
-### Gate: Regulatory Sufficiency Gate
+### Gate: Regulatory Intake Gate
 
 Must pass:
 
-* Regulator clearly identified
-* Enforcement defined
-* Penalties known
-* Obligations enumerated
-* Ambiguity bounded
-
-Failure → BLOCKED
+* Output contract present and readable from the deterministic regulatory path
+* Manifest status is valid for progression (`SURFACE_FOUND | NO_SURFACE | EXCEPTION_APPROVED`)
+* Manifest fingerprint matches current baseline/problem statement + scope
+* Lightweight drift check passes (`generated_at`, `expires_at`, `status`, and 2 sentence scope description present and current)
+* If exception is used, explicit risk flag recorded in `decision-log.md`
 
 ---
 
-# Phase 3 — Model & Technology Exploration
+# Phase 3A — Model & Technology Exploration for Pragmatic Clarity
 
-Technology selection allowed.
+Artifact: `03a-model-exploration.md`
 
-Artifact: `03-model-hypotheses.md`
+Purpose:
+
+* Use technology exploration to inform a pragmatic approach.
+* Rethink overly ambiguous framing before capability mapping starts.
+
+Technology selection is exploratory at this stage and must remain reversible.
 
 Must include:
 
@@ -281,37 +292,145 @@ Must include:
 * Tradeoff matrix
 * Broken assumptions
 * Risk surfaces
+* Notes on ambiguity reduction or decomposition from exploration outcomes
 
-### Gate: Positive Drift Gate
+### Gate: Pragmatic Exploration Gate
 
 Must pass:
 
-* Ambiguity reduced
+* Ambiguity reduced or decomposed with explicit evidence
 * Assumptions logged
 * No silent scope expansion
+* No irreversible commitment introduced
 
 ---
 
-# Phase 4 — Capability Definition
+# Phase 3B — Explicit Phase 4 Handoff
 
-Artifact: `04-capabilities.md`
+Artifact: `03b-phase4-handoff.md`
 
-Each capability must define:
+Purpose:
 
+* Convert model exploration into explicit inputs for Phase 4A and Phase 4B.
+
+Must include:
+
+* Translation of each model candidate into capability implications
+* Model impact expression on four objective axes:
+  * Workflow Explicitness
+  * Economic Posture
+  * Technology Complexity
+  * Cultural Specificity
+* Candidate recommendation status per model option: carry-forward or prune
+* Rationale for each carry-forward or prune decision
+
+Prune/carry-forward rule:
+
+* A model candidate may be pruned only with explicit rationale tied to objective fit, risk, or feasibility.
+* At least one carry-forward candidate must remain to seed Phase 4 artifacts.
+* Pruned candidates must retain a brief risk note to avoid repeating invalid paths.
+
+### Gate: Handoff Readiness Gate
+
+Must pass:
+
+* Every model candidate translated into capability implications
+* Every model candidate expressed against the four objective axes
+* Carry-forward/prune decisions are explicit and justified
+* Phase 4 inputs are complete and actionable
+
+---
+
+# Phase 4A — Capability Inventory
+
+Artifact: `04a-capability-inventory.md`
+
+Purpose:
+
+* Establish a complete, reviewable capability inventory before objective scoring.
+
+Required inputs:
+
+* Baseline objective set and success metrics
+* Latest ambiguity register
+* Surface map and core value scenarios
+* Regulatory prerequisite outputs from `project-ideas/<IDEA_NAME>/regulatory/`, or valid exception with explicit risk flag
+
+For each capability, define a capability card:
+
+* capability_id
+* Actor and journey step
 * Input surface
 * Output surface
 * Invariant
 * Failure condition
-* Measurable success signal
+* Success signal
+* Estimated implementation weight (S/M/L)
 
-### Gate: Testability Gate
+### Gate: Capability Coverage Gate
 
 Must pass:
 
-* All capabilities observable
-* Core value scenarios covered
-* No untestable behavior
-* Ambiguity trending downward
+* Core value scenarios are covered by named capabilities
+* Capability IDs are unique and stable for downstream mapping
+* Every capability has observable success and explicit failure condition
+* No high-risk surface remains uncataloged
+
+---
+
+# Phase 4B — Objective Mapping and Axis Vector Scoring
+
+Artifact: `04b-objective-mapping.md`
+
+Optional companion artifact: `04b-capability-objective-matrix.csv`
+
+Purpose:
+
+* Map inventoried capabilities to objectives and quantify support/conflict before Phase 5.
+
+For each objective, define an objective card:
+
+* objective_id
+* Desired outcome (one sentence)
+* Success measurements (2-3 measurable KPIs)
+* Axis vector:
+  * Workflow Explicitness (-2 to +2)
+  * Economic Posture (-2 to +2)
+  * Technology Complexity (-2 to +2)
+  * Cultural Specificity (-2 to +2)
+* Force (1-5)
+* Non-negotiable flag (yes/no)
+
+For each capability, record objective mapping fields:
+
+* Objective links (supports/conflicts/neutral per objective_id)
+* Axis effect vector on the same four axes (-2 to +2)
+* support_score per mapped objective (-2 to +2)
+* Weighted contribution: support_score x objective_force
+
+Mapping method:
+
+* Score each capability against each mapped objective with support_score (-2 to +2).
+* Compute weighted contribution: support_score x objective_force.
+* Flag cross-purpose candidates where one capability strongly supports one objective and strongly conflicts with another in overlapping scope.
+* Record option per flagged candidate: keep, split, defer, or redesign.
+
+Outputs to Phase 5:
+
+* Ranked conflict list (capability_id, objective pair, rationale)
+* Objective-capability matrix with weighted contributions
+* Proposed structural splits (default flow vs exception flow, locale split, or scale split)
+* Decision candidates with risk and KPI impact
+
+### Gate: Mapping Sufficiency Gate
+
+Must pass:
+
+* Every objective maps to one or more capabilities
+* Every core capability maps to one or more objectives
+* High-tension pairs have explicit options and decision path
+* Non-negotiable objectives preserved across candidate paths
+* No unmapped high-risk capability remains
 
 ---
 
@@ -319,9 +438,34 @@ Must pass:
 
 Artifact: `05-tradeoffs.md`
 
+### Objective Tension Taxonomy (Reusable)
+
+For each objective, define an objective card:
+
+* Desired outcome (one sentence)
+* Success measurements (2-3 measurable KPIs)
+* Primary axis: Workflow Explicitness (-2 to +2)
+* Secondary axes:
+  * Economic Posture (-2 low-cost/access to +2 resilience/compliance at higher cost)
+  * Technology Complexity (-2 simple stack to +2 distributed/high-scale architecture)
+  * Cultural Specificity (-2 uniform global behavior to +2 locale-specific behavior/rules)
+* Force (1-5): how strongly this objective pushes design
+* Scope overlap (0-1): actor/journey/market overlap with compared objective
+
+Cross-purpose tension exists when primary-axis directions oppose and both objectives have non-trivial force in overlapping scope.
+
+Use this comparison score:
+
+Tension Score = sum(axis_weight x abs(delta_per_axis)) x scope_overlap x min(force_a, force_b)
+
+Higher score means explicit prioritization and structural split are required.
+
 Must include:
 
-* Conflicting goals
+* Conflicting objectives and constraints
+* Objective cards for each conflicting objective
+* Cross-purpose assessment on primary and secondary axes
+* Tension Score and rationale
 * Priority decision
 * Justification
 * Risk impact

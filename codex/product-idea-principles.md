@@ -92,13 +92,22 @@ Silent objective drift is prohibited.
 
 ## 5. Resolve Tension Explicitly
 
-When goals or constraints are in tension:
+When objectives or constraints are in tension:
 
 * the conflict must be documented,
 * prioritization must be declared,
 * and the chosen tradeoff must be justified.
 
 Unresolved tension is misalignment.
+
+### Principle: Structured Objective Tension Resolution
+
+Objective tension must be resolved through explicit, comparable, and traceable analysis:
+
+* each objective defines a measurable desired outcome,
+* objective-to-capability relationships are explicit before tradeoff decisions,
+* cross-purpose tensions are identified using a consistent comparison method,
+* and non-negotiable objectives remain preserved across selected tradeoff paths.
 
 ---
 
@@ -139,4 +148,3 @@ Execution optimizes implementation.
 Refinement optimizes problem clarity.
 
 They do not conflict. They govern different phases.
-
