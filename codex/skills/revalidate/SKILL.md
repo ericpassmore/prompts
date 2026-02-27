@@ -33,6 +33,7 @@ Stage 5 archival and code-review operations MUST run through:
 
 - `prepare-phased-impl-archive.sh`
 - `revalidate-code-review.sh`
+- `revalidate-audit-log.sh`
 - `revalidate-validate.sh`
 
 Direct shell reimplementation of these operations is not allowed.
@@ -178,6 +179,12 @@ Validator behavior:
 - enforces Stage 3 run-count source from `lifecycle-state.md`
 - increments drift revalidation count in `lifecycle-state.md` when trigger source is `drift` and verdict is `READY TO REPLAN`
 - enforces landing strictness for review findings/verdict, with optional risk-acceptance waiver
+- executes `revalidate-audit-log.sh` and appends a run entry to `tasks/<task>/audit-log.md` including findings summary and tuning signals
+- audit-log tuning signals include, at minimum:
+  - complexity score snapshot (score/level/recommended goals+phases)
+  - fragile artifacts snapshot from `codex/project-structure.md`
+  - diff surface/churn snapshot
+  - lifecycle counter snapshot
 - emits exactly:
   - `READY TO REPLAN`
   - `READY TO LAND`
@@ -194,7 +201,8 @@ All gates must pass:
 - Gate 5: drift categories assessed with explicit outcomes.
 - Gate 6: explicit code review completed and validated.
 - Gate 7: final verdict recorded in `revalidate.md`.
-- Gate 8: `revalidate-validate.sh` emits terminal verdict.
+- Gate 8: `revalidate-audit-log.sh` appends current-run audit entry.
+- Gate 9: `revalidate-validate.sh` emits terminal verdict.
 
 ## Exit behavior
 
@@ -220,5 +228,6 @@ All gates must pass:
   - actionable findings (or explicit no-findings state)
   - overall correctness verdict
   - confidence score
+- `./tasks/<TASK_NAME_IN_KEBAB_CASE>/audit-log.md` updated with a revalidate run entry containing findings and tuning signals
 - optional `./tasks/<TASK_NAME_IN_KEBAB_CASE>/risk-acceptance.md` when unresolved actionable findings are explicitly waived
 - for trigger source `drift`: archived Stage 3 artifacts under task `archive/` using short-hash GUID format
