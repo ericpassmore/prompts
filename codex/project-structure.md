@@ -54,6 +54,15 @@
 - Lifecycle stages must follow the ordered gate contract defined in `codex/AGENTS.md`.
 - Command references in task specs must be pinned and traceable to canonical repository records.
 
+## Fragile Artifacts
+- `codex/AGENTS.md` (lifecycle gate contract; small wording changes can alter allowed stage exits)
+- `codex/codex-config.yaml` (bootstrap source of truth for command resolution and base branch)
+- `codex/project-structure.md` (required bootstrap input; missing or stale records block stage execution)
+- `codex/scripts/resolve-codex-root.sh` (root path selection used by stage scripts)
+- `codex/scripts/read-codex-paths.sh` (runtime path hydration for selected codex root/scripts dir)
+- `codex/scripts/revalidate-validate.sh` (terminal gate validator for Stage 5 verdict integrity)
+- `goals/task-manifest.csv` (landing metadata and task identity continuity)
+
 ## Success Criteria
 - Core codex assets (`AGENTS.md`, `codex-config.yaml`, `project-structure.md`, `scripts/`, `skills/`) exist and remain internally consistent.
 - Stage scripts can resolve `CODEX_ROOT` and `CODEX_SCRIPTS_DIR` through canonical config.

@@ -158,6 +158,14 @@ All revalidation decisions must be documented.
 
 - `revalidate` wipes prior working memory/history for active execution context
 - `establish-goals` and `prepare-takeoff` remain locked context-only inputs
+- each revalidate run appends an entry to:
+  - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/audit-log.md`
+- each revalidate audit entry must include, at minimum:
+  - findings summary (status/count/severity/verdict/confidence)
+  - complexity score snapshot (score/level/recommended goals and phases)
+  - fragile artifacts snapshot sourced from `./codex/project-structure.md`
+  - diff surface/churn snapshot
+  - lifecycle counters snapshot (`Stage 3 runs`, `Stage 3 current cycle`, `Drift revalidation count`)
 - trigger classes:
   - drift-triggered revalidation
   - direct reverification revalidation (direct from `implement` verdict `READY FOR REVERIFICATION`)

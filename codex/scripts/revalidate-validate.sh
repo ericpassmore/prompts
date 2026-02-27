@@ -172,6 +172,41 @@ update_drift_revalidation_count() {
 EOF
 }
 
+run_revalidate_audit_log() {
+  local audit_status="$1"
+  local audit_reason="$2"
+  local audit_cmd
+  local audit_output
+
+  audit_cmd=( "${SCRIPT_DIR}/revalidate-audit-log.sh" "${TASK_NAME}" "--status" "${audit_status}" "--reason" "${audit_reason}" )
+  if [[ -n "${BASE_BRANCH}" ]]; then
+    audit_cmd+=( "--base-branch" "${BASE_BRANCH}" )
+  fi
+
+  if ! audit_output="$("${audit_cmd[@]}" 2>&1)"; then
+    issues+=("Revalidate audit logging failed via revalidate-audit-log.sh.")
+    while IFS= read -r line; do
+      [[ -z "${line}" ]] && continue
+      issues+=("  ${line}")
+    done <<< "${audit_output}"
+  fi
+}
+
+if [[ "${trigger_source}" == "drift" && "${verdict}" == "READY TO REPLAN" && "${#issues[@]}" -eq 0 ]]; then
+  update_drift_revalidation_count
+fi
+
+audit_status="success"
+audit_reason="none"
+if [[ "${#issues[@]}" -gt 0 ]]; then
+  audit_status="blocked"
+  audit_reason="${issues[0]}"
+elif [[ "${verdict}" == "BLOCKED" ]]; then
+  audit_status="blocked"
+  audit_reason="Final verdict in ${REVALIDATE_FILE} is BLOCKED."
+fi
+run_revalidate_audit_log "${audit_status}" "${audit_reason}"
+
 if [[ "${#issues[@]}" -gt 0 ]]; then
   echo "BLOCKED"
   for issue in "${issues[@]}"; do
@@ -184,10 +219,6 @@ if [[ "${verdict}" == "BLOCKED" ]]; then
   echo "BLOCKED"
   echo "- Final verdict in ${REVALIDATE_FILE} is BLOCKED."
   exit 1
-fi
-
-if [[ "${trigger_source}" == "drift" && "${verdict}" == "READY TO REPLAN" ]]; then
-  update_drift_revalidation_count
 fi
 
 echo "${verdict}"
