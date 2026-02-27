@@ -120,6 +120,7 @@ Script behavior:
 - writes `./tasks/<TASK_NAME_IN_KEBAB_CASE>/.complexity-lock.json` and treats post-lock signals path/content/range drift as `BLOCKED` in validation
 - initializes/advances `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` Stage 3 cycle metadata
 - appends implementation strategy section to `spec.md` when missing
+- Stage 3 validation enforces complexity minimum phase count and does not block when phase count exceeds complexity max (global `1..12` still applies)
 
 ### Step 4 — Populate planning documents
 

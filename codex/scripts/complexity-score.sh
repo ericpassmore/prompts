@@ -172,32 +172,18 @@ if [[ "${no_schema_or_api_contract_change}" == "true" \
   force_l1="true"
 fi
 
-if [[ "${force_l1}" == "true" ]] && (( scope > 2 || behavior > 2 || dependency > 2 || uncertainty > 2 || verification > 2 )); then
-  echo "ERROR: Forced L1 guardrails conflict with high-complexity signals; all signals must be <=2 when forcing L1."
-  exit 1
-fi
-
 total_score=$((scope + behavior + dependency + uncertainty + verification))
 
-level="L1"
-level_name="surgical"
-goals_min=1
-goals_max=3
-phases_min=1
-phases_max=1
-
-if [[ "${force_l1}" != "true" ]]; then
-  if (( total_score <= 4 )); then
-    level="L1"; level_name="surgical"; goals_min=1; goals_max=3; phases_min=1; phases_max=1
-  elif (( total_score <= 8 )); then
-    level="L2"; level_name="focused"; goals_min=3; goals_max=5; phases_min=2; phases_max=4
-  elif (( total_score <= 12 )); then
-    level="L3"; level_name="multi-surface"; goals_min=5; goals_max=8; phases_min=4; phases_max=6
-  elif (( total_score <= 16 )); then
-    level="L4"; level_name="cross-system"; goals_min=8; goals_max=13; phases_min=6; phases_max=9
-  else
-    level="L5"; level_name="program"; goals_min=13; goals_max=20; phases_min=9; phases_max=12
-  fi
+if (( total_score <= 4 )); then
+  level="L1"; level_name="surgical"; goals_min=1; goals_max=3; phases_min=1; phases_max=1
+elif (( total_score <= 8 )); then
+  level="L2"; level_name="focused"; goals_min=3; goals_max=5; phases_min=2; phases_max=4
+elif (( total_score <= 12 )); then
+  level="L3"; level_name="multi-surface"; goals_min=5; goals_max=8; phases_min=4; phases_max=6
+elif (( total_score <= 16 )); then
+  level="L4"; level_name="cross-system"; goals_min=8; goals_max=13; phases_min=6; phases_max=9
+else
+  level="L5"; level_name="program"; goals_min=13; goals_max=20; phases_min=9; phases_max=12
 fi
 
 goals_midpoint=$(((goals_min + goals_max) / 2))
@@ -281,6 +267,7 @@ total_score=${total_score}
 level=${level}
 level_name=${level_name}
 force_l1=${force_l1}
+guardrails_all_true=${force_l1}
 goals_min=${goals_min}
 goals_max=${goals_max}
 phases_min=${phases_min}
@@ -326,6 +313,7 @@ if [[ "${FORMAT_VALUE}" == "json" ]]; then
       level: $level,
       level_name: $level_name,
       force_l1: ($force_l1 == "true"),
+      guardrails_all_true: ($force_l1 == "true"),
       ranges: {
         goals: { min: $goals_min, max: $goals_max },
         phases: { min: $phases_min, max: $phases_max }
@@ -365,7 +353,7 @@ cat <<EOF
 ## Complexity Score
 - Total score: ${total_score}
 - Level: ${level} (${level_name})
-- Forced L1 guardrail: ${force_l1}
+- Guardrails-all-true (informational): ${force_l1}
 
 ## Ranges
 - Goals: ${goals_min}-${goals_max}

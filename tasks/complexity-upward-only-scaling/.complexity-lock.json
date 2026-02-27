@@ -1,0 +1,23 @@
+{
+  "selected_signals_path": "/Users/eric/.codex/worktrees/01dc/prompts/tasks/complexity-upward-only-scaling/complexity-signals.json",
+  "selected_signals_sha256": "fb89540c141c2d33e7489c7f820902e2b9f31063eb10a0fa2fe58d93f8755da6",
+  "score_script_path": "/Users/eric/.codex/worktrees/01dc/prompts/codex/scripts/complexity-score.sh",
+  "score_script_sha256": "45a062dd25a8938ad1fba76e1be65815c40d7d722a20ff07c22c74ed0e479699",
+  "ranges": {
+    "goals": {
+      "min": 5,
+      "max": 8
+    },
+    "phases": {
+      "min": 4,
+      "max": 6
+    }
+  },
+  "recommended": {
+    "goals": 6,
+    "phases": 6
+  },
+  "complexity_input": "8",
+  "complexity_descriptor": "8",
+  "captured_at": "2026-02-15T15:19:52Z"
+}

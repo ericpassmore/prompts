@@ -60,12 +60,8 @@ if [[ -n "${SIGNALS_FILE_ARG}" ]]; then
     exit 1
   fi
 
-  score_json="$("${score_script}" "${signals_file}" --format json)"
-  goals_min="$(echo "${score_json}" | jq -r '.ranges.goals.min')"
-  goals_max="$(echo "${score_json}" | jq -r '.ranges.goals.max')"
-
-  if (( GOAL_COUNT < goals_min || GOAL_COUNT > goals_max )); then
-    echo "ERROR: Goal count ${GOAL_COUNT} outside complexity range ${goals_min}-${goals_max}"
+  if ! "${score_script}" "${signals_file}" --format json >/dev/null; then
+    echo "ERROR: Complexity scoring failed for: ${signals_file}"
     exit 1
   fi
 fi
