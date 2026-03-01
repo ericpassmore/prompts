@@ -60,7 +60,7 @@
 - `codex/project-structure.md` (required bootstrap input; missing or stale records block stage execution)
 - `codex/scripts/resolve-codex-root.sh` (root path selection used by stage scripts)
 - `codex/scripts/read-codex-paths.sh` (runtime path hydration for selected codex root/scripts dir)
-- `codex/scripts/revalidate-validate.sh` (terminal gate validator for Stage 5 verdict integrity)
+- `codex/scripts/implement-validate.sh` (terminal gate validator for Stage 4 -> Stage 5 readiness)
 - `goals/task-manifest.csv` (landing metadata and task identity continuity)
 
 ## Success Criteria

@@ -102,7 +102,6 @@ If drift is detected in goals, constraints, success criteria, non-goals, scope, 
 
 - stop Stage 4 immediately
 - document drift evidence and rationale
-- route to `revalidate` before any further implementation
 - emit `BLOCKED` for Stage 4
 
 ### Step 1A — Enforce progress budget hard gate (loop prevention)
@@ -120,7 +119,7 @@ New evidence means at least one of:
 - reduced failure surface
 - concrete reproducible observation not previously recorded
 
-Exceeding `N`, `M`, or `K` is drift. Stop Stage 4, document evidence, route to `revalidate`, and emit `BLOCKED`.
+Exceeding `N`, `M`, or `K` is drift. Stop Stage 4, document evidence, and emit `BLOCKED`.
 
 ### Step 2 — Maintain final-phase completion ledger
 
@@ -170,12 +169,14 @@ In `## Outstanding issues (if any)`:
 
 - record every known issue with severity, repro, and suggested fix
 - issue recording is temporary evidence, not completion approval
-- unresolved actionable code-review findings must route to `BLOCKED`/`READY TO REPLAN` before landing
+- unresolved actionable findings must route to `BLOCKED` before landing
 - if no issues exist, write an explicit none marker (for example `- None.`)
 
 Placeholder-only issue entries are invalid.
 
 ### Step 6 — Emit implementation verdict via validator
+
+Before finalizing Stage 4, run one explicit drift check against locked goals and emit `BLOCKED` on any mismatch.
 
 Run:
 
@@ -185,7 +186,7 @@ Run:
 
 Validator emits exactly one verdict:
 
-- `READY FOR REVERIFICATION`
+- `READY TO LAND`
 - `BLOCKED`
 
 Validator also updates `phase-plan.md` verdict accordingly.
@@ -204,13 +205,12 @@ All gates must pass:
 
 ## Exit behavior
 
-- On `READY FOR REVERIFICATION`: hand off to `revalidate`.
+- On `READY TO LAND`: hand off to `land-the-plan`.
 - On `BLOCKED`: stop and list precise blockers.
 
 ## Constraints
 
 - No goal or scope expansion.
-- Revalidate on drift before continuing.
 - No stage/surface expansion outside approved phase work.
 - No verification weakening or bypass.
 - No silent failure masking.
@@ -219,12 +219,12 @@ All gates must pass:
 
 ## Non-goals
 
-Stage 4 does not perform final code review.  
-Code review is deferred to `revalidate`.
+Stage 4 does not perform final code review.
+Code review is handled during landing gates.
 
 ## Required handoff outputs
 
-- stage verdict (`READY FOR REVERIFICATION` or `BLOCKED`)
+- stage verdict (`READY TO LAND` or `BLOCKED`)
 - updated `final-phase.md` containing:
   - proof all checklist items were evaluated (completion not required for all)
   - full outstanding-issues documentation

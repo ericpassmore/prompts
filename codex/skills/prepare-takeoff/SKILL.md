@@ -176,7 +176,7 @@ During Stage 2, continuously enforce the cross-stage drift policy from `codex/AG
 - progress budget (`N=45m`, `M=5`, `K=2 no-evidence cycles`)
 - completion declaration integrity
 
-If any drift signal is detected, stop Stage 2, emit `BLOCKED` with explicit evidence, and route to `revalidate`.
+If any drift signal is detected, stop Stage 2 and emit `BLOCKED` with explicit evidence.
 
 ### 12. Emit Readiness Verdict
 
