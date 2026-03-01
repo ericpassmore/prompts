@@ -3,7 +3,7 @@
 ## Autonomous Coding Agent Contract
 
 This contract defines cross-stage invariants for the lifecycle:
-`establish-goals` -> `prepare-takeoff` -> `prepare-phased-impl` -> `implement` -> `revalidate` -> `land-the-plan`
+`establish-goals` -> `prepare-takeoff` -> `prepare-phased-impl` -> `implement` -> `land-the-plan`
 
 Stage mechanics, commands, and file-surface details are owned by stage artifacts under `codex/skills/*/SKILL.md`.
 
@@ -16,8 +16,7 @@ Stages must run in lifecycle order and emit only these verdicts:
 - `establish-goals`: `GOALS LOCKED` or `BLOCKED`
 - `prepare-takeoff`: `READY FOR PLANNING` or `BLOCKED`
 - `prepare-phased-impl`: `READY FOR IMPLEMENTATION` or `BLOCKED`
-- `implement`: `READY FOR REVERIFICATION` or `BLOCKED`
-- `revalidate`: `READY TO REPLAN`, `READY TO LAND`, or `BLOCKED`
+- `implement`: `READY TO LAND` or `BLOCKED`
 - `land-the-plan`: `LANDED` or `BLOCKED`
 
 If any stage emits `BLOCKED`, progression stops immediately.
@@ -71,7 +70,7 @@ Traceability is mandatory:
 
 - planned phase work maps to locked goals
 - implemented changes maps to approved phase work
-- reverification evidence maps to implemented changes
+- verification evidence maps to implemented changes
 
 ### 3.1 Principles Traceability Matrix
 
@@ -82,7 +81,7 @@ Traceability is mandatory:
 - `Keep Changes Minimal` -> Section 3 (`Execution Invariants`)
 - `Fail Fast and Explicitly` -> Section 3 (`Execution Invariants`)
 - `Verify, Then Declare Done` -> Section 4 (`Verification and Completion Contract`)
-- `Revalidate on Drift` -> Section 5 and Section 6 (`Drift and Revalidation`)
+- `Detect Drift and Stop` -> Section 5 (`Drift Hard Gate`)
 
 ---
 
@@ -93,7 +92,7 @@ Completion requires passing verification or explicit blocker documentation.
 - tests or equivalent validation must exist
 - tests are mandatory when behavior is changed
 - unverifiable goals are invalid
-- `lint`, `build`, and `test` are mandatory reverification command classes
+- `lint`, `build`, and `test` are mandatory verification command classes
 - command instances must come from pinned task/repo command records:
   - `spec.md`
   - `./codex/project-structure.md`
@@ -103,9 +102,9 @@ A stage MAY be declared complete only when locked success criteria and verificat
 
 ---
 
-## 5. Drift and Revalidation Hard Gate
+## 5. Drift Hard Gate
 
-Post-lock stages MUST continuously detect drift and enter `revalidate` on drift.
+Post-lock stages MUST continuously detect drift and stop immediately on drift.
 
 ### 5.1 Drift signals
 
@@ -148,52 +147,14 @@ New evidence is at least one of:
 - reduced failure surface
 - concrete reproducible observation not previously recorded
 
-Exceeding `N`, `M`, or `K` is drift and requires `revalidate`.
-
----
-
-## 6. Revalidate Contract
-
-All revalidation decisions must be documented.
-
-- `revalidate` wipes prior working memory/history for active execution context
-- `establish-goals` and `prepare-takeoff` remain locked context-only inputs
-- each revalidate run appends an entry to:
-  - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/audit-log.md`
-- each revalidate audit entry must include, at minimum:
-  - findings summary (status/count/severity/verdict/confidence)
-  - complexity score snapshot (score/level/recommended goals and phases)
-  - fragile artifacts snapshot sourced from `./codex/project-structure.md`
-  - diff surface/churn snapshot
-  - lifecycle counters snapshot (`Stage 3 runs`, `Stage 3 current cycle`, `Drift revalidation count`)
-- trigger classes:
-  - drift-triggered revalidation
-  - direct reverification revalidation (direct from `implement` verdict `READY FOR REVERIFICATION`)
-
-Allowed exits by trigger:
-
-- drift-triggered: `READY TO REPLAN` or `BLOCKED`
-- direct reverification: `READY TO LAND` or `BLOCKED`
-
-Outcome routing:
-
-- `READY TO REPLAN`: resume at `prepare-phased-impl` (Stage 3 restart)
-- `READY TO LAND`: hand off directly to `land-the-plan` (no Stage 3 restart)
-
-`READY TO LAND` is valid only when:
-
-- `prepare-phased-impl` has been executed at least once total for the task
-- current `revalidate` entry is direct from Stage 4 verdict `READY FOR REVERIFICATION`
-- no open actionable code-review findings
-- code-review verdict is `patch is correct`
-- unresolved actionable findings are covered by explicit risk acceptance at:
-  - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/risk-acceptance.md`
+Exceeding `N`, `M`, or `K` is drift and requires immediate stage stop with `BLOCKED`.
 
 Stage 3 state source of truth:
 
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md`:
   - `- Stage 3 runs: <N>`
-  - `- Drift revalidation count: <N>`
+  - `- Stage 3 current cycle: <N>`
+  - `- Stage 3 last validated cycle: <N>`
 
 Stage 3 restart archival requirement:
 
@@ -207,13 +168,13 @@ Stage 3 restart archival requirement:
 
 ---
 
-## 7. Land Cleanly
+## 6. Land Cleanly
 
 Do not finalize until:
 
 - Definition of Done is met
 - verification is complete or explicitly blocked
 - task artifacts are current
-- latest reverification includes `lint`, `build`, and `test` outcomes
+- latest verification includes `lint`, `build`, and `test` outcomes
 
 Finalization requires approved commit workflow and reviewer-ready handoff details.
