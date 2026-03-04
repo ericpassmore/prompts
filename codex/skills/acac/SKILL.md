@@ -9,7 +9,7 @@ description: Orchestrate the full Autonomous Coding Agent Contract from a #ACAC 
 
 Run the Autonomous Coding Agent Contract as an end-to-end orchestrator:
 
-`establish-goals` -> `prepare-takeoff` -> `prepare-phased-impl` -> `implement` -> `revalidate` -> `land-the-plan`
+`establish-goals` -> `prepare-takeoff` -> `prepare-phased-impl` -> `implement` -> `land-the-plan`
 
 This skill coordinates stage entry/exit and user approvals. Stage mechanics remain owned by the individual stage skills.
 
@@ -52,14 +52,14 @@ This skill coordinates stage entry/exit and user approvals. Stage mechanics rema
 ### 5. Verify, Then Declare Done
 
 - Completion is valid only when the lifecycle reaches `LANDED` or an explicit `BLOCKED` outcome is recorded.
-- Never bypass stage validators or reverification requirements.
+- Never bypass stage validators or verification requirements.
 - Treat verification as mandatory when behavior changes, including `lint`, `build`, and `test` as defined by task/repo records.
 
-### 6. Revalidate on Drift
+### 6. Detect Drift and Stop
 
-- If scope, goals, touched surfaces, verification plan, or completion criteria drift, route to `revalidate` before continuing.
+- If scope, goals, touched surfaces, verification plan, or completion criteria drift, stop the active stage immediately.
 - Treat drift as a hard gate and enforce loop-prevention limits (`N=45m`, `M=5`, `K=2` no-evidence cycles).
-- Continue only when `revalidate` emits a valid next-step verdict.
+- Resume only after corrective updates re-establish a valid stage entry state.
 
 ## Orchestration workflow
 
@@ -96,22 +96,15 @@ This skill coordinates stage entry/exit and user approvals. Stage mechanics rema
 ### Step 6 - Run implement
 
 - Execute: `Run $implement for <task-name>`.
-- Continue only on `READY FOR REVERIFICATION`.
+- Continue only on `READY TO LAND`.
 - On `BLOCKED`, stop and report blockers.
-
-### Step 7 - Run revalidate
-
-- Execute: `Run $revalidate for <task-name>`.
-- If verdict is `READY TO REPLAN`, restart from Step 5 (`prepare-phased-impl`) and continue forward again.
-- If verdict is `READY TO LAND`, continue to Step 8.
-- If verdict is `BLOCKED`, stop and report blockers.
 
 ### Drift handling at any stage (hard gate)
 
-- If drift is detected before terminal completion, enter `revalidate` immediately.
-- Do not continue normal stage progression until `revalidate` returns the allowed next verdict.
+- If drift is detected before terminal completion, stop the current stage and record evidence.
+- Resume normal progression only after required corrective updates are applied and the current stage can be re-entered cleanly.
 
-### Step 8 - Run land-the-plan
+### Step 7 - Run land-the-plan
 
 - Execute: `Run $land-the-plan for <task-name>`.
 - Terminal outcomes:
@@ -131,7 +124,7 @@ At each stage boundary, report:
 
 - stage name
 - terminal verdict
-- next action (`continue`, `replan`, or `stop`)
+- next action (`continue` or `stop`)
 
 ## Guardrails
 

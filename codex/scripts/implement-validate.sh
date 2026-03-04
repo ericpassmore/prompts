@@ -76,8 +76,8 @@ if [[ ! -f "${FINAL_PHASE_FILE}" ]]; then
 fi
 
 if [[ -f "${PHASE_PLAN_FILE}" ]]; then
-  if ! grep -q '^- Verdict: READY FOR IMPLEMENTATION$' "${PHASE_PLAN_FILE}"; then
-    issues+=("Precondition failed: ${PHASE_PLAN_FILE} must contain '- Verdict: READY FOR IMPLEMENTATION' before Stage 4 closeout.")
+  if ! grep -Eq '^- Verdict: (READY FOR IMPLEMENTATION|READY TO LAND)$' "${PHASE_PLAN_FILE}"; then
+    issues+=("Precondition failed: ${PHASE_PLAN_FILE} must contain '- Verdict: READY FOR IMPLEMENTATION' or '- Verdict: READY TO LAND' before Stage 4/5 validation.")
   fi
 fi
 
@@ -138,8 +138,8 @@ if [[ -f "${FINAL_PHASE_FILE}" ]]; then
 fi
 
 if [[ "${#issues[@]}" -eq 0 ]]; then
-  set_verdict "READY FOR REVERIFICATION"
-  echo "READY FOR REVERIFICATION"
+  set_verdict "READY TO LAND"
+  echo "READY TO LAND"
   exit 0
 fi
 
