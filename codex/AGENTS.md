@@ -5,7 +5,7 @@
 This contract defines cross-stage invariants for the lifecycle:
 `establish-goals` -> `prepare-takeoff` -> `prepare-phased-impl` -> `implement` -> `land-the-plan`
 
-Stage mechanics, commands, and file-surface details are owned by stage artifacts under `codex/skills/*/SKILL.md`.
+Stage mechanics, commands, and file-surface details are owned by stage artifacts under `$HOME/.codex/skills/*/SKILL.md`.
 
 ---
 
@@ -23,15 +23,15 @@ If any stage emits `BLOCKED`, progression stops immediately.
 
 ### 1.1 Codex Root Resolution Compatibility
 
-Execution MUST use bootstrap-resolved paths from `codex/codex-config.yaml` when available:
+Execution MUST use bootstrap-resolved paths from `./.codex/codex-config.yaml` when available:
 
 - `CODEX_ROOT`
 - `CODEX_SCRIPTS_DIR`
 
 Repository note:
 
-- this repository is rooted at `./codex` (not `./.codex`)
-- fallback compatibility remains required for `./.codex` and `$HOME/.codex`
+- this repository is rooted at `./.codex`
+- fallback compatibility remains required for `./codex` and `$HOME/.codex`
 - command examples may show canonical `./.codex/...` paths, but runtime resolution must honor bootstrap-selected paths first
 
 ---
@@ -74,7 +74,7 @@ Traceability is mandatory:
 
 ### 3.1 Principles Traceability Matrix
 
-`codex/principles.md` is authoritative. This contract enforces those principles as follows:
+`./.codex/principles.md` is authoritative. This contract enforces those principles as follows:
 
 - `Lock Goals Before Action` -> Section 2 (`Goal Lock Contract`)
 - `Respect Stage Gates` -> Section 1 (`Stage Flow Contract`)
@@ -95,8 +95,8 @@ Completion requires passing verification or explicit blocker documentation.
 - `lint`, `build`, and `test` are mandatory verification command classes
 - command instances must come from pinned task/repo command records:
   - `spec.md`
-  - `./codex/project-structure.md`
-  - `./codex/codex-config.yaml`
+  - `./.codex/project-structure.md`
+  - `./.codex/codex-config.yaml`
 
 A stage MAY be declared complete only when locked success criteria and verification steps are satisfied, or blockers are explicitly documented.
 
