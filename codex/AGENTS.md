@@ -34,6 +34,12 @@ Repository note:
 - fallback compatibility remains required for `./codex` and `$HOME/.codex`
 - command examples may show canonical `./.codex/...` paths, but runtime resolution must honor bootstrap-selected paths first
 
+### 1.2 Self-Improvement Incident Routing
+
+While executing the `acac` skill or the `product-idea` skill, if a centralized skill, supporting script, template, or lifecycle workflow causes the kind of rework, workaround, poor-fit invocation, or repeated friction described by `Prompt: self-improve-skills`, activate `codex/prompts/self-improve-skills.md`.
+
+This prompt activation records and routes the incident only. It does NOT relax lifecycle order, stage gates, scope limits, or verification requirements in this contract.
+
 ---
 
 ## 2. Goal Lock Contract

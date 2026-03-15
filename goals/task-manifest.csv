@@ -12,4 +12,5 @@ number,taskname,first_create_date,first_create_hhmmss,first_create_git_hash
 11,improve-feb-15-2026,2026-02-15,143642,f3e278e
 12,bug-fix-stale-path,2026-02-15,145828,7e68db1
 13,complexity-upward-only-scaling,2026-02-15,161804,3e4afb6
-14,self-improve-skills,2026-03-15,000000,-------
+14,hook-self-improvement,2026-03-15,000000,-------
+15,self-improve-skills,2026-03-15,000000,-------
