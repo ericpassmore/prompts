@@ -71,7 +71,7 @@ Complexity drives phase count dynamically.
 
 ### Step 1 — Archive prior Stage 3 artifacts before restart
 
-If restarting Stage 3 after `revalidate`, archive prior Stage 3 artifacts using:
+If restarting Stage 3 after a blocked drift event, archive prior Stage 3 artifacts using:
 
 ```bash
 <CODEX_SCRIPTS_DIR>/prepare-phased-impl-archive.sh <TASK_NAME_IN_KEBAB_CASE>
@@ -151,7 +151,6 @@ If scope changes are needed:
 
 - stop Stage 3
 - emit `BLOCKED`
-- route to `revalidate`
 
 ### Step 6 — Enforce drift hard-gate policy
 
@@ -163,7 +162,7 @@ Continuously enforce the cross-stage drift policy from `codex/AGENTS.md`:
 - progress budget (`N=45m`, `M=5`, `K=2 no-evidence cycles`)
 - completion declaration integrity
 
-If any drift signal is detected, stop Stage 3, document evidence, emit `BLOCKED`, and route to `revalidate`.
+If any drift signal is detected, stop Stage 3, document evidence, and emit `BLOCKED`.
 
 ### Step 7 — Emit readiness verdict
 
@@ -209,6 +208,6 @@ All gates must pass:
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/.scope-lock.md`.
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/.complexity-lock.json`.
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/lifecycle-state.md` with Stage 3 run metadata.
-  - includes `Stage 3 runs`, `Stage 3 current cycle`, `Stage 3 last validated cycle`, and `Drift revalidation count`
+  - includes `Stage 3 runs`, `Stage 3 current cycle`, and `Stage 3 last validated cycle`
 - Active phase files matching chosen complexity.
 - Updated planning docs under `./tasks/<TASK_NAME_IN_KEBAB_CASE>/`.

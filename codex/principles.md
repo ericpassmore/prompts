@@ -26,7 +26,7 @@ Do not hide uncertainty or errors.
 Completion requires passing verification or explicitly documented blockers.
 Tests are mandatory when behavior is changed.
 
-### 6. Revalidate on Drift
+### 6. Detect Drift and Stop
 
-If goals, scope, tests, touched surfaces, verification plans, or locked completion criteria drift, enter `revalidate` before continuing.
+If goals, scope, tests, touched surfaces, verification plans, or locked completion criteria drift, stop the active stage and emit `BLOCKED`.
 Treat drift detection as a hard gate, including loop-prevention limits (`N=45m`, `M=5 cycles`, `K=2 no-evidence cycles`).

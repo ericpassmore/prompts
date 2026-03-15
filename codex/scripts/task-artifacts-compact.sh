@@ -381,10 +381,8 @@ fi
 
 goal_state="$(sed -nE 's/^- State:[[:space:]]*(.+)$/\1/p' "${RETAINED_GOAL_FILE}" | head -n 1)"
 phase_plan_verdict="$(sed -nE 's/^- Verdict:[[:space:]]*(.+)$/\1/p' "${TASK_DIR}/phase-plan.md" 2>/dev/null | head -n 1 || true)"
-revalidate_verdict="$(sed -nE 's/^- Final verdict:[[:space:]]*(.+)$/\1/p' "${TASK_DIR}/revalidate.md" 2>/dev/null | head -n 1 || true)"
 stage3_runs="$(sed -nE 's/^- Stage 3 runs:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "${TASK_DIR}/lifecycle-state.md" 2>/dev/null | head -n 1 || true)"
 phase_plan_verdict="${phase_plan_verdict:-unknown}"
-revalidate_verdict="${revalidate_verdict:-unknown}"
 stage3_runs="${stage3_runs:-unknown}"
 
 if [[ ! -f "${AUDIT_LOG_FILE}" ]]; then
@@ -411,7 +409,6 @@ fi
     echo "  - Goal versions diff: none (single goal version)"
   fi
   echo "  - Phase plan verdict snapshot: ${phase_plan_verdict}"
-  echo "  - Revalidate verdict snapshot: ${revalidate_verdict}"
   echo "  - Stage 3 runs snapshot: ${stage3_runs}"
   echo "- Outcome:"
   if [[ "${STATUS}" == "complete" ]]; then

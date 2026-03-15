@@ -11,7 +11,7 @@ Finalize verified task work into a reviewer-ready pull request, then cleanly rel
 
 ## Preconditions (hard)
 
-- `revalidate` has emitted `READY TO LAND`.
+- `implement` has emitted `READY TO LAND`.
 - `./tasks/<TASK_NAME_IN_KEBAB_CASE>/` exists.
 - Current git state may be a named branch or detached `HEAD`.
 - Repository has no unmerged/conflicted paths.
@@ -21,7 +21,7 @@ If any hard precondition fails, emit `BLOCKED` and stop.
 
 ## Rule dependencies
 
-Stage 6 depends on:
+Stage 5 depends on:
 
 - `codex/rules/expand-task-spec.rules`
 - `codex/rules/git-safe.rules`
@@ -100,12 +100,28 @@ If any check fails, emit `BLOCKED`.
 Run:
 
 ```bash
-<CODEX_SCRIPTS_DIR>/revalidate-validate.sh <TASK_NAME_IN_KEBAB_CASE> [base-branch]
+<CODEX_SCRIPTS_DIR>/implement-validate.sh <TASK_NAME_IN_KEBAB_CASE>
 ```
 
 Proceed only if output is exactly:
 
 `READY TO LAND`
+
+Otherwise emit `BLOCKED`.
+
+### Step 1A — Enforce code-review readiness gate
+
+Run:
+
+```bash
+<CODEX_SCRIPTS_DIR>/revalidate-code-review.sh <TASK_NAME_IN_KEBAB_CASE> [base-branch]
+```
+
+Proceed only when:
+
+- review script result is `READY`
+- review verdict is `patch is correct`
+- findings status is `none`, or explicit risk acceptance exists at `./tasks/<TASK_NAME_IN_KEBAB_CASE>/risk-acceptance.md`
 
 Otherwise emit `BLOCKED`.
 
@@ -141,7 +157,7 @@ This helper MUST:
 - update `goals/task-manifest.csv` for `<TASK_NAME_IN_KEBAB_CASE>`:
   - `first_create_hhmmss` to current UTC `HHMMSS`
   - `first_create_git_hash` to current `HEAD` hash at script start
-- run `task-artifacts-compact.sh` for `<TASK_NAME_IN_KEBAB_CASE>` during Stage 6 and enforce compact retention:
+- run `task-artifacts-compact.sh` for `<TASK_NAME_IN_KEBAB_CASE>` during Stage 5 and enforce compact retention:
   - preserve exactly one locked `goals.vN.md` file under `goals/<task>/` and keep it unmodified
   - preserve exactly one task spec file: `tasks/<task>/spec.md`
   - preserve risk-acceptance evidence files when present (for example `tasks/<task>/risk-acceptance.md`)
@@ -169,7 +185,7 @@ Collect required context from task artifacts and code:
   - referenced or newly added ADR documents
   - if no ADR applies, state `None`
 - Exceptions:
-  - blockers/deviations recorded in retained task artifacts (for example `audit-log.md`, `revalidate.md`, review notes)
+  - blockers/deviations recorded in retained task artifacts (for example `audit-log.md` and review notes)
 - Deferred work:
   - discover real `//TODO` markers in changed files
   - include file references and short rationale where present
@@ -239,6 +255,7 @@ Emit exactly one verdict:
 `LANDED` is allowed only when:
 
 - `READY TO LAND` precondition passed
+- code-review readiness gate passed
 - detached-head branch preparation checks passed (when applicable)
 - `git-commit` completed successfully
 - task manifest metadata update completed successfully
@@ -250,8 +267,8 @@ Emit exactly one verdict:
 
 All gates must pass:
 
-- Gate 1: `revalidate-validate.sh` returns `READY TO LAND`.
-- Gate 1A: no open review findings; review verdict is `patch is correct` (or explicit risk-acceptance waiver is present).
+- Gate 1: `implement-validate.sh` returns `READY TO LAND`.
+- Gate 1A: `revalidate-code-review.sh` returns `READY`, verdict is `patch is correct`, and findings are closed or explicitly risk-accepted.
 - Gate 2: detached-head branch prep checks pass (fetch + name + non-existence + create/switch) when in detached `HEAD`.
 - Gate 3: `git-commit` skill completed (including push).
 - Gate 4: `task-manifest-land-update.sh` completed (manifest update + compaction + commit + required push behavior).
@@ -277,7 +294,7 @@ All gates must pass:
 - Do not run `land-the-plan` unless `READY TO LAND` is satisfied.
 - Do not bypass the `git-commit` skill.
 - Do not skip `task-manifest-land-update.sh` between commit and PR creation.
-- Do not bypass task artifact compaction in Stage 6.
+- Do not bypass task artifact compaction in Stage 5.
 - Do not modify the retained goal file content during compaction.
 - Do not bypass detached-head branch prep checks when starting from detached `HEAD`.
 - Do not run raw `git push -u origin <branch>`; use `git-push-branch-safe.sh`.
