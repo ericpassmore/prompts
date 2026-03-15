@@ -1,9 +1,10 @@
 code_review:
-  base_branch: qa
+  base_branch: main
 
 notes:
   - "Update this manifest only when the repository's canonical commands change."
   - "Tasks must also copy the chosen commands into /tasks/<task-name>/spec.md under Verification Commands."
+
 
 
 
