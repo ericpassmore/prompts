@@ -127,6 +127,24 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern = ["gh", "pr", "view"],
+    decision = "allow",
+    justification = "Allow checking whether a PR already exists for the resolved head branch during land-the-plan fallback.",
+    match = [
+        "gh pr view land-the-plan/task/agent-20260210120000 --json number,url",
+    ],
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", "edit"],
+    decision = "allow",
+    justification = "Allow updating an existing PR during land-the-plan fallback when MCP PR access fails.",
+    match = [
+        "gh pr edit 123 --title \"Title\" --body \"Body\"",
+    ],
+)
+
+prefix_rule(
     pattern = ["gh", "issue", "create"],
     decision = "allow",
     justification = "Allow issue creation in ericpassmore/prompts for the issue-first skill-improvement workflow.",

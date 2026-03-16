@@ -18,6 +18,12 @@ Every concrete skill or workflow incident starts with a child GitHub issue in `e
 
 Do not wait for batch analysis when the issue is already observable.
 
+## Active stage reminder
+
+When the incident is discovered during an active lifecycle stage, file the child issue before continuing whenever it is safe to do so.
+
+If continuing would hide the failure, weaken verification, or create drift risk, stop and treat the incident as blocking.
+
 ## File Immediately
 
 Create an issue as soon as any of these are noticed:

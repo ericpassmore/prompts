@@ -27,7 +27,7 @@ This skill coordinates stage entry/exit and user approvals. Stage mechanics rema
 
 ### 1. Lock Goals Before Action
 
-- Do not run planning or implementation stages before `establish-goals` emits `GOALS LOCKED`.
+- Do not run planning or implementation stages before the user explicitly approves extracted goals and `establish-goals` emits `GOALS LOCKED`.
 - Do not proceed downstream until the user explicitly approves extracted goals.
 - Do not reinterpret, expand, or relax locked goals, constraints, or success criteria.
 
@@ -72,14 +72,15 @@ This skill coordinates stage entry/exit and user approvals. Stage mechanics rema
 ### Step 2 - Run establish-goals
 
 - Execute: `Run $establish-goals for <task-name>`.
-- If verdict is `BLOCKED`, stop and report blockers.
-- If verdict is `GOALS LOCKED`, continue.
+- Stop at the latest extracted goals artifact when it is ready for user review.
+- If the stage is blocked before review-ready goals exist, stop and report blockers.
 
 ### Step 3 - Goals review gate (mandatory)
 
 - Present the extracted goals from `goals/<task-name>/goals.vN.md`.
-- Ask user to approve goals before downstream execution.
-- If edits are requested, return to `establish-goals` iteration flow until `GOALS LOCKED` and approved.
+- Ask the user to approve goals before any lock/handoff to downstream stages.
+- If edits are requested, return to `establish-goals` iteration flow until the user approves the revised goals.
+- After approval, resume `establish-goals` and continue only when it emits `GOALS LOCKED`.
 
 ### Step 4 - Run prepare-takeoff
 
@@ -98,6 +99,12 @@ This skill coordinates stage entry/exit and user approvals. Stage mechanics rema
 - Execute: `Run $implement for <task-name>`.
 - Continue only on `READY TO LAND`.
 - On `BLOCKED`, stop and report blockers.
+
+### Shared workflow incident routing
+
+- If a centralized skill, script, template, or lifecycle workflow causes a bug, workaround, poor-fit invocation, or repeated friction during any ACAC-managed stage, activate `codex/prompts/self-improve-skills.md` immediately.
+- File the child issue before continuing whenever it is safe to do so.
+- If continuing would hide the failure or create drift risk, stop and treat the incident as blocking.
 
 ### Drift handling at any stage (hard gate)
 

@@ -216,16 +216,30 @@ If MCP succeeds:
 - record the resulting PR URL/number for handoff
 - continue to Step 8
 
-If MCP fails with a permission/auth-access error (for example 401/403, token scope denial, or "resource not accessible"):
+If MCP create/update fails with a permission/auth-access error (for example 401/403, token scope denial, or "resource not accessible"):
 
-1. attempt CLI fallback with:
+1. use GitHub MCP to check whether a PR for `<RESOLVED_HEAD_BRANCH>` already exists.
+2. if the MCP check finds an existing PR, update that PR via CLI fallback with:
+
+```bash
+gh pr edit <PR_NUMBER> --title "<PR_TITLE>" --body "<PR_BODY>"
+```
+
+3. if the MCP check confirms no existing PR, create one via CLI fallback with:
 
 ```bash
 gh pr create --base <BASE_BRANCH> --head <RESOLVED_HEAD_BRANCH> --title "<PR_TITLE>" --body "<PR_BODY>"
 ```
 
-2. if sandbox/network restrictions block CLI fallback, rerun `gh pr create` with elevated permissions
-3. on fallback success, record PR URL/number and continue to Step 8
+4. if the MCP check is also unavailable because of permission/auth-access failure, use CLI fallback to detect an existing PR first:
+
+```bash
+gh pr view <RESOLVED_HEAD_BRANCH> --json number,url
+```
+
+5. if `gh pr view` finds an existing PR, update it with `gh pr edit <PR_NUMBER> --title "<PR_TITLE>" --body "<PR_BODY>"`; otherwise run `gh pr create --base <BASE_BRANCH> --head <RESOLVED_HEAD_BRANCH> --title "<PR_TITLE>" --body "<PR_BODY>"`.
+6. if sandbox/network restrictions block CLI fallback, rerun the needed `gh pr view`, `gh pr edit`, or `gh pr create` command with elevated permissions.
+7. on fallback success, record PR URL/number and continue to Step 8.
 
 If both MCP and CLI fallback fail:
 
@@ -284,7 +298,7 @@ All gates must pass:
 - Gate 7: PR body contains `Goals`, `Non-goals`, `ADR`, `Exceptions`, `Deferred work`.
 - Gate 8: deferred work section reflects actual `//TODO` markers (or explicit none).
 - Gate 9: MCP PR attempt executed first.
-- Gate 9A: if MCP fails with permission/auth-access error, `gh pr create` fallback is attempted (with elevated permissions when required by sandbox/network restrictions).
+- Gate 9A: if MCP create/update fails with permission/auth-access error, GitHub MCP is used to check for an existing PR first; CLI fallback updates or creates the PR as needed (with elevated permissions when required by sandbox/network restrictions).
 - Gate 9B: PR is created/updated successfully by MCP or CLI fallback; otherwise stage is `BLOCKED` and manual PR URL is provided.
 - Gate 10: held resources released.
 - Gate 11: terminal verdict emitted (`LANDED` or `BLOCKED`).
@@ -299,6 +313,7 @@ All gates must pass:
 - Do not bypass detached-head branch prep checks when starting from detached `HEAD`.
 - Do not run raw `git push -u origin <branch>`; use `git-push-branch-safe.sh`.
 - Do not use `gh pr create` as first PR method; it is allowed only as fallback after MCP permission/auth-access failure.
+- Do not create a duplicate PR when one already exists for the resolved head branch; reuse or update it instead.
 - Do not invent TODO items; only include observed `//TODO`.
 - Do not skip required PR body sections.
 
@@ -315,7 +330,7 @@ All gates must pass:
   - goal-versions diff path when present
   - removed artifacts count under `goals/<task>/` and `tasks/<task>/`
 - PR URL
-- PR creation method used (`GitHub MCP` or `gh pr create` fallback)
+- PR creation method used (`GitHub MCP` or CLI fallback via `gh pr view`/`gh pr edit`/`gh pr create`)
 - generated PR title
 - generated PR body containing:
   - goals
