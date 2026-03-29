@@ -1,9 +1,17 @@
 code_review:
   base_branch: main
 
+github_cli:
+  owner_token_env:
+    example-owner: GH_EXAMPLE_TOKEN
+
 notes:
   - "Update this manifest only when the repository's canonical commands change."
   - "Tasks must also copy the chosen commands into /tasks/<task-name>/spec.md under Verification Commands."
+  - "github_cli.owner_token_env maps a GitHub owner/org to the env var name a wrapper should use for GH_TOKEN rebinding."
+  - "Store env var names only; never store token values in this file."
+
+
 
 
 
@@ -19,8 +27,8 @@ notes:
 
 # PREPARE-TAKEOFF BOOTSTRAP START
 bootstrap:
-  codex_root: "/Users/eric/side-projects/prompts/codex"
-  codex_scripts_dir: "/Users/eric/side-projects/prompts/codex/scripts"
+  codex_root: "/Users/eric/.codex/worktrees/898e/prompts/codex"
+  codex_scripts_dir: "/Users/eric/.codex/worktrees/898e/prompts/codex/scripts"
   canonical_scripts_path: "./.codex/scripts"
   repository_local_fallback_scripts_path: "./codex/scripts"
   home_fallback_scripts_path: "$HOME/.codex/scripts"
