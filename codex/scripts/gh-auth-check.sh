@@ -47,8 +47,16 @@ configured_token_env_for_owner() {
         sub(/^    /, "", key)
         sub(/:.*/, "", key)
         sub(/^    [^:]+:[[:space:]]*/, "", value)
-        gsub(/"/, "", value)
+        sub(/[[:space:]]+#.*$/, "", value)
+        sub(/^[[:space:]]+/, "", value)
         sub(/[[:space:]]*$/, "", value)
+        if (value ~ /^".*"$/) {
+          sub(/^"/, "", value)
+          sub(/"$/, "", value)
+        } else if (value ~ /^\047.*\047$/) {
+          sub(/^\047/, "", value)
+          sub(/\047$/, "", value)
+        }
         if (tolower(key) == owner) {
           print value
           exit
