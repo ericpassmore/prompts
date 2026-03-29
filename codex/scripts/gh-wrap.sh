@@ -5,13 +5,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
 resolve_config_path() {
-  if [[ -f "${ROOT_DIR}/codex/codex-config.yaml" ]]; then
-    printf '%s\n' "${ROOT_DIR}/codex/codex-config.yaml"
+  if [[ -f "${ROOT_DIR}/.codex/codex-config.yaml" ]]; then
+    printf '%s\n' "${ROOT_DIR}/.codex/codex-config.yaml"
     return 0
   fi
 
-  if [[ -f "${ROOT_DIR}/.codex/codex-config.yaml" ]]; then
-    printf '%s\n' "${ROOT_DIR}/.codex/codex-config.yaml"
+  if [[ -f "${ROOT_DIR}/codex/codex-config.yaml" ]]; then
+    printf '%s\n' "${ROOT_DIR}/codex/codex-config.yaml"
     return 0
   fi
 
