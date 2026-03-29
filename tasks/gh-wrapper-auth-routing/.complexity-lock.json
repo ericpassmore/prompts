@@ -1,0 +1,23 @@
+{
+  "selected_signals_path": "/Users/eric/.codex/worktrees/898e/prompts/tasks/gh-wrapper-auth-routing/complexity-signals.json",
+  "selected_signals_sha256": "da168f9da4d133e5835024890db385cd3a4b7bef12de5fb2ae98b0c027b94acc",
+  "score_script_path": "/Users/eric/.codex/worktrees/898e/prompts/codex/scripts/complexity-score.sh",
+  "score_script_sha256": "45a062dd25a8938ad1fba76e1be65815c40d7d722a20ff07c22c74ed0e479699",
+  "ranges": {
+    "goals": {
+      "min": 3,
+      "max": 5
+    },
+    "phases": {
+      "min": 2,
+      "max": 4
+    }
+  },
+  "recommended": {
+    "goals": 4,
+    "phases": 3
+  },
+  "complexity_input": "@tasks/gh-wrapper-auth-routing/complexity-signals.json",
+  "complexity_descriptor": "scored:L2 (focused)",
+  "captured_at": "2026-03-29T15:52:48Z"
+}

@@ -222,24 +222,25 @@ If MCP create/update fails with a permission/auth-access error (for example 401/
 2. if the MCP check finds an existing PR, update that PR via CLI fallback with:
 
 ```bash
-gh pr edit <PR_NUMBER> --title "<PR_TITLE>" --body "<PR_BODY>"
+./codex/scripts/gh-wrap.sh pr edit <PR_NUMBER> --title "<PR_TITLE>" --body "<PR_BODY>"
 ```
 
 3. if the MCP check confirms no existing PR, create one via CLI fallback with:
 
 ```bash
-gh pr create --base <BASE_BRANCH> --head <RESOLVED_HEAD_BRANCH> --title "<PR_TITLE>" --body "<PR_BODY>"
+./codex/scripts/gh-wrap.sh pr create --base <BASE_BRANCH> --head <RESOLVED_HEAD_BRANCH> --title "<PR_TITLE>" --body "<PR_BODY>"
 ```
 
 4. if the MCP check is also unavailable because of permission/auth-access failure, use CLI fallback to detect an existing PR first:
 
 ```bash
-gh pr view <RESOLVED_HEAD_BRANCH> --json number,url
+./codex/scripts/gh-wrap.sh pr view <RESOLVED_HEAD_BRANCH> --json number,url
 ```
 
-5. if `gh pr view` finds an existing PR, update it with `gh pr edit <PR_NUMBER> --title "<PR_TITLE>" --body "<PR_BODY>"`; otherwise run `gh pr create --base <BASE_BRANCH> --head <RESOLVED_HEAD_BRANCH> --title "<PR_TITLE>" --body "<PR_BODY>"`.
-6. if sandbox/network restrictions block CLI fallback, rerun the needed `gh pr view`, `gh pr edit`, or `gh pr create` command with elevated permissions.
-7. on fallback success, record PR URL/number and continue to Step 8.
+5. if `gh-wrap.sh pr view` finds an existing PR, update it with `./codex/scripts/gh-wrap.sh pr edit <PR_NUMBER> --title "<PR_TITLE>" --body "<PR_BODY>"`; otherwise run `./codex/scripts/gh-wrap.sh pr create --base <BASE_BRANCH> --head <RESOLVED_HEAD_BRANCH> --title "<PR_TITLE>" --body "<PR_BODY>"`.
+6. if wrapper fallback reports an auth-block, suggest `./codex/scripts/gh-auth-check.sh [--repo owner/name]` for manual diagnosis; do not run it automatically.
+7. if sandbox/network restrictions block wrapper fallback, rerun the needed wrapper command with elevated permissions.
+8. on fallback success, record PR URL/number and continue to Step 8.
 
 If both MCP and CLI fallback fail:
 
@@ -312,7 +313,7 @@ All gates must pass:
 - Do not modify the retained goal file content during compaction.
 - Do not bypass detached-head branch prep checks when starting from detached `HEAD`.
 - Do not run raw `git push -u origin <branch>`; use `git-push-branch-safe.sh`.
-- Do not use `gh pr create` as first PR method; it is allowed only as fallback after MCP permission/auth-access failure.
+- Do not use raw `gh pr create` as first PR method; wrapper-based CLI fallback is allowed only after MCP permission/auth-access failure.
 - Do not create a duplicate PR when one already exists for the resolved head branch; reuse or update it instead.
 - Do not invent TODO items; only include observed `//TODO`.
 - Do not skip required PR body sections.
@@ -330,7 +331,7 @@ All gates must pass:
   - goal-versions diff path when present
   - removed artifacts count under `goals/<task>/` and `tasks/<task>/`
 - PR URL
-- PR creation method used (`GitHub MCP` or CLI fallback via `gh pr view`/`gh pr edit`/`gh pr create`)
+- PR creation method used (`GitHub MCP` or CLI fallback via `gh-wrap.sh pr view`/`gh-wrap.sh pr edit`/`gh-wrap.sh pr create`)
 - generated PR title
 - generated PR body containing:
   - goals
