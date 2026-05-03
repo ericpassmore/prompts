@@ -1,0 +1,36 @@
+# goals.v0.md -> goals.v1.md
+--- /Users/eric/side-projects/prompts/goals/git-wrapper-only/goals.v0.md	2026-05-03 10:46:43
++++ /Users/eric/side-projects/prompts/goals/git-wrapper-only/goals.v1.md	2026-05-03 10:53:58
+@@ -1,7 +1,7 @@
+ # Goals Extract
+ - Task name: git-wrapper-only
+-- Iteration: v0
+-- State: ready-for-confirmation
++- Iteration: v1
++- State: locked
+ 
+ ## Goals (1-20, verifiable)
+ 
+@@ -10,6 +10,7 @@
+ 3. Correct the `git-commit` environment-file exception spelling from `developement.env` to `development.env` in the `git-commit` skill and supporting helper behavior.
+ 4. Keep the change scope limited to the git wrapper guidance and `development.env` exception correction.
+ 5. Verify the updated instructions and helper behavior with repo/task-approved lint, build, and test command classes, or document explicit blockers if any class is unavailable.
++6. Ensure the updated workflow does not instruct or require agents to use the Codex MCP GitHub service.
+ 
+ 
+ ## Non-goals (explicit exclusions)
+@@ -17,6 +18,7 @@
+ - Do not redesign the ACAC lifecycle or stage gate contract.
+ - Do not add unrelated git or GitHub workflows.
+ - Do not change token handling, GitHub auth routing, or PR creation behavior except where wording must avoid direct raw git instructions.
++- Do not use the Codex MCP GitHub service for this task or make it part of the updated workflow.
+ - Do not alter unrelated task artifacts or historical goal iterations.
+ 
+ 
+@@ -29,4 +31,5 @@
+ - [G3] No `developement.env` references remain in the in-scope current skill/helper surfaces; the allowed example-file exception is spelled `development.env`.
+ - [G4] The diff is limited to in-scope instruction/helper files and required lifecycle artifacts for this task.
+ - [G5] Verification records include lint, build, and test outcomes from approved repo/task command records, or explicit blocker documentation for unavailable commands.
++- [G6] In-scope workflow instructions contain no requirement to use the Codex MCP GitHub service, and this task is completed without using that service.
+ 
+
