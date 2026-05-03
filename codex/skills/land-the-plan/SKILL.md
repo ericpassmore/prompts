@@ -75,24 +75,24 @@ PR body MUST include these sections:
 ### Step 0 — Confirm task identity and resolve head branch
 
 - Confirm `<TASK_NAME_IN_KEBAB_CASE>`.
-- Resolve active branch via `git branch --show-current`.
-- If active branch is present, use it as `RESOLVED_HEAD_BRANCH`.
-- If active branch is empty (detached `HEAD`), run:
+- Resolve the active branch or prepare a detached-head landing branch by running:
 
 ```bash
-<CODEX_SCRIPTS_DIR>/git-land-branch-safe.sh <TASK_NAME_IN_KEBAB_CASE> [agent-id] [timestamp]
+<CODEX_SCRIPTS_DIR>/git-resolve-head-branch-safe.sh <TASK_NAME_IN_KEBAB_CASE> [agent-id] [timestamp]
 ```
 
-Detached-head branch requirements (mandatory):
+The helper MUST:
 
-- run `git fetch origin --prune` (latest remote branches)
-- construct branch name exactly as:
+- if already on a named branch, print `Resolved head branch: <branch>`
+- if in detached `HEAD`, delegate to the landing helper and print `Landing branch prepared: <branch>`
+- for detached `HEAD`, fetch latest remote branches internally
+- for detached `HEAD`, construct branch name exactly as:
   - `land-the-plan/<TASK_NAME_IN_KEBAB_CASE>/<agent-id>-<timestamp>`
-- verify local branch does not exist
-- verify remote `origin` branch does not exist
-- create branch and switch to it
+- for detached `HEAD`, verify local branch does not exist
+- for detached `HEAD`, verify remote `origin` branch does not exist
+- for detached `HEAD`, create the branch and switch to it
 
-On success, set `RESOLVED_HEAD_BRANCH` to the created branch.
+On success, set `RESOLVED_HEAD_BRANCH` to the branch reported by the helper.
 If any check fails, emit `BLOCKED`.
 
 ### Step 1 — Enforce `READY TO LAND` hard gate
@@ -199,53 +199,36 @@ Generate:
 
 Do not omit sections; use explicit `None` when a section has no entries.
 
-### Step 7 — Create or update the PR (MCP first, CLI fallback)
+### Step 7 — Create or update the PR (wrapper CLI only)
 
-First attempt PR create/update through GitHub MCP against resolved base branch using generated title/body.
+Use the repository GitHub CLI wrapper only. Do not use the Codex MCP GitHub service.
 
-Required MCP prompt content:
-
-- base branch: `<BASE_BRANCH>`
-- head branch: `<RESOLVED_HEAD_BRANCH>`
-- PR title: `<PR_TITLE>`
-- PR body: `<PR_BODY>`
-- instruction: if a PR for the head branch already exists, update it instead of creating a duplicate
-
-If MCP succeeds:
-
-- record the resulting PR URL/number for handoff
-- continue to Step 8
-
-If MCP create/update fails with a permission/auth-access error (for example 401/403, token scope denial, or "resource not accessible"):
-
-1. use GitHub MCP to check whether a PR for `<RESOLVED_HEAD_BRANCH>` already exists.
-2. if the MCP check finds an existing PR, update that PR via CLI fallback with:
-
-```bash
-./codex/scripts/gh-wrap.sh pr edit <PR_NUMBER> --title "<PR_TITLE>" --body "<PR_BODY>"
-```
-
-3. if the MCP check confirms no existing PR, create one via CLI fallback with:
-
-```bash
-./codex/scripts/gh-wrap.sh pr create --base <BASE_BRANCH> --head <RESOLVED_HEAD_BRANCH> --title "<PR_TITLE>" --body "<PR_BODY>"
-```
-
-4. if the MCP check is also unavailable because of permission/auth-access failure, use CLI fallback to detect an existing PR first:
+First detect whether a PR already exists for the resolved head branch:
 
 ```bash
 ./codex/scripts/gh-wrap.sh pr view <RESOLVED_HEAD_BRANCH> --json number,url
 ```
 
-5. if `gh-wrap.sh pr view` finds an existing PR, update it with `./codex/scripts/gh-wrap.sh pr edit <PR_NUMBER> --title "<PR_TITLE>" --body "<PR_BODY>"`; otherwise run `./codex/scripts/gh-wrap.sh pr create --base <BASE_BRANCH> --head <RESOLVED_HEAD_BRANCH> --title "<PR_TITLE>" --body "<PR_BODY>"`.
-6. if wrapper fallback reports an auth-block, suggest `./codex/scripts/gh-auth-check.sh [--repo owner/name]` for manual diagnosis; do not run it automatically.
-7. if sandbox/network restrictions block wrapper fallback, rerun the needed wrapper command with elevated permissions.
-8. on fallback success, record PR URL/number and continue to Step 8.
+If `gh-wrap.sh pr view` finds an existing PR, update it with:
 
-If both MCP and CLI fallback fail:
+```bash
+./codex/scripts/gh-wrap.sh pr edit <PR_NUMBER> --title "<PR_TITLE>" --body "<PR_BODY>"
+```
+
+If no PR exists for the head branch, create one with:
+
+```bash
+./codex/scripts/gh-wrap.sh pr create --base <BASE_BRANCH> --head <RESOLVED_HEAD_BRANCH> --title "<PR_TITLE>" --body "<PR_BODY>"
+```
+
+If the wrapper reports an auth-block, suggest `./codex/scripts/gh-auth-check.sh [--repo owner/name]` for manual diagnosis; do not run it automatically.
+If sandbox/network restrictions block the wrapper command, rerun the needed wrapper command with elevated permissions.
+On wrapper success, record PR URL/number and continue to Step 8.
+
+If wrapper PR create/update fails:
 
 - emit `BLOCKED`
-- include both failure summaries (MCP + CLI)
+- include the wrapper failure summary
 - suggest manual PR creation URL:
   - `https://github.com/<OWNER>/<REPO>/pull/new/<RESOLVED_HEAD_BRANCH>`
 
@@ -271,7 +254,7 @@ Emit exactly one verdict:
 
 - `READY TO LAND` precondition passed
 - code-review readiness gate passed
-- detached-head branch preparation checks passed (when applicable)
+- head branch resolution helper passed
 - `git-commit` completed successfully
 - task manifest metadata update completed successfully
 - branch push succeeded
@@ -284,7 +267,7 @@ All gates must pass:
 
 - Gate 1: `implement-validate.sh` returns `READY TO LAND`.
 - Gate 1A: `revalidate-code-review.sh` returns `READY`, verdict is `patch is correct`, and findings are closed or explicitly risk-accepted.
-- Gate 2: detached-head branch prep checks pass (fetch + name + non-existence + create/switch) when in detached `HEAD`.
+- Gate 2: head branch resolution helper passes, including detached-head branch prep checks when applicable.
 - Gate 3: `git-commit` skill completed (including push).
 - Gate 4: `task-manifest-land-update.sh` completed (manifest update + compaction + commit + required push behavior).
 - Gate 4A: compact retention outputs exist and satisfy policy:
@@ -298,9 +281,9 @@ All gates must pass:
 - Gate 6: PR title/body generated by Codex.
 - Gate 7: PR body contains `Goals`, `Non-goals`, `ADR`, `Exceptions`, `Deferred work`.
 - Gate 8: deferred work section reflects actual `//TODO` markers (or explicit none).
-- Gate 9: MCP PR attempt executed first.
-- Gate 9A: if MCP create/update fails with permission/auth-access error, GitHub MCP is used to check for an existing PR first; CLI fallback updates or creates the PR as needed (with elevated permissions when required by sandbox/network restrictions).
-- Gate 9B: PR is created/updated successfully by MCP or CLI fallback; otherwise stage is `BLOCKED` and manual PR URL is provided.
+- Gate 9: Codex MCP GitHub service is not used.
+- Gate 9A: wrapper lookup checks whether a PR already exists for the resolved head branch.
+- Gate 9B: PR is created/updated successfully by `gh-wrap.sh`; otherwise stage is `BLOCKED` and manual PR URL is provided.
 - Gate 10: held resources released.
 - Gate 11: terminal verdict emitted (`LANDED` or `BLOCKED`).
 
@@ -311,9 +294,10 @@ All gates must pass:
 - Do not skip `task-manifest-land-update.sh` between commit and PR creation.
 - Do not bypass task artifact compaction in Stage 5.
 - Do not modify the retained goal file content during compaction.
-- Do not bypass detached-head branch prep checks when starting from detached `HEAD`.
-- Do not run raw `git push -u origin <branch>`; use `git-push-branch-safe.sh`.
-- Do not use raw `gh pr create` as first PR method; wrapper-based CLI fallback is allowed only after MCP permission/auth-access failure.
+- Do not bypass the head branch resolution helper.
+- Do not run raw branch push commands; use `git-push-branch-safe.sh`.
+- Do not use the Codex MCP GitHub service.
+- Do not use raw `gh pr create`; use `gh-wrap.sh`.
 - Do not create a duplicate PR when one already exists for the resolved head branch; reuse or update it instead.
 - Do not invent TODO items; only include observed `//TODO`.
 - Do not skip required PR body sections.
@@ -331,7 +315,7 @@ All gates must pass:
   - goal-versions diff path when present
   - removed artifacts count under `goals/<task>/` and `tasks/<task>/`
 - PR URL
-- PR creation method used (`GitHub MCP` or CLI fallback via `gh-wrap.sh pr view`/`gh-wrap.sh pr edit`/`gh-wrap.sh pr create`)
+- PR creation method used (`gh-wrap.sh pr view`/`gh-wrap.sh pr edit`/`gh-wrap.sh pr create`)
 - generated PR title
 - generated PR body containing:
   - goals
@@ -340,4 +324,4 @@ All gates must pass:
   - exceptions
   - deferred work (`//TODO`)
 - explicit release summary for held resources
-- when `BLOCKED` in Step 7: MCP error summary, CLI fallback error summary, and manual PR create URL
+- when `BLOCKED` in Step 7: wrapper error summary and manual PR create URL

@@ -124,7 +124,7 @@ $HOME/.codex/scripts/prepare-takeoff-worktree.sh <TASK_NAME_IN_KEBAB_CASE> [expe
 ```
 
 - The safety-prep helper must:
-  - run `git worktree prune`
+  - prune stale worktree metadata internally
   - validate repository/branch context
   - fail fast on unresolved merge conflicts
   - report status summary for current worktree

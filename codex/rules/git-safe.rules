@@ -120,7 +120,7 @@ prefix_rule(
 prefix_rule(
     pattern = ["./codex/scripts/gh-wrap.sh", "pr", "create"],
     decision = "allow",
-    justification = "Allow wrapper-based PR creation fallback after GitHub MCP auth-access failure.",
+    justification = "Allow wrapper-based PR creation without direct GitHub service usage.",
     match = [
         "./codex/scripts/gh-wrap.sh pr create --base main --head land-the-plan/task/agent-20260210120000 --title \"Title\" --body \"Body\"",
     ],
@@ -129,7 +129,7 @@ prefix_rule(
 prefix_rule(
     pattern = ["./codex/scripts/gh-wrap.sh", "pr", "view"],
     decision = "allow",
-    justification = "Allow wrapper-based PR lookup during fallback.",
+    justification = "Allow wrapper-based PR lookup without direct GitHub service usage.",
     match = [
         "./codex/scripts/gh-wrap.sh pr view land-the-plan/task/agent-20260210120000 --json number,url",
     ],
@@ -138,7 +138,7 @@ prefix_rule(
 prefix_rule(
     pattern = ["./codex/scripts/gh-wrap.sh", "pr", "edit"],
     decision = "allow",
-    justification = "Allow wrapper-based PR update during fallback.",
+    justification = "Allow wrapper-based PR update without direct GitHub service usage.",
     match = [
         "./codex/scripts/gh-wrap.sh pr edit 123 --title \"Title\" --body \"Body\"",
     ],
@@ -335,6 +335,51 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern = ["/Users/eric/.codex/scripts/git-diff-unstaged-skip-binary.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to diff unstaged files while skipping binaries.",
+    match = [
+        "/Users/eric/.codex/scripts/git-diff-unstaged-skip-binary.sh",
+    ],
+)
+
+prefix_rule(
+    pattern = ["/Users/eric/.codex/scripts/git-pull-ff-only-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script for clean fast-forward-only pull checks.",
+    match = [
+        "/Users/eric/.codex/scripts/git-pull-ff-only-safe.sh",
+    ],
+)
+
+prefix_rule(
+    pattern = ["/Users/eric/.codex/scripts/git-resolve-head-branch-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to resolve or prepare a landing head branch safely.",
+    match = [
+        "/Users/eric/.codex/scripts/git-resolve-head-branch-safe.sh add-feature-x codex-agent 20260210153045",
+    ],
+)
+
+prefix_rule(
+    pattern = ["/Users/eric/.codex/scripts/git-commit-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to create a local commit after git-commit safety checks.",
+    match = [
+        "/Users/eric/.codex/scripts/git-commit-safe.sh \"Update lifecycle git helpers\"",
+    ],
+)
+
+prefix_rule(
+    pattern = ["/Users/eric/.codex/scripts/git-stage-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to stage explicit paths after git-commit safety checks.",
+    match = [
+        "/Users/eric/.codex/scripts/git-stage-safe.sh codex/skills/git-commit/SKILL.md",
+    ],
+)
+
+prefix_rule(
     pattern = ["/Users/eric/.codex/scripts/git-commit-preflight.sh"],
     decision = "allow",
     justification = "Trusted helper script for git-commit preflight safety checks and fast-forward sync.",
@@ -363,6 +408,51 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern = ["./.codex/scripts/git-diff-unstaged-skip-binary.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to diff unstaged files while skipping binaries (canonical repo path).",
+    match = [
+        "./.codex/scripts/git-diff-unstaged-skip-binary.sh",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./.codex/scripts/git-pull-ff-only-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script for clean fast-forward-only pull checks (canonical repo path).",
+    match = [
+        "./.codex/scripts/git-pull-ff-only-safe.sh",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./.codex/scripts/git-resolve-head-branch-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to resolve or prepare a landing head branch safely (canonical repo path).",
+    match = [
+        "./.codex/scripts/git-resolve-head-branch-safe.sh add-feature-x codex-agent 20260210153045",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./.codex/scripts/git-commit-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to create a local commit after git-commit safety checks (canonical repo path).",
+    match = [
+        "./.codex/scripts/git-commit-safe.sh \"Update lifecycle git helpers\"",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./.codex/scripts/git-stage-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to stage explicit paths after git-commit safety checks (canonical repo path).",
+    match = [
+        "./.codex/scripts/git-stage-safe.sh codex/skills/git-commit/SKILL.md",
+    ],
+)
+
+prefix_rule(
     pattern = ["./.codex/scripts/codex-config-bootstrap-sync.sh"],
     decision = "allow",
     justification = "Trusted helper script to apply/revert detached-head worktree bootstrap path overrides in codex-config.yaml (canonical repo path).",
@@ -378,6 +468,51 @@ prefix_rule(
     justification = "Trusted helper script for git-commit preflight checks (repo-local fallback path).",
     match = [
         "./codex/scripts/git-commit-preflight.sh",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./codex/scripts/git-diff-unstaged-skip-binary.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to diff unstaged files while skipping binaries (repo-local fallback path).",
+    match = [
+        "./codex/scripts/git-diff-unstaged-skip-binary.sh",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./codex/scripts/git-pull-ff-only-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script for clean fast-forward-only pull checks (repo-local fallback path).",
+    match = [
+        "./codex/scripts/git-pull-ff-only-safe.sh",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./codex/scripts/git-resolve-head-branch-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to resolve or prepare a landing head branch safely (repo-local fallback path).",
+    match = [
+        "./codex/scripts/git-resolve-head-branch-safe.sh add-feature-x codex-agent 20260210153045",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./codex/scripts/git-commit-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to create a local commit after git-commit safety checks (repo-local fallback path).",
+    match = [
+        "./codex/scripts/git-commit-safe.sh \"Update lifecycle git helpers\"",
+    ],
+)
+
+prefix_rule(
+    pattern = ["./codex/scripts/git-stage-safe.sh"],
+    decision = "allow",
+    justification = "Trusted helper script to stage explicit paths after git-commit safety checks (repo-local fallback path).",
+    match = [
+        "./codex/scripts/git-stage-safe.sh codex/skills/git-commit/SKILL.md",
     ],
 )
 

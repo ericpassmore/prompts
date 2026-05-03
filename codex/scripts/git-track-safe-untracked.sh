@@ -10,7 +10,7 @@ needs_permission=()
 auto_image_count=0
 
 is_exception_env_file() {
-  [ "$1" = "developement.env" ]
+  [ "$1" = "development.env" ]
 }
 
 is_env_like_file() {
