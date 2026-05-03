@@ -25,7 +25,7 @@ if ! upstream="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/n
   fi
 
   echo "Abort: branch '$branch' has no upstream and must be pushed first."
-  echo "Run: git push -u origin $branch"
+  echo "Run the configured git push helper for this branch."
   exit 1
 fi
 

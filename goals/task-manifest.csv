@@ -16,3 +16,4 @@ number,taskname,first_create_date,first_create_hhmmss,first_create_git_hash
 15,hook-self-improvement,2026-03-15,041906,267111a
 16,fix-open-prompts-issues,2026-03-16,041013,0364e2d
 17,gh-wrapper-auth-routing,2026-03-29,000000,-------
+18,git-wrapper-only,2026-05-03,223947,cb2e598

@@ -46,9 +46,9 @@ Ensure that file citations and line numbers are exactly correct using the tools 
 
 ## Diff source policy
 
-- Preferred diff source: `git diff <BASE_BRANCH>...HEAD`, where `<BASE_BRANCH>` comes from `codex-config.yaml`.
+- Preferred diff source: the scripted workflow below, which resolves `<BASE_BRANCH>` from `codex-config.yaml` and captures diff context through the repository helper.
 - Fallback base branch: `main`.
-- If the preferred diff errors or is empty, fallback to `git diff`.
+- If the preferred diff source errors or is empty, the scripted workflow records the fallback diff source it used.
 
 ## Scripted workflow
 

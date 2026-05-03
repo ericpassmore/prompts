@@ -28,9 +28,9 @@ Treat any file matching **any** of these globs as an env file:
 
 The following file is allowed to be tracked and committed as an example/template:
 
-* `developement.env`
+* `development.env`
 
-When filtering env-like files, exclude anything matching the env-like globs **unless** the path is exactly `developement.env`
+When filtering env-like files, exclude anything matching the env-like globs **unless** the path is exactly `development.env`
 
 #### `.gitignore` implementation
 
@@ -42,7 +42,7 @@ When filtering env-like files, exclude anything matching the env-like globs **un
 *.env.*
 
 # Exception: allow this example file to be committed
-!developement.env
+!development.env
 ```
 
 ---
@@ -165,6 +165,16 @@ Run the trusted helper script:
 /Users/eric/.codex/scripts/git-diff-staged-skip-binary.sh
 ```
 
+### Script: Diff Unstaged Files Only (Skip Binary)
+
+**Used by:** Protect Sensitive Data
+
+Run the trusted helper script:
+
+```bash
+/Users/eric/.codex/scripts/git-diff-unstaged-skip-binary.sh
+```
+
 ### Script: Commit Preflight
 
 **Used by:** Update Branch
@@ -175,6 +185,16 @@ Run the trusted helper script:
 /Users/eric/.codex/scripts/git-commit-preflight.sh
 ```
 
+### Script: Commit Safely
+
+**Used by:** Commit
+
+Run the trusted helper script:
+
+```bash
+/Users/eric/.codex/scripts/git-commit-safe.sh "<commit-message>" [-- <path>...]
+```
+
 ### Script: Track Safe Untracked Files
 
 **Used by:** Track Files
@@ -183,6 +203,16 @@ Run the trusted helper script:
 
 ```bash
 /Users/eric/.codex/scripts/git-track-safe-untracked.sh
+```
+
+### Script: Stage Safe Paths
+
+**Used by:** Track Files, Commit
+
+Run the trusted helper script with explicit intended paths:
+
+```bash
+/Users/eric/.codex/scripts/git-stage-safe.sh <path>...
 ```
 
 ---
@@ -199,7 +229,7 @@ Run the trusted helper script:
    * accept detached `HEAD` state and report explicit detached-mode behavior
    * when on a named branch, abort when no upstream is configured
    * exception: allow no-upstream first-commit flow for `land-the-plan/*` branches
-   * when on a named branch, run `git pull --ff-only` and classify pull failures:
+   * when on a named branch, perform fast-forward-only upstream sync internally and classify pull failures:
      * upstream/reference issues (`couldn't find remote ref`, `no such ref`, `no tracking information`)
      * all other failures as manual-intervention required
 
@@ -211,13 +241,14 @@ Run the trusted helper script:
 
 1. **Always** run **Script: Track Safe Untracked Files**.
 2. The tracking script must:
-   * read untracked files from `git ls-files -o --exclude-standard`
-   * add eligible files as intent-to-add via `git add -N`
+   * discover untracked files using its internal git wrapper/helper logic
+   * add eligible files as intent-to-add using its internal git wrapper/helper logic
    * skip files matching **.env File Patterns**, **Forbidden Directories**, **Compiled and Cached Output Patterns**, **Non-Media Binary File Patterns**, and tar archives
    * enforce media rules from **Image File Definitions** and **Video and Audio File Definitions**
    * if permission-required images are reported, ask the user before adding any of those files
-   * preserve the exception: `developement.env` is allowed
+   * preserve the exception: `development.env` is allowed
 3. **Always** run **Protect Sensitive Data** after tracking untracked files.
+4. Stage intended files only with **Script: Stage Safe Paths** after sensitive-data review passes.
 
 ---
 
@@ -229,10 +260,10 @@ Run the trusted helper script:
 1. Follow **.env File Patterns** rules:
 
    * `.env` files may be appended to locally but must never be staged or committed.
-   * Exception: `developement.env` is allowed to be tracked and committed as an example file.
+   * Exception: `development.env` is allowed to be tracked and committed as an example file.
 2. **Always** inspect changes for secrets using:
 
-   * `git diff` (unstaged changes)
+   * Script: Diff Unstaged Files Only (Skip Binary) (unstaged changes)
    * Script: Diff Staged Files Only (Skip Binary) (staged and intent-to-add changes)
 3. **Never** remove any lines from files matching **.env File Patterns**
 4. **Always** remove secrets from code or configuration files:
@@ -251,22 +282,23 @@ Run the trusted helper script:
 7. When these steps do not resolve sensitive data, take the following recovery steps:
 
    * do not track the file
-   * run `git rm --cached <file>`
+   * unstage the file through an approved git helper or stop and request operator intervention
    * add the file pattern to `.gitignore`
 
 ---
 
 ### Commit
 
-**Before any `git commit` command**
+**Before any commit helper invocation**
 
 1. **Always** run **Script: Diff Staged Files Only (Skip Binary)** to review staged changes on non-binary files
 2. **Always** analyze the staged changes output from the diff script
 3. **Always** generate a commit message following the format below
 4. **Never** commit secrets or sensitive data
 5. **Never** commit files matching **.env File Patterns**
-  - Exception: `developement.env` is allowed to be tracked and committed as an example file
+  - Exception: `development.env` is allowed to be tracked and committed as an example file
 6. **Allowed** vendor lockfiles per **Vendor Lockfiles**
+7. **Always** create the commit with **Script: Commit Safely**.
 
 ---
 
@@ -294,12 +326,19 @@ Refactor authentication system for better organization of code
 
 ---
 
+### Script: Push Branch Safely
+
+**Used by:** Sync
+
+Run the trusted helper script:
+
+```bash
+/Users/eric/.codex/scripts/git-push-branch-safe.sh <current-or-target-branch-name>
+```
+
 ### Sync
 
-**Final Step, After any `git commit` command**
+**Final Step, After any commit helper invocation**
 
-1. **Always** push commit(s) to origin using one of:
-   * named branch mode: `git push origin <current-branch-name>`
-   * detached `HEAD` mode: `git push origin HEAD:<target-branch-name>`
-   * when upstream setup is required, use Stage-safe helper policy (for example `git-push-branch-safe.sh`)
+1. **Always** push commit(s) to origin using **Script: Push Branch Safely**.
 2. **Always** summarize the messages from git and report to the user
