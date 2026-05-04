@@ -132,9 +132,15 @@ else
 fi
 
 if [[ ! -f "${COMPLEXITY_SIGNALS_FILE}" ]]; then
-  echo "Abort: missing task complexity signals file ${COMPLEXITY_SIGNALS_FILE}."
-  echo "Remediation: create ${COMPLEXITY_SIGNALS_FILE} and re-run prepare-phased-impl-scaffold.sh."
-  exit 1
+  if CODEX_ROOT_FOR_SIGNALS="$(resolve_codex_root tasks/_templates/complexity-signals.template.json)"; then
+    signals_template="${CODEX_ROOT_FOR_SIGNALS}/tasks/_templates/complexity-signals.template.json"
+    cp "${signals_template}" "${COMPLEXITY_SIGNALS_FILE}"
+    echo "Materialized missing task complexity signals from template: ${COMPLEXITY_SIGNALS_FILE}"
+  else
+    echo "Abort: missing task complexity signals file ${COMPLEXITY_SIGNALS_FILE}."
+    echo "Remediation: create ${COMPLEXITY_SIGNALS_FILE} from codex/tasks/_templates/complexity-signals.template.json and re-run prepare-phased-impl-scaffold.sh."
+    exit 1
+  fi
 fi
 
 if [[ ! -f "${SELECTED_SIGNALS_FILE}" ]]; then

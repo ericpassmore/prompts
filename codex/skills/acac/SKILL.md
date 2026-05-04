@@ -87,6 +87,7 @@ This skill coordinates stage entry/exit and user approvals. Stage mechanics rema
 - Execute: `Run $prepare-takeoff for <task-name>`.
 - Continue only on `READY FOR PLANNING`.
 - On `BLOCKED`, stop and report blockers.
+- Do not return a final user-facing stop after `READY FOR PLANNING`; immediately enter `prepare-phased-impl` in the same ACAC run unless the user has explicitly paused the workflow.
 
 ### Step 5 - Run prepare-phased-impl
 
@@ -132,6 +133,8 @@ At each stage boundary, report:
 - stage name
 - terminal verdict
 - next action (`continue` or `stop`)
+
+Successful intermediate stage verdicts (`READY FOR PLANNING`, `READY FOR IMPLEMENTATION`, and `READY TO LAND`) are continuation gates, not terminal assistant responses.
 
 ## Guardrails
 

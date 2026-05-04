@@ -58,6 +58,7 @@ fi
 SPEC_TPL="${TEMPLATES_DIR}/spec.template.md"
 PHASE_TPL="${TEMPLATES_DIR}/phase.template.md"
 FINAL_TPL="${TEMPLATES_DIR}/final-phase.template.md"
+COMPLEXITY_SIGNALS_TPL="${TEMPLATES_DIR}/complexity-signals.template.json"
 
 mkdir -p "${TASK_DIR}"
 
@@ -90,6 +91,13 @@ done
 if [[ ! -f "${TASK_DIR}/final-phase.md" ]]; then
   cp "${FINAL_TPL}" "${TASK_DIR}/final-phase.md"
   created_files+=("${TASK_DIR}/final-phase.md")
+fi
+
+# complexity-signals.template.json -> complexity-signals.json
+# This is a neutral planning input template; scoring remains gated by Stage 3.
+if [[ -f "${COMPLEXITY_SIGNALS_TPL}" && ! -f "${TASK_DIR}/complexity-signals.json" ]]; then
+  cp "${COMPLEXITY_SIGNALS_TPL}" "${TASK_DIR}/complexity-signals.json"
+  created_files+=("${TASK_DIR}/complexity-signals.json")
 fi
 
 # Materialize any additional *.template.md files (beyond known ones)

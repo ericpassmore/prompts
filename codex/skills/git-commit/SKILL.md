@@ -24,13 +24,14 @@ Treat any file matching **any** of these globs as an env file:
 
 **Rule:** Env-like files may be appended to locally but must never be staged or committed.
 
-#### Explicit exception: allowed example file
+#### Explicit exception: allowed example files
 
-The following file is allowed to be tracked and committed as an example/template:
+The following repository-configured files are allowed to be tracked and committed as examples/templates:
 
 * `development.env`
+* any tracked path listed in `git_commit.allowed_env_sample_files` in `codex/codex-config.yaml`
 
-When filtering env-like files, exclude anything matching the env-like globs **unless** the path is exactly `development.env`
+When filtering env-like files, exclude anything matching the env-like globs **unless** the path is exactly `development.env` or is a tracked path listed in `git_commit.allowed_env_sample_files`.
 
 #### `.gitignore` implementation
 
@@ -41,7 +42,7 @@ When filtering env-like files, exclude anything matching the env-like globs **un
 *.env
 *.env.*
 
-# Exception: allow this example file to be committed
+# Exception: allow configured example files to be committed
 !development.env
 ```
 
@@ -224,10 +225,11 @@ Run the trusted helper script with explicit intended paths:
 **Before Track Files Step**
 
 1. **Always** run **Script: Commit Preflight**.
+   * If the current named branch has no upstream, first confirm it is the intended PR head branch and run **Script: Push Branch Safely** for that branch. Then rerun **Script: Commit Preflight**.
 2. The preflight script must:
    * abort when merge conflicts/unmerged paths are present
    * accept detached `HEAD` state and report explicit detached-mode behavior
-   * when on a named branch, abort when no upstream is configured
+   * when on a named branch, abort with explicit upstream setup instructions when no upstream is configured
    * exception: allow no-upstream first-commit flow for `land-the-plan/*` branches
    * when on a named branch, perform fast-forward-only upstream sync internally and classify pull failures:
      * upstream/reference issues (`couldn't find remote ref`, `no such ref`, `no tracking information`)
@@ -246,7 +248,7 @@ Run the trusted helper script with explicit intended paths:
    * skip files matching **.env File Patterns**, **Forbidden Directories**, **Compiled and Cached Output Patterns**, **Non-Media Binary File Patterns**, and tar archives
    * enforce media rules from **Image File Definitions** and **Video and Audio File Definitions**
    * if permission-required images are reported, ask the user before adding any of those files
-   * preserve the exception: `development.env` is allowed
+   * preserve the exception: `development.env` and tracked repository-configured env sample files are allowed
 3. **Always** run **Protect Sensitive Data** after tracking untracked files.
 4. Stage intended files only with **Script: Stage Safe Paths** after sensitive-data review passes.
 
@@ -260,7 +262,7 @@ Run the trusted helper script with explicit intended paths:
 1. Follow **.env File Patterns** rules:
 
    * `.env` files may be appended to locally but must never be staged or committed.
-   * Exception: `development.env` is allowed to be tracked and committed as an example file.
+   * Exception: `development.env` and tracked files listed in `git_commit.allowed_env_sample_files` are allowed to be tracked and committed as example files.
 2. **Always** inspect changes for secrets using:
 
    * Script: Diff Unstaged Files Only (Skip Binary) (unstaged changes)
@@ -296,7 +298,7 @@ Run the trusted helper script with explicit intended paths:
 3. **Always** generate a commit message following the format below
 4. **Never** commit secrets or sensitive data
 5. **Never** commit files matching **.env File Patterns**
-  - Exception: `development.env` is allowed to be tracked and committed as an example file
+  - Exception: `development.env` and tracked files listed in `git_commit.allowed_env_sample_files` are allowed to be tracked and committed as example files
 6. **Allowed** vendor lockfiles per **Vendor Lockfiles**
 7. **Always** create the commit with **Script: Commit Safely**.
 

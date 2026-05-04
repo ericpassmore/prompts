@@ -39,6 +39,7 @@
 - Maintain canonical codex settings in `codex/codex-config.yaml`.
 - Keep this repository structure reference current in `codex/project-structure.md`.
 - Scaffold task artifacts via `./codex/scripts/task-scaffold.sh <task-name>`.
+- Task scaffolding materializes `tasks/<task-name>/complexity-signals.json` from `codex/tasks/_templates/complexity-signals.template.json`; Stage 3 can also remediate the missing file from the same template.
 
 ## Verification
 - Lint: `not-configured`

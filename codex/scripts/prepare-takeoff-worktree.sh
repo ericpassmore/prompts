@@ -101,4 +101,5 @@ echo "Uncommitted entries: ${STATUS_COUNT}"
 if [[ "${STATUS_COUNT}" -gt 0 ]]; then
   echo "Status summary:"
   printf '%s\n' "${STATUS_PORCELAIN}" | sed '/^$/d' | sed 's/^/  /'
+  echo "Dirty worktree decision required before downstream progression: record continue, isolate, or stop in the task spec."
 fi

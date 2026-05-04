@@ -94,24 +94,30 @@ BASE_BRANCH="$(resolve_base_branch)"
 DIFF_MODE="base-branch"
 DIFF_COMMAND="git diff ${BASE_BRANCH}...HEAD"
 
-if DIFF_TEXT="$(git diff "${BASE_BRANCH}...HEAD" 2>/dev/null)"; then
-  :
+STAGED_DIFF_TEXT="$(git diff --cached 2>/dev/null || true)"
+UNSTAGED_DIFF_TEXT="$(git diff 2>/dev/null || true)"
+WORKTREE_DIFF_TEXT="${STAGED_DIFF_TEXT}${UNSTAGED_DIFF_TEXT}"
+
+if [[ -n "${WORKTREE_DIFF_TEXT}" ]]; then
+  DIFF_MODE="working-tree"
+  DIFF_COMMAND="git diff --cached && git diff"
+  DIFF_TEXT="${WORKTREE_DIFF_TEXT}"
+  CHANGED_FILES="$({
+    git diff --cached --name-only 2>/dev/null || true
+    git diff --name-only 2>/dev/null || true
+  } | sed '/^$/d' | sort -u)"
+  HUNKS="$({
+    git diff --cached -U0 2>/dev/null || true
+    git diff -U0 2>/dev/null || true
+  })"
 else
-  DIFF_TEXT=""
-fi
-
-if [[ -z "${DIFF_TEXT}" ]]; then
-  DIFF_MODE="fallback"
-  DIFF_COMMAND="git diff"
-  DIFF_TEXT="$(git diff 2>/dev/null || true)"
-fi
-
-if [[ "${DIFF_MODE}" == "base-branch" ]]; then
+  if DIFF_TEXT="$(git diff "${BASE_BRANCH}...HEAD" 2>/dev/null)"; then
+    :
+  else
+    DIFF_TEXT=""
+  fi
   CHANGED_FILES="$(git diff --name-only "${BASE_BRANCH}...HEAD" 2>/dev/null || true)"
   HUNKS="$(git diff -U0 "${BASE_BRANCH}...HEAD" 2>/dev/null || true)"
-else
-  CHANGED_FILES="$(git diff --name-only 2>/dev/null || true)"
-  HUNKS="$(git diff -U0 2>/dev/null || true)"
 fi
 
 CITATIONS="$(printf '%s\n' "${HUNKS}" | awk '

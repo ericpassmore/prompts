@@ -20,7 +20,7 @@ Executable implementation:
 
 ## Input Schema
 
-Signals are passed as JSON (see `codex/tasks/_templates/complexity-signals.template.json`).
+Signals are passed as JSON (see `codex/tasks/_templates/complexity-signals.template.json`). The shared template must remain directly scorer-compatible so Stage 2/3 scaffolding can materialize a valid task-local `complexity-signals.json` without a manual retry.
 
 Required keys:
 
