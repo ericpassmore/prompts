@@ -25,7 +25,7 @@ if ! upstream="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/n
   fi
 
   echo "Abort: branch '$branch' has no upstream and must be pushed first."
-  echo "Run the configured git push helper for this branch."
+  echo "Recovery: run ./codex/scripts/git-push-branch-safe.sh '$branch' after confirming this is the intended PR head branch, then rerun preflight."
   exit 1
 fi
 

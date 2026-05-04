@@ -115,6 +115,7 @@ Script behavior:
 - accepts explicit phase count override only in `1..12`
 - when provided a scored input file (`@...`), derives phase count using `complexity-score.sh`
 - requires task-local complexity signals at `./tasks/<TASK_NAME_IN_KEBAB_CASE>/complexity-signals.json`
+- if task-local complexity signals are missing, materializes them from `codex/tasks/_templates/complexity-signals.template.json` before scoring; the template must be scorer-compatible, including required evidence tokens such as `interfaces=` and `checks=`
 - creates missing `phase-<n>.md` files for active phases
 - writes `./tasks/<TASK_NAME_IN_KEBAB_CASE>/phase-plan.md` with `PENDING` verdict
 - writes `./tasks/<TASK_NAME_IN_KEBAB_CASE>/.complexity-lock.json` and treats post-lock signals path/content/range drift as `BLOCKED` in validation

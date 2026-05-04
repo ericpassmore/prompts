@@ -8,9 +8,95 @@ eligible=()
 skipped=()
 needs_permission=()
 auto_image_count=0
+TASK_NAME="${1:-${CODEX_TASK_NAME:-}}"
+
+usage() {
+  echo "Usage (canonical): ./.codex/scripts/git-track-safe-untracked.sh [task-name]"
+  echo "Usage (repo-local fallback): ./codex/scripts/git-track-safe-untracked.sh [task-name]"
+  echo "Usage (home fallback): ${HOME}/.codex/scripts/git-track-safe-untracked.sh [task-name]"
+}
+
+if [ "$#" -gt 1 ]; then
+  echo "Abort: too many arguments."
+  usage
+  exit 2
+fi
+
+if [ -n "$TASK_NAME" ] && ! [[ "$TASK_NAME" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+  echo "Abort: task-name must be kebab-case using lowercase letters, digits, and hyphens only."
+  exit 2
+fi
 
 is_exception_env_file() {
-  [ "$1" = "development.env" ]
+  local path="$1"
+  local repo_root
+  local config_file
+
+  [ "$path" = "development.env" ] && return 0
+
+  repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+  config_file="${repo_root}/codex/codex-config.yaml"
+  [ -f "$config_file" ] || return 1
+
+  awk '
+    /^[[:space:]]*allowed_env_sample_files:[[:space:]]*$/ {in_list=1; next}
+    in_list && /^[^[:space:]-]/ {exit}
+    in_list && /^[[:space:]]*-[[:space:]]*/ {
+      value=$0
+      sub(/^[[:space:]]*-[[:space:]]*/, "", value)
+      gsub(/^"|"$/, "", value)
+      gsub(/^'\''|'\''$/, "", value)
+      print value
+    }
+  ' "$config_file" | grep -Fx -- "$path" >/dev/null 2>&1
+}
+
+infer_task_name_from_untracked() {
+  local inferred=""
+  local candidate=""
+
+  while IFS= read -r -d '' path; do
+    case "$path" in
+      tasks/*/*|goals/*/*)
+        candidate="${path#*/}"
+        candidate="${candidate%%/*}"
+        ;;
+      *)
+        continue
+        ;;
+    esac
+
+    if ! [[ "$candidate" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+      continue
+    fi
+
+    if [ -z "$inferred" ]; then
+      inferred="$candidate"
+    elif [ "$inferred" != "$candidate" ]; then
+      echo ""
+      return 0
+    fi
+  done < <(git ls-files -o --exclude-standard -z)
+
+  echo "$inferred"
+}
+
+if [ -z "$TASK_NAME" ]; then
+  TASK_NAME="$(infer_task_name_from_untracked)"
+fi
+
+is_task_owned_untracked_path() {
+  local path="$1"
+
+  [ -n "$TASK_NAME" ] || return 1
+
+  case "$path" in
+    "tasks/${TASK_NAME}/"*|"goals/${TASK_NAME}/"*)
+      return 0
+      ;;
+  esac
+
+  return 1
 }
 
 is_env_like_file() {
@@ -87,6 +173,11 @@ while IFS= read -r -d '' path; do
     continue
   fi
 
+  if ! is_task_owned_untracked_path "$path"; then
+    needs_permission+=("$path (untracked path outside task scope)")
+    continue
+  fi
+
   case "$lower_path" in
     *.mp4|*.mp3)
       skipped+=("$path (video/audio not allowed)")
@@ -144,7 +235,7 @@ fi
 
 if [ "${#needs_permission[@]}" -gt 0 ]; then
   echo
-  echo "Permission-required image files (not added): ${#needs_permission[@]}"
+  echo "Permission-required files (not added): ${#needs_permission[@]}"
   printf '%s\n' "${needs_permission[@]}"
-  echo "Action required: request explicit user approval before adding these files."
+  echo "Action required: request explicit user approval before adding these files, or stage intended paths explicitly with git-stage-safe.sh."
 fi

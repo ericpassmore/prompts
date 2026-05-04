@@ -128,6 +128,7 @@ $HOME/.codex/scripts/prepare-takeoff-worktree.sh <TASK_NAME_IN_KEBAB_CASE> [expe
   - validate repository/branch context
   - fail fast on unresolved merge conflicts
   - report status summary for current worktree
+  - when uncommitted entries exist, require the task spec to record an explicit dirty-worktree decision: `continue`, `isolate`, or `stop`
 - If `expected-branch` is provided and does not match current branch, fail with `BLOCKED`.
 
 ### 6. Identify Governing Context
@@ -216,6 +217,7 @@ All gates must pass before planning starts.
 - `project-structure.md` present; stage aborts if missing
 - Fully scaffolded `./tasks/<TASK_NAME_IN_KEBAB_CASE>/`.
 - Existing-worktree safety-prep evidence recorded (for example prune + status safety checks).
+- Dirty-worktree decision recorded when safety prep reports uncommitted entries.
 - Updated `spec.md` with:
   - goal lock assertion
   - ambiguity check result

@@ -142,6 +142,8 @@ If upstream push is required with `-u`, use:
 <CODEX_SCRIPTS_DIR>/git-push-branch-safe.sh <RESOLVED_HEAD_BRANCH>
 ```
 
+Run this upstream setup before the `git-commit` preflight step when the resolved named branch has no upstream. Do not wait for commit preflight to discover the no-upstream condition late in landing.
+
 If `git-commit` fails, emit `BLOCKED`.
 
 ### Step 3 — Update task manifest metadata and compact task artifacts
