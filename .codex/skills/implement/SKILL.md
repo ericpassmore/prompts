@@ -1,234 +1,31 @@
 ---
 name: implement
-description: Execute the approved implementation phases in order and produce working changes that satisfy the locked goals.
+description: Execute locked coding goals rapidly and minimally, including environment preflight, task scoping, implementation, and a handoff for final quality gates.
 ---
 
-# SKILL: implement
+# Implement
 
-## Intent
+## Entry
 
-Execute approved implementation work in deterministic phase order and produce truthful, verifiable outputs aligned to locked goals and scope.
+Require a locked `goals/<task>/goals.vN.md`. If goals are missing, ambiguous, or changed, return to `establish-goals` or emit `BLOCKED`.
 
-## Preconditions (hard)
+## Flow
 
-- `prepare-phased-impl` emitted `READY FOR IMPLEMENTATION`.
-- Locked goals, constraints, and success criteria already exist.
-- `./tasks/<TASK_NAME_IN_KEBAB_CASE>/` exists with:
-  - `spec.md`
-  - `phase-plan.md`
-  - `final-phase.md`
-  - `.scope-lock.md`
-  - active `phase-<n>.md` files
-- Verification commands are pinned in task `spec.md` and canonical records (`./codex/project-structure.md`, `./codex/codex-config.yaml`) for:
-  - lint
-  - build
-  - test
+1. Run `implement-bootstrap.sh`, `task-scaffold.sh <task>`, and `implement-preflight.sh <task> [expected-branch]` from the resolved Codex scripts directory.
+2. Populate `tasks/<task>/spec.md` with:
+   - the locked-goal reference;
+   - in-scope and out-of-scope boundaries;
+   - exact lint, build, and test commands;
+   - the dirty-worktree decision when needed;
+   - a short execution approach only when it adds clarity.
+3. Implement the goals directly. Use your judgment to scale the number of goals and implementation phases to the task’s complexity. Do not create phase artifacts.
+4. Keep changes minimal, handle recoverable failures explicitly, and run focused checks when they accelerate feedback.
+5. Update the spec with delivered behavior, exceptions, and deferred work. Verify every locked success criterion is satisfied and no scope drift occurred.
 
-If any precondition fails, emit `BLOCKED` and stop.
+## Stop conditions
 
-## Rule dependencies
+Emit `BLOCKED` when required input is unavailable, conflicts are unresolved, scope or goals drift, a necessary check fails, or operator judgment is required. Include concrete evidence and the next required action.
 
-Stage 4 depends on:
+## Exit
 
-- `codex/rules/expand-task-spec.rules`
-- `codex/rules/git-safe.rules`
-
-## Approved scripts (mandatory)
-
-Stage 4 final gate validation MUST run through:
-
-- `implement-validate.sh`
-
-Direct shell reimplementation of the Stage 4 final gate logic is not allowed.
-
-## Command resolution
-
-Preferred (from persisted bootstrap reference in `codex-config.yaml`):
-
-```bash
-CODEX_ROOT=<CODEX_ROOT> <CODEX_SCRIPTS_DIR>/<script>.sh ...
-```
-
-Fallback order:
-
-1. `./.codex/scripts/<script>.sh ...`
-2. `./codex/scripts/<script>.sh ...`
-3. `$HOME/.codex/scripts/<script>.sh ...`
-
-## Phase-complete source of truth (mandatory)
-
-Stage 4 phase completion truth comes from task artifacts, with `final-phase.md` as the authoritative completion ledger:
-
-- final-phase checklist items are authoritative evidence of evaluation status
-- `## Full verification` in `final-phase.md` is authoritative for lint/build/test status
-- all checklist items must be evaluated, but not all must be completed
-
-Evaluation rule for checklist lines:
-
-- Completed item: `- [x] ...`
-- Not completed but evaluated item: `- [ ] ... EVALUATED: <decision + reason>`
-
-Accepted `EVALUATED:` decisions include:
-
-- `deferred`
-- `not-applicable`
-- `blocked`
-
-## Stage procedure
-
-### Step 0 — Confirm task identity and active phase set
-
-- Confirm `<TASK_NAME_IN_KEBAB_CASE>`.
-- Read `phase-plan.md` to determine active phases and execution order.
-- Proceed strictly in order (Phase 1 -> Phase 2 -> ...).
-
-### Step 1 — Execute approved phase work in order
-
-For each active phase:
-
-1. Implement only the approved `Work items`.
-2. Apply simplicity bias and surgical-change discipline.
-3. Stay within locked scope (`## IN SCOPE` / `## OUT OF SCOPE`).
-4. Run phase-specific verification steps from the phase file.
-5. Update phase gate evidence in the phase file.
-
-If a phase gate fails:
-
-- stop progression
-- record blockers and evidence
-- emit `BLOCKED`
-
-If drift is detected in goals, constraints, success criteria, non-goals, scope, tests, touched surfaces, verification plan, or completion criteria:
-
-- stop Stage 4 immediately
-- document drift evidence and rationale
-- emit `BLOCKED` for Stage 4
-
-### Step 1A — Enforce progress budget hard gate (loop prevention)
-
-Stage 4 budgets are strict:
-
-- `N = 45 minutes` maximum wall-clock in Stage 4
-- `M = 5 cycles` maximum plan -> attempt -> observe -> adjust loops
-- `K = 2 cycles` maximum consecutive loops without new evidence
-
-New evidence means at least one of:
-
-- new or changed test output
-- narrowed or falsified hypothesis
-- reduced failure surface
-- concrete reproducible observation not previously recorded
-
-Exceeding `N`, `M`, or `K` is drift. Stop Stage 4, document evidence, and emit `BLOCKED`.
-
-### Step 2 — Maintain final-phase completion ledger
-
-Update `final-phase.md` continuously during implementation:
-
-- evaluate every checklist item
-- use `[x]` when complete
-- for unchecked items, append `EVALUATED:` with explicit rationale
-
-The validator treats unchecked items without `EVALUATED:` as unevaluated and blocks Stage 4.
-
-### Step 3 — Mandatory full verification (`lint`, `build`, `test`)
-
-- Run pinned lint/build/test commands from task `spec.md` and canonical records (`./codex/project-structure.md`, `./codex/codex-config.yaml`).
-- Record command and outcome under `## Full verification` in `final-phase.md`.
-
-Required pass notation:
-
-- `- [x] Lint: \`<command>\` PASS`
-- `- [x] Build: \`<command>\` PASS`
-- `- [x] Tests: \`<command>\` PASS`
-
-If any command cannot run (for example broken dependencies/toolchain):
-
-- do not claim pass
-- document the precise blocker in `final-phase.md`
-- document it in `Outstanding issues`
-- emit `BLOCKED`
-
-### Step 4 — Accuracy, test integrity, and exceptions
-
-Hard rules:
-
-- represent code state honestly against locked goals
-- do not rewrite/loosen tests just to force pass status
-- keep tests true to goal/spec behavior
-- document every exception and deviation explicitly
-
-`//TODO` comments are permitted for delayed/future goals when:
-
-- they do not hide required Stage 4 completion work
-- they are traceable to an outstanding issue, deferral, or non-goal
-
-### Step 5 — Document outstanding issues completely
-
-In `## Outstanding issues (if any)`:
-
-- record every known issue with severity, repro, and suggested fix
-- issue recording is temporary evidence, not completion approval
-- unresolved actionable findings must route to `BLOCKED` before landing
-- if no issues exist, write an explicit none marker (for example `- None.`)
-
-Placeholder-only issue entries are invalid.
-
-### Step 6 — Emit implementation verdict via validator
-
-Before finalizing Stage 4, run one explicit drift check against locked goals and emit `BLOCKED` on any mismatch.
-
-Run:
-
-```bash
-<CODEX_SCRIPTS_DIR>/implement-validate.sh <TASK_NAME_IN_KEBAB_CASE>
-```
-
-Validator emits exactly one verdict:
-
-- `READY TO LAND`
-- `BLOCKED`
-
-Validator also updates `phase-plan.md` verdict accordingly.
-
-## Stage gates
-
-All gates must pass:
-
-- Gate 1: hard preconditions satisfied.
-- Gate 2: active phases executed in approved order with gate evidence.
-- Gate 3: `final-phase.md` checklist items are fully evaluated (`[x]` or `EVALUATED:`).
-- Gate 4: lint/build/test are present and marked `PASS`.
-- Gate 5: outstanding issues are fully documented.
-- Gate 6: drift hard-gate policy (including `N/M/K` budget) respected or stage blocked with evidence.
-- Gate 7: validator emits terminal verdict.
-
-## Exit behavior
-
-- On `READY TO LAND`: hand off to `land-the-plan`.
-- On `BLOCKED`: stop and list precise blockers.
-
-## Constraints
-
-- No goal or scope expansion.
-- No stage/surface expansion outside approved phase work.
-- No verification weakening or bypass.
-- No silent failure masking.
-- No verification falsification.
-- No code review stage in Stage 4.
-
-## Non-goals
-
-Stage 4 does not perform final code review.
-Code review is handled during landing gates.
-
-## Required handoff outputs
-
-- stage verdict (`READY TO LAND` or `BLOCKED`)
-- updated `final-phase.md` containing:
-  - proof all checklist items were evaluated (completion not required for all)
-  - full outstanding-issues documentation
-  - lint/build/test pass evidence
-- implemented code, documentation, and tests present in the repository changeset
-- explicit exception notes for blockers/drift/verification gaps
-- optional `//TODO` markers for delayed/future goals where justified
+Emit `READY TO LAND` only when implementation satisfies the locked goals and the spec contains executable pinned lint/build/test commands. Full validation and code review run in `land-the-plan`.

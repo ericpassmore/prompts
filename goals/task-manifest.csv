@@ -18,3 +18,5 @@ number,taskname,first_create_date,first_create_hhmmss,first_create_git_hash
 17,gh-wrapper-auth-routing,2026-03-29,000000,-------
 18,may-self-improvements,2026-05-03,000322,b03ea2c
 19,git-wrapper-only,2026-05-03,223947,cb2e598
+20,remove-complexity-scoring,2026-08-13,000000,-------
+21,simplify-lifecycle-workflow,2026-08-13,000000,-------

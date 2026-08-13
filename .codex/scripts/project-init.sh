@@ -183,7 +183,7 @@ update_codex_config_paths() {
     END {
       if (!root_seen || !scripts_seen) {
         print ""
-        print "# PREPARE-TAKEOFF BOOTSTRAP START"
+        print "# IMPLEMENT BOOTSTRAP START"
         print "bootstrap:"
         if (!root_seen) {
           print "  codex_root: \"./.codex\""
@@ -194,7 +194,7 @@ update_codex_config_paths() {
         print "  canonical_scripts_path: \"./.codex/scripts\""
         print "  repository_local_fallback_scripts_path: \"./codex/scripts\""
         print "  home_fallback_scripts_path: \"$HOME/.codex/scripts\""
-        print "# PREPARE-TAKEOFF BOOTSTRAP END"
+        print "# IMPLEMENT BOOTSTRAP END"
       }
     }
   ' "${TARGET_CONFIG}" > "${tmp}"

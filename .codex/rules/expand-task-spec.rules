@@ -67,238 +67,52 @@ prefix_rule(
 )
 
 # -------------------------
-# Prepare-takeoff bootstrap script
+# Consolidated lifecycle helpers
 # -------------------------
 
 prefix_rule(
-    pattern=["/Users/eric/.codex/scripts/prepare-takeoff-bootstrap.sh"],
+    pattern=["./.codex/scripts/implement-bootstrap.sh"],
     decision="allow",
-    justification="Bootstrap codex root selection and codex-commands manifest deterministically.",
+    justification="Resolve the active Codex root for implementation.",
+    match=["./.codex/scripts/implement-bootstrap.sh"],
+)
+
+prefix_rule(
+    pattern=["./codex/scripts/implement-bootstrap.sh"],
+    decision="allow",
+    justification="Resolve the active Codex root for implementation (repo-local fallback).",
+    match=["./codex/scripts/implement-bootstrap.sh"],
+)
+
+prefix_rule(
+    pattern=["/Users/eric/.codex/scripts/implement-bootstrap.sh"],
+    decision="allow",
+    justification="Resolve the active Codex root for implementation (home fallback).",
+    match=["/Users/eric/.codex/scripts/implement-bootstrap.sh"],
+)
+
+prefix_rule(
+    pattern=["./.codex/scripts/code-review-validate.sh"],
+    decision="allow",
+    justification="Prepare or validate structured code-review evidence.",
     match=[
-        "/Users/eric/.codex/scripts/prepare-takeoff-bootstrap.sh",
+        "./.codex/scripts/code-review-validate.sh add-feature-x prepare main",
+        "./.codex/scripts/code-review-validate.sh add-feature-x validate main",
     ],
 )
 
 prefix_rule(
-    pattern=["./.codex/scripts/prepare-takeoff-bootstrap.sh"],
+    pattern=["./codex/scripts/code-review-validate.sh"],
     decision="allow",
-    justification="Bootstrap codex root selection and codex-commands manifest deterministically (canonical repo path).",
-    match=[
-        "./.codex/scripts/prepare-takeoff-bootstrap.sh",
-    ],
+    justification="Prepare or validate structured code-review evidence (repo-local fallback).",
+    match=["./codex/scripts/code-review-validate.sh add-feature-x prepare main"],
 )
 
 prefix_rule(
-    pattern=["./codex/scripts/prepare-takeoff-bootstrap.sh"],
+    pattern=["/Users/eric/.codex/scripts/code-review-validate.sh"],
     decision="allow",
-    justification="Bootstrap codex root selection and codex-commands manifest deterministically (repo-local fallback path).",
-    match=[
-        "./codex/scripts/prepare-takeoff-bootstrap.sh",
-    ],
-)
-
-# -------------------------
-# Prepare-phased-impl scripts
-# -------------------------
-
-prefix_rule(
-    pattern=["/Users/eric/.codex/scripts/complexity-score.sh"],
-    decision="allow",
-    justification="Compute deterministic complexity level and recommended goals/phases from scored JSON signals.",
-    match=[
-        "/Users/eric/.codex/scripts/complexity-score.sh ./tasks/add-feature-x/complexity-signals.json --format json",
-    ],
-)
-
-prefix_rule(
-    pattern=["./.codex/scripts/complexity-score.sh"],
-    decision="allow",
-    justification="Compute deterministic complexity level and recommended goals/phases from scored JSON signals (canonical repo path).",
-    match=[
-        "./.codex/scripts/complexity-score.sh ./tasks/add-feature-x/complexity-signals.json --format json",
-    ],
-)
-
-prefix_rule(
-    pattern=["./codex/scripts/complexity-score.sh"],
-    decision="allow",
-    justification="Compute deterministic complexity level and recommended goals/phases from scored JSON signals (repo-local fallback path).",
-    match=[
-        "./codex/scripts/complexity-score.sh ./tasks/add-feature-x/complexity-signals.json --format json",
-    ],
-)
-
-prefix_rule(
-    pattern=["/Users/eric/.codex/scripts/prepare-phased-impl-archive.sh"],
-    decision="allow",
-    justification="Archive previous Stage 3 planning artifacts using short-hash archive GUIDs before restart.",
-    match=[
-        "/Users/eric/.codex/scripts/prepare-phased-impl-archive.sh add-feature-x",
-    ],
-)
-
-prefix_rule(
-    pattern=["./.codex/scripts/prepare-phased-impl-archive.sh"],
-    decision="allow",
-    justification="Archive previous Stage 3 planning artifacts using short-hash archive GUIDs before restart (canonical repo path).",
-    match=[
-        "./.codex/scripts/prepare-phased-impl-archive.sh add-feature-x",
-    ],
-)
-
-prefix_rule(
-    pattern=["./codex/scripts/prepare-phased-impl-archive.sh"],
-    decision="allow",
-    justification="Archive previous Stage 3 planning artifacts using short-hash archive GUIDs before restart (repo-local fallback path).",
-    match=[
-        "./codex/scripts/prepare-phased-impl-archive.sh add-feature-x",
-    ],
-)
-
-prefix_rule(
-    pattern=["/Users/eric/.codex/scripts/prepare-phased-impl-scaffold.sh"],
-    decision="allow",
-    justification="Create/normalize dynamic phase planning files for Stage 3.",
-    match=[
-        "/Users/eric/.codex/scripts/prepare-phased-impl-scaffold.sh add-feature-x medium",
-    ],
-)
-
-prefix_rule(
-    pattern=["./.codex/scripts/prepare-phased-impl-scaffold.sh"],
-    decision="allow",
-    justification="Create/normalize dynamic phase planning files for Stage 3 (canonical repo path).",
-    match=[
-        "./.codex/scripts/prepare-phased-impl-scaffold.sh add-feature-x medium",
-    ],
-)
-
-prefix_rule(
-    pattern=["./codex/scripts/prepare-phased-impl-scaffold.sh"],
-    decision="allow",
-    justification="Create/normalize dynamic phase planning files for Stage 3 (repo-local fallback path).",
-    match=[
-        "./codex/scripts/prepare-phased-impl-scaffold.sh add-feature-x medium",
-    ],
-)
-
-prefix_rule(
-    pattern=["/Users/eric/.codex/scripts/prepare-phased-impl-scope-lock.sh"],
-    decision="allow",
-    justification="Lock IN SCOPE / OUT OF SCOPE snapshot to enforce no-new-scope rule in Stage 3.",
-    match=[
-        "/Users/eric/.codex/scripts/prepare-phased-impl-scope-lock.sh add-feature-x",
-    ],
-)
-
-prefix_rule(
-    pattern=["./.codex/scripts/prepare-phased-impl-scope-lock.sh"],
-    decision="allow",
-    justification="Lock IN SCOPE / OUT OF SCOPE snapshot to enforce no-new-scope rule in Stage 3 (canonical repo path).",
-    match=[
-        "./.codex/scripts/prepare-phased-impl-scope-lock.sh add-feature-x",
-    ],
-)
-
-prefix_rule(
-    pattern=["./codex/scripts/prepare-phased-impl-scope-lock.sh"],
-    decision="allow",
-    justification="Lock IN SCOPE / OUT OF SCOPE snapshot to enforce no-new-scope rule in Stage 3 (repo-local fallback path).",
-    match=[
-        "./codex/scripts/prepare-phased-impl-scope-lock.sh add-feature-x",
-    ],
-)
-
-prefix_rule(
-    pattern=["/Users/eric/.codex/scripts/prepare-phased-impl-validate.sh"],
-    decision="allow",
-    justification="Validate Stage 3 gates and emit READY FOR IMPLEMENTATION or BLOCKED.",
-    match=[
-        "/Users/eric/.codex/scripts/prepare-phased-impl-validate.sh add-feature-x",
-    ],
-)
-
-prefix_rule(
-    pattern=["./.codex/scripts/prepare-phased-impl-validate.sh"],
-    decision="allow",
-    justification="Validate Stage 3 gates and emit READY FOR IMPLEMENTATION or BLOCKED (canonical repo path).",
-    match=[
-        "./.codex/scripts/prepare-phased-impl-validate.sh add-feature-x",
-    ],
-)
-
-prefix_rule(
-    pattern=["./codex/scripts/prepare-phased-impl-validate.sh"],
-    decision="allow",
-    justification="Validate Stage 3 gates and emit READY FOR IMPLEMENTATION or BLOCKED (repo-local fallback path).",
-    match=[
-        "./codex/scripts/prepare-phased-impl-validate.sh add-feature-x",
-    ],
-)
-
-# -------------------------
-# Implement validation script
-# -------------------------
-
-prefix_rule(
-    pattern=["/Users/eric/.codex/scripts/implement-validate.sh"],
-    decision="allow",
-    justification="Validate Stage 4 gates and emit READY TO LAND or BLOCKED.",
-    match=[
-        "/Users/eric/.codex/scripts/implement-validate.sh add-feature-x",
-    ],
-)
-
-prefix_rule(
-    pattern=["./.codex/scripts/implement-validate.sh"],
-    decision="allow",
-    justification="Validate Stage 4 gates and emit READY TO LAND or BLOCKED (canonical repo path).",
-    match=[
-        "./.codex/scripts/implement-validate.sh add-feature-x",
-    ],
-)
-
-prefix_rule(
-    pattern=["./codex/scripts/implement-validate.sh"],
-    decision="allow",
-    justification="Validate Stage 4 gates and emit READY TO LAND or BLOCKED (repo-local fallback path).",
-    match=[
-        "./codex/scripts/implement-validate.sh add-feature-x",
-    ],
-)
-
-# -------------------------
-# Revalidate code review script
-# -------------------------
-
-prefix_rule(
-    pattern=["/Users/eric/.codex/scripts/revalidate-code-review.sh"],
-    decision="allow",
-    justification="Scaffold/validate Stage 5 code review findings and verdict output.",
-    match=[
-        "/Users/eric/.codex/scripts/revalidate-code-review.sh add-feature-x",
-        "/Users/eric/.codex/scripts/revalidate-code-review.sh add-feature-x main",
-    ],
-)
-
-prefix_rule(
-    pattern=["./.codex/scripts/revalidate-code-review.sh"],
-    decision="allow",
-    justification="Scaffold/validate Stage 5 code review findings and verdict output (canonical repo path).",
-    match=[
-        "./.codex/scripts/revalidate-code-review.sh add-feature-x",
-        "./.codex/scripts/revalidate-code-review.sh add-feature-x main",
-    ],
-)
-
-prefix_rule(
-    pattern=["./codex/scripts/revalidate-code-review.sh"],
-    decision="allow",
-    justification="Scaffold/validate Stage 5 code review findings and verdict output (repo-local fallback path).",
-    match=[
-        "./codex/scripts/revalidate-code-review.sh add-feature-x",
-        "./codex/scripts/revalidate-code-review.sh add-feature-x main",
-    ],
+    justification="Prepare or validate structured code-review evidence (home fallback).",
+    match=["/Users/eric/.codex/scripts/code-review-validate.sh add-feature-x prepare main"],
 )
 
 # -------------------------
