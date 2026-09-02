@@ -1,60 +1,40 @@
 # <TASK TITLE>
 
-## Overview
+## Goal reference
 
-## Goals
+- `goals/<task>/goals.vN.md`
 
-## Non-goals
+## Scope
 
-## Use cases / user stories
+### In scope
 
-## Current behavior
-- Notes:
-- Key files:
-  - `...`
+-
 
-## Proposed behavior
-- Behavior changes:
-- Edge cases:
+### Out of scope
 
-## Technical design
-### Architecture / modules impacted
-- `...`
+-
 
-### API changes (if any)
+## Approach
 
-### UI/UX changes (if any)
+- Add only when it improves execution clarity.
 
-### Data model / schema changes (PostgreSQL)
-- Migrations:
-- Backward compatibility:
-- Rollback:
+## Verification commands
 
-## Security & privacy
+- Lint: `<exact command>`
+- Build: `<exact command>`
+- Tests: `<exact command>`
 
-## Observability (logs/metrics)
+## Delivery
 
-## Verification Commands
-> Pin the exact commands discovered for this repo (also update `./codex/project-structure.md` and `./codex/codex-config.yaml`).
+- Delivered:
+- Exceptions: None
+- Deferred work: None
+- Dirty-worktree decision: clean | continue | isolate | stop
 
-- Lint:
-  - `...`
-- Build:
-  - `...`
-- Test:
-  - `...`
+## Quality gate results
 
-## Test strategy
-- Unit:
-- Integration:
-- E2E / UI (if applicable):
-
-## Acceptance criteria checklist
-- [ ] …
-- [ ] …
-
-## IN SCOPE
-- `...`
-
-## OUT OF SCOPE
-- `...`
+- Lint: pending
+- Build: pending
+- Tests: pending
+- Code review: pending
+- Clean merge: pending

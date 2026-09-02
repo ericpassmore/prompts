@@ -16,11 +16,8 @@ notes:
   - "github_cli.owner_token_env maps a GitHub owner/org to the env var name a wrapper should use for GH_TOKEN rebinding."
   - "Store env var names only; never store token values in this file."
 
-# PREPARE-TAKEOFF BOOTSTRAP START
+# IMPLEMENT BOOTSTRAP START
 bootstrap:
   codex_root: "/Users/eric/side-projects/prompts/.codex"
   codex_scripts_dir: "/Users/eric/side-projects/prompts/.codex/scripts"
-  canonical_scripts_path: "./.codex/scripts"
-  repository_local_fallback_scripts_path: "./codex/scripts"
-  home_fallback_scripts_path: "$HOME/.codex/scripts"
-# PREPARE-TAKEOFF BOOTSTRAP END
+# IMPLEMENT BOOTSTRAP END

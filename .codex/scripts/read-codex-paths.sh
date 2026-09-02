@@ -3,8 +3,8 @@ set -euo pipefail
 
 ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BOOTSTRAP_START="# PREPARE-TAKEOFF BOOTSTRAP START"
-BOOTSTRAP_END="# PREPARE-TAKEOFF BOOTSTRAP END"
+BOOTSTRAP_START="# IMPLEMENT BOOTSTRAP START"
+BOOTSTRAP_END="# IMPLEMENT BOOTSTRAP END"
 
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR}/resolve-codex-root.sh"

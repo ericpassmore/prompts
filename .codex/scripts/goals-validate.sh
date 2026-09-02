@@ -3,10 +3,8 @@ set -euo pipefail
 
 TASK_NAME="${1:-}"
 ITERATION="${2:-}"
-SIGNALS_FILE_ARG="${3:-}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [[ -z "$TASK_NAME" || -z "$ITERATION" ]]; then
+if [[ "$#" -ne 2 || -z "$TASK_NAME" || -z "$ITERATION" ]]; then
   echo "ERROR: TASK_NAME_IN_KEBAB_CASE and iteration (vN) are required"
   exit 1
 fi
@@ -52,29 +50,6 @@ if [[ "$GOAL_COUNT" -lt 1 ]]; then
   fi
   echo "ERROR: At least one goal is required unless State=blocked"
   exit 1
-fi
-
-if [[ -n "${SIGNALS_FILE_ARG}" ]]; then
-  score_script="${SCRIPT_DIR}/complexity-score.sh"
-  if [[ ! -x "${score_script}" ]]; then
-    echo "ERROR: Missing executable complexity scorer: ${score_script}"
-    exit 1
-  fi
-
-  signals_file="${SIGNALS_FILE_ARG}"
-  if [[ "${signals_file}" != /* ]]; then
-    signals_file="./${signals_file}"
-  fi
-
-  if [[ ! -f "${signals_file}" ]]; then
-    echo "ERROR: Missing complexity signals file: ${signals_file}"
-    exit 1
-  fi
-
-  if ! "${score_script}" "${signals_file}" --format json >/dev/null; then
-    echo "ERROR: Complexity scoring failed for: ${signals_file}"
-    exit 1
-  fi
 fi
 
 if [[ "$GOAL_COUNT" -gt 0 && "$SUCCESS_COUNT" -eq 0 ]]; then

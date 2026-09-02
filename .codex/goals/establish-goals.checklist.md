@@ -1,11 +1,8 @@
-# establish-goals checklist
+# Goal lock checklist
 
-- [ ] I have not written or modified code.
-- [ ] I restated the request in my own words.
-- [ ] I listed ambiguities and separated blocking vs non-blocking.
-- [ ] I asked targeted questions for blocking ambiguities.
-- [ ] Any assumptions are explicitly labeled.
-- [ ] Goals are 1-20 and verifiable.
-- [ ] Non-goals are explicit.
-- [ ] Success criteria are objective and tied to goals.
-- [ ] Status is set correctly: draft / blocked / ready-for-confirmation / locked.
+- [ ] Blocking ambiguity is resolved or the task is blocked.
+- [ ] Assumptions are explicit.
+- [ ] Goals are verifiable and limited to 1–20.
+- [ ] Non-goals bound the scope.
+- [ ] Every goal has objective success criteria.
+- [ ] The user approved the locked iteration.

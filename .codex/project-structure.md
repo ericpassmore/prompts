@@ -1,74 +1,50 @@
-# Codex Lifecycle Repository Structure
+# Codex Lifecycle Repository
 
-## Metadata
-- Name: Prompts Codex Workspace
-- Type: Documentation and automation repository for staged Codex execution
-- Language/Runtime: Bash + Markdown
-- Primary Tooling: Git, ripgrep (`rg`), repository-local Codex scripts
+This Bash-and-Markdown repository stores reusable Codex governance under `.codex/`, locked goals under `goals/`, and task specs under `tasks/`.
 
-## Objectives
-- Keep lifecycle governance and stage skills under `codex/`.
-- Keep reusable project structure examples under `project-structure/`.
-- Keep task execution artifacts under `tasks/` and goal artifacts under `goals/`.
-- Keep stage operations script-driven with deterministic command resolution.
+## Workflow
 
-## Layout
+`establish-goals` → `implement` → `land-the-plan`
+
+`code-review` is independently reusable and mandatory during landing.
+
+## Active structure
+
 ```text
-/
-├── codex/
-│   ├── AGENTS.md
-│   ├── codex-config.yaml
-│   ├── project-structure.md
-│   ├── goals/
-│   ├── prompts/
-│   ├── rules/
-│   ├── scripts/
-│   ├── skills/
-│   └── tasks/_templates/
-├── project-structure/
-├── goals/
-├── tasks/
+.codex/
+├── AGENTS.md
+├── codex-config.yaml
+├── goals/                 # goal templates and checklist
+├── prompts/
+├── rules/
 ├── scripts/
-└── sync-codex-to-git.sh
+├── skills/
+└── tasks/_templates/      # concise task spec template
+goals/                     # immutable goal iterations + manifest
+tasks/                     # task specs and review evidence
 ```
 
-## Actions
-- Manage lifecycle contract and invariants in `codex/AGENTS.md`.
-- Update skill workflows in `codex/skills/*/SKILL.md`.
-- Update stage automation and validators in `codex/scripts/*.sh`.
-- Maintain canonical codex settings in `codex/codex-config.yaml`.
-- Keep this repository structure reference current in `codex/project-structure.md`.
-- Scaffold task artifacts via `./codex/scripts/task-scaffold.sh <task-name>`.
-- Task scaffolding materializes `tasks/<task-name>/complexity-signals.json` from `codex/tasks/_templates/complexity-signals.template.json`; Stage 3 can also remediate the missing file from the same template.
+## Canonical commands
 
-## Verification
+- Bootstrap implementation: `./.codex/scripts/implement-bootstrap.sh`
+- Scaffold task spec: `./.codex/scripts/task-scaffold.sh <task>`
+- Check worktree: `./.codex/scripts/implement-preflight.sh <task> [expected-branch]`
+- Prepare review: `./.codex/scripts/code-review-validate.sh <task> prepare [base]`
+- Validate review: `./.codex/scripts/code-review-validate.sh <task> validate [base]`
+- Check mergeability: `./.codex/scripts/git-clean-merge-check.sh <base> [head]`
+
+## Repository validation
+
 - Lint: `not-configured`
 - Build: `not-configured`
 - Test: `not-configured`
-- Script health: `./codex/scripts/prepare-takeoff-bootstrap.sh`
-- Stage 3 plan validation: `./codex/scripts/prepare-phased-impl-validate.sh <task-name>`
-- Stage 4 implementation validation: `./codex/scripts/implement-validate.sh <task-name>`
+- Shell changes: run `bash -n` on every modified script.
+
+Task specs must pin the repository's actual lint, build, and test commands. Landing runs all three, performs code review, and verifies clean mergeability before PR creation.
 
 ## Constraints
-- `codex/project-structure.md` is required; execution aborts when missing.
-- `codex/codex-config.yaml` is the canonical source for code-review base branch and bootstrap metadata.
-- Lifecycle stages must follow the ordered gate contract defined in `codex/AGENTS.md`.
-- Command references in task specs must be pinned and traceable to canonical repository records.
 
-## Fragile Artifacts
-- `codex/AGENTS.md` (lifecycle gate contract; small wording changes can alter allowed stage exits)
-- `codex/codex-config.yaml` (bootstrap source of truth for command resolution and base branch)
-- `codex/project-structure.md` (required bootstrap input; missing or stale records block stage execution)
-- `codex/scripts/resolve-codex-root.sh` (root path selection used by stage scripts)
-- `codex/scripts/read-codex-paths.sh` (runtime path hydration for selected codex root/scripts dir)
-- `codex/scripts/implement-validate.sh` (terminal gate validator for Stage 4 -> Stage 5 readiness)
-- `goals/task-manifest.csv` (landing metadata and task identity continuity)
-
-## Success Criteria
-- Core codex assets (`AGENTS.md`, `codex-config.yaml`, `project-structure.md`, `scripts/`, `skills/`) exist and remain internally consistent.
-- Stage scripts can resolve `CODEX_ROOT` and `CODEX_SCRIPTS_DIR` through canonical config.
-- Task artifacts can be scaffolded and validated by stage scripts without legacy manifest dependencies.
-
-## Non-Goals
-- Defining application runtime architecture beyond codex lifecycle assets.
-- Managing deployment infrastructure, CI hosting, or external service topology.
+- Resolve Codex assets from `./.codex`, `./codex`, then `$HOME/.codex`.
+- Keep goals locked and changes within declared scope.
+- Never auto-resolve merge conflicts.
+- Preserve historical task and goal records.
